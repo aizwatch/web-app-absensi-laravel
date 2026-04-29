@@ -1,0 +1,2928 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Absensi Realtime — Fingerspot</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Socket.io diganti polling browser -->
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #e8eef5;
+    --border: #d0dae6;
+    --accent: #0077cc;
+    --accent2: #00aa55;
+    --warn: #cc8800;
+    --danger: #dd2244;
+    --text: #1a2333;
+    --text-muted: #5a7080;
+    --text-dim: #a0b4c4;
+    --font-sans: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --header-bg: rgba(240,244,248,0.95);
+    --grid-color: #d0dae6;
+    --loading-bg: rgba(240,244,248,0.7);
+    --hover-bg: rgba(0,0,0,0.03);
+    --absent-bg: rgba(0,0,0,0.02);
+    --btn-primary-text: #ffffff;
+  }
+
+  [data-theme="dark"] {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #00ff88;
+    --warn: #ffaa00;
+    --danger: #ff4466;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #334155;
+    --header-bg: rgba(10,14,26,0.95);
+    --grid-color: #1e2d45;
+    --loading-bg: rgba(10,14,26,0.7);
+    --hover-bg: rgba(255,255,255,0.03);
+    --absent-bg: rgba(255,255,255,0.02);
+    --btn-primary-text: #0a0e1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    background: var(--header-bg);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+  }
+
+  .logo { display: flex; align-items: center; gap: 12px; }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-family: var(--font-mono);
+    font-size: 15px; font-weight: 600;
+    color: var(--text); letter-spacing: 0.5px;
+  }
+
+  .logo-sub { font-size: 11px; color: var(--text-muted); display: block; margin-top: 1px; }
+
+  .header-right { display: flex; align-items: center; gap: 20px; }
+
+  .live-badge {
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 12px; color: var(--accent2); letter-spacing: 1px;
+  }
+
+  .live-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent2);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .live-dot.offline { background: var(--danger); animation: none; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  #clock { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); }
+
+  /* MAIN */
+  main { padding: 32px 0 64px; }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    padding: 10px 24px;
+    background: none; border: none;
+    font-family: var(--font-sans); font-size: 14px;
+    color: var(--text-muted); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s; letter-spacing: 0.3px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative; overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent-color, var(--accent));
+    opacity: 0.7;
+  }
+
+  .stat-card:nth-child(1) { --accent-color: var(--accent); }
+  .stat-card:nth-child(2) { --accent-color: var(--accent2); }
+  .stat-card:nth-child(3) { --accent-color: #4ade80; }
+  .stat-card:nth-child(4) { --accent-color: var(--danger); }
+  .stat-card:nth-child(5) { --accent-color: var(--warn); }
+
+  .stat-label {
+    font-size: 10px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.2px;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 28px; font-weight: 600;
+    color: var(--text); line-height: 1;
+  }
+  .stat-value.accent { color: var(--accent); }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex; gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .filter-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .filter-group label {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  .filter-group input,
+  .filter-group select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-family: var(--font-sans); font-size: 14px;
+    color: var(--text); outline: none;
+    transition: border-color 0.2s; min-width: 160px;
+  }
+
+  .filter-group input:focus,
+  .filter-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+  }
+
+  .btn {
+    padding: 9px 20px; border: none;
+    border-radius: 8px;
+    font-family: var(--font-sans); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;
+  }
+  .btn-primary { background: var(--accent); color: var(--btn-primary-text); }
+  .btn-primary:hover { background: #33dcff; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-ghost:hover { border-color: var(--text-muted); color: var(--text); }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-title {
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--text-muted); letter-spacing: 0.5px;
+  }
+
+  .total-badge {
+    font-family: var(--font-mono); font-size: 12px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 12px; color: var(--accent);
+  }
+
+  .table-scroll { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; min-width: 800px; }
+
+  thead th {
+    text-align: center;
+    padding: 11px 16px;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  thead th:first-child,
+  thead th:nth-child(2) { text-align: left; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--hover-bg); }
+
+  tbody tr.row-absent {
+    background: var(--absent-bg);
+    opacity: 0.5;
+  }
+
+  tbody tr.new-entry { animation: newRow 2s ease-out; }
+
+  @keyframes newRow {
+    0% { background: rgba(0,255,136,0.12); }
+    100% { background: transparent; }
+  }
+
+  td {
+    padding: 11px 16px;
+    font-size: 13px;
+    color: var(--text);
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  td:first-child,
+  td:nth-child(2) { text-align: left; }
+
+  .td-tanggal {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-muted); white-space: nowrap;
+  }
+
+  .td-pin {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--text-dim); display: block;
+  }
+
+  .td-name { font-weight: 500; font-size: 13px; }
+
+  .td-time {
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--text);
+  }
+
+  .td-time.empty { color: var(--text-dim); font-size: 16px; }
+
+  .td-durasi {
+    font-family: var(--font-mono); font-size: 14px;
+    font-weight: 600; color: var(--text);
+  }
+  .td-durasi.zero { color: var(--text-dim); }
+
+  /* Highlight cells */
+  .cell-late {
+    background: rgba(255,200,0,0.18);
+    color: #ffd700;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 4px 10px;
+    display: inline-block;
+  }
+
+  .cell-early {
+    background: rgba(0,220,255,0.15);
+    color: #00d4ff;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 4px 10px;
+    display: inline-block;
+  }
+
+  /* 1x scan istirahat saja — incomplete */
+  .cell-ist-incomplete {
+    background: rgba(255,100,180,0.18);
+    color: #ff80c0;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 4px 10px;
+    display: inline-block;
+  }
+
+  .cell-ok {
+    color: var(--text);
+  }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 16px; align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 3px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-text { font-size: 15px; }
+
+  /* TOAST */
+  #toast-container {
+    position: fixed; top: 80px; right: 24px;
+    z-index: 999;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--accent2);
+    border-left: 4px solid var(--accent2);
+    border-radius: 10px; padding: 12px 18px;
+    min-width: 280px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-in 3.7s forwards;
+  }
+  .toast-title { font-size: 13px; font-weight: 600; color: var(--accent2); margin-bottom: 4px; }
+  .toast-body  { font-size: 13px; color: var(--text-muted); }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateX(40px); }
+  }
+
+  /* LOADING */
+  .loading-overlay {
+    position: absolute; inset: 0;
+    background: var(--loading-bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10; border-radius: 12px;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #last-update {
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+  }
+
+  /* MODAL OVERLAY */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%; max-width: 420px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+    transform: translateY(16px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+
+  .modal-box.wide {
+    max-width: 920px;
+    max-height: 94vh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-box.wide .modal-body-scroll { flex: 1; overflow-y: auto; max-height: none; padding-right: 4px; }
+  .modal-box.wide .modal-footer { flex-shrink: 0; margin-top: 0; padding-top: 20px; border-top: 1px solid var(--border); }
+
+  .modal-body-scroll {
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  /* Settings tabs */
+  .stab-bar {
+    display: flex; gap: 2px; margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stab-btn {
+    padding: 8px 14px; background: none; border: none;
+    font-family: var(--font-sans); font-size: 12px;
+    color: var(--text-muted); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .stab-btn:hover { color: var(--text); }
+  .stab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .stab-pane { display: none; }
+  .stab-pane.active { display: block; }
+
+  /* Settings inner table */
+  .settings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .settings-table th {
+    text-align: left; padding: 8px 10px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-muted);
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  .settings-table td {
+    padding: 9px 10px; border-bottom: 1px solid var(--border);
+    color: var(--text); vertical-align: middle;
+  }
+  .settings-table tr:last-child td { border-bottom: none; }
+  .settings-table input[type=time],
+  .settings-table input[type=text] {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 9px;
+    font-family: var(--font-mono); font-size: 13px; color: var(--text);
+    outline: none; width: 100%;
+  }
+  .settings-table input:focus { border-color: var(--accent); }
+  .settings-table select {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 9px;
+    font-size: 13px; color: var(--text); outline: none; width: 100%;
+    cursor: pointer;
+  }
+  .settings-table select:focus { border-color: var(--accent); }
+
+  .shift-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+    background: var(--surface2); color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-icon {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 14px; padding: 4px 6px;
+    border-radius: 5px; transition: all 0.15s;
+  }
+  .btn-icon:hover { background: var(--surface2); color: var(--text); }
+  .btn-icon.del:hover { color: var(--danger); }
+
+  .add-shift-form {
+    display: none; margin-top: 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+  }
+  .add-shift-form.open { display: block; }
+  .add-shift-form .form-row { margin-bottom: 0; }
+
+  .emp-search {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 14px;
+    font-size: 13px; color: var(--text); outline: none; margin-bottom: 14px;
+  }
+  .emp-search:focus { border-color: var(--accent); }
+
+  .modal-title {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+    color: var(--text); margin-bottom: 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .modal-close {
+    margin-left: auto; background: none; border: none;
+    color: var(--text-muted); font-size: 20px; cursor: pointer;
+    line-height: 1; padding: 0 4px;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); margin-bottom: 7px;
+  }
+  .form-group input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: var(--font-mono); font-size: 14px;
+    color: var(--text); outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,150,255,0.12); }
+  .form-group .hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .form-section-title {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--accent);
+    margin: 22px 0 14px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-footer {
+    display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;
+  }
+
+  .pin-input-wrap { display: flex; gap: 10px; }
+  .pin-input-wrap input { flex: 1; text-align: center; font-size: 22px; letter-spacing: 6px; }
+
+  .alert-err {
+    background: rgba(220,34,68,0.12); border: 1px solid var(--danger);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: var(--danger);
+    margin-bottom: 16px; display: none;
+  }
+  .alert-err.show { display: block; }
+
+  .alert-ok {
+    background: rgba(0,170,85,0.12); border: 1px solid var(--accent2);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: var(--accent2);
+    margin-bottom: 16px; display: none;
+  }
+  .alert-ok.show { display: block; }
+
+  /* SYNC BUTTON */
+  .sync-btn {
+    width: 36px; height: 36px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--accent);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .sync-btn:hover { border-color: var(--accent); background: var(--surface); }
+  .sync-btn.spinning { animation: spin 0.8s linear infinite; pointer-events: none; opacity: 0.7; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* THEME TOGGLE */
+  .theme-toggle {
+    width: 36px; height: 36px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  /* ADMIN */
+  .admin-stab-bar {
+    display: flex; gap: 2px; margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .admin-stab-btn {
+    padding: 8px 20px; background: none; border: none;
+    font-family: var(--font-sans); font-size: 13px;
+    color: var(--text-muted); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+  .admin-stab-btn:hover { color: var(--text); }
+  .admin-stab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .admin-stab-pane { display: none; }
+  .admin-stab-pane.active { display: block; }
+
+  .raw-scan-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; }
+  .raw-scan-table th {
+    text-align: left; padding: 9px 12px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-muted);
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  .raw-scan-table td {
+    padding: 9px 12px; border-bottom: 1px solid var(--border);
+    color: var(--text); vertical-align: middle;
+  }
+  .raw-scan-table tr:last-child td { border-bottom: none; }
+  .raw-scan-table tr:hover { background: var(--hover-bg); }
+  .raw-scan-table input[type=datetime-local] {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 8px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text);
+    outline: none;
+  }
+  .raw-scan-table input:focus { border-color: var(--accent); }
+
+  .admin-form-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin-bottom: 20px;
+  }
+  .admin-form-card .form-row { margin-bottom: 14px; }
+
+  /* EMPLOYEE PICKER OVERLAY */
+  .picker-overlay {
+    position: fixed; inset: 0; z-index: 600;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    padding: 40px 24px 60px;
+    overflow-y: auto;
+    transition: opacity 0.3s;
+  }
+  .picker-overlay.hidden { opacity: 0; pointer-events: none; }
+
+  .picker-title {
+    font-family: var(--font-mono); font-size: 22px; font-weight: 600;
+    color: var(--text); margin-bottom: 6px; text-align: center;
+  }
+  .picker-sub {
+    font-size: 14px; color: var(--text-muted); margin-bottom: 32px; text-align: center;
+  }
+
+  .picker-search {
+    width: 100%; max-width: 480px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px;
+    font-size: 15px; color: var(--text); outline: none;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .picker-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,150,255,0.1); }
+
+  .picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    width: 100%; max-width: 800px;
+  }
+
+  .emp-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .emp-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,150,255,0.1);
+    transform: translateY(-2px);
+  }
+  .emp-avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .emp-card-info { min-width: 0; }
+  .emp-card-name { font-weight: 500; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .emp-card-pin  { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* PERSONAL VIEW */
+  .personal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 22px; flex-wrap: wrap; gap: 12px;
+  }
+  .personal-info { display: flex; align-items: center; gap: 14px; }
+  .personal-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .personal-name { font-size: 18px; font-weight: 600; color: var(--text); }
+  .personal-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  .month-nav {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .month-nav button {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; width: 34px; height: 34px;
+    cursor: pointer; font-size: 16px; color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .month-nav button:hover { border-color: var(--accent); color: var(--accent); }
+  .month-label {
+    font-family: var(--font-mono); font-size: 14px;
+    color: var(--text); min-width: 120px; text-align: center;
+  }
+
+  .personal-stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px; margin-bottom: 22px;
+  }
+
+  .td-status {
+    font-size: 12px; font-weight: 600; border-radius: 5px;
+    padding: 3px 10px; display: inline-block; white-space: nowrap;
+  }
+  .status-hadir    { background: rgba(0,170,85,0.15); color: var(--accent2); }
+  .status-alpha    { background: rgba(220,34,68,0.12); color: var(--danger); font-weight: 600; }
+  .status-future   { background: transparent; color: var(--text-dim); }
+  .status-libur    { background: rgba(0,120,255,0.1); color: var(--accent); }
+  .status-override { background: rgba(255,180,0,0.15); color: #b8860b; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .status-catatan  { background: rgba(160,80,255,0.12); color: #9b59b6; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .td-weekend    { opacity: 0.4; }
+
+  @media (max-width: 900px) {
+    .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    .personal-stats { grid-template-columns: repeat(3, 1fr); }
+    .picker-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .personal-stats { grid-template-columns: repeat(2, 1fr); }
+    .filter-bar { flex-direction: column; align-items: stretch; }
+  }
+</style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- EMPLOYEE PICKER OVERLAY -->
+<div class="picker-overlay" id="picker-overlay">
+  <div style="margin-bottom:32px;display:flex;align-items:center;gap:12px">
+    <div class="logo-icon">👁</div>
+    <div>
+      <div class="logo-text" style="font-family:var(--font-mono);font-size:15px;font-weight:600">ABSENSI MONITOR</div>
+      <span style="font-size:11px;color:var(--text-muted)">Fingerspot Realtime Dashboard</span>
+    </div>
+  </div>
+  <div class="picker-title">Halo! Siapa kamu?</div>
+  <div class="picker-sub">Pilih namamu untuk melihat data absensi</div>
+  <div style="width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px">
+    <select id="picker-select" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:15px;color:var(--text);outline:none;cursor:pointer;appearance:auto">
+      <option value="">— Pilih nama karyawan —</option>
+    </select>
+    <button class="btn btn-primary" style="padding:14px;font-size:15px;border-radius:10px" onclick="confirmPickerSelect()">Masuk →</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">👁</div>
+        <div>
+          <div class="logo-text">ABSENSI MONITOR</div>
+          <span class="logo-sub">Fingerspot Realtime Dashboard</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="live-badge">
+          <div class="live-dot" id="live-dot"></div>
+          <span id="conn-status">CONNECTING</span>
+        </div>
+        <div id="clock">--:--:--</div>
+        <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+        <button class="theme-toggle" onclick="openPinModal()" title="Pengaturan">⚙️</button>
+        <button class="theme-toggle" onclick="openAdminPinModal()" title="Menu Admin">🛠️</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+  <div class="container">
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-btn-personal" onclick="switchTab('tab-personal', this)">👤 Absensi Saya</button>
+      <button class="tab-btn" onclick="switchTab('tab-live', this)">⚡ Live Hari Ini</button>
+    </div>
+
+    <!-- TAB: PERSONAL -->
+    <div id="tab-personal" class="tab-content active">
+
+      <div class="personal-header">
+        <div class="personal-info">
+          <div class="personal-avatar" id="p-avatar">?</div>
+          <div>
+            <div class="personal-name" id="p-name">—</div>
+            <div class="personal-meta" id="p-meta">PIN — | Shift —</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="month-nav">
+            <button onclick="changeMonth(-1)" title="Bulan sebelumnya">‹</button>
+            <span class="month-label" id="p-month-label">—</span>
+            <button onclick="changeMonth(1)" title="Bulan berikutnya">›</button>
+          </div>
+          <button class="btn btn-ghost" style="font-size:13px" onclick="showPicker()">🔄 Ganti Karyawan</button>
+        </div>
+      </div>
+
+      <!-- Personal stats -->
+      <div class="personal-stats">
+        <div class="stat-card">
+          <div class="stat-label">Hari Kerja</div>
+          <div class="stat-value accent" id="ps-total">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Hadir</div>
+          <div class="stat-value" id="ps-hadir">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Terlambat</div>
+          <div class="stat-value" id="ps-telat">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pulang Awal</div>
+          <div class="stat-value" id="ps-awal">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tidak Hadir</div>
+          <div class="stat-value" id="ps-alpha">—</div>
+        </div>
+      </div>
+
+      <!-- Personal table -->
+      <div class="table-wrap" style="position:relative" id="personal-wrap">
+        <div class="table-header">
+          <span class="table-title">REKAP ABSENSI — <span id="p-table-month"></span></span>
+          <span class="total-badge" id="p-badge">0 hari</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:120px">Tanggal</th>
+                <th style="width:80px">Hari</th>
+                <th>Scan Masuk</th>
+                <th>Scan Istirahat 1</th>
+                <th>Scan Istirahat 2</th>
+                <th>Scan Pulang</th>
+                <th>Ist (mnt)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="personal-tbody">
+              <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">Pilih karyawan untuk melihat data</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: LIVE -->
+    <div id="tab-live" class="tab-content">
+
+      <!-- STATS -->
+      <div class="stats-bar">
+        <div class="stat-card">
+          <div class="stat-label">Total Karyawan</div>
+          <div class="stat-value accent" id="stat-total">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Sudah Masuk</div>
+          <div class="stat-value" id="stat-in">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Sudah Pulang</div>
+          <div class="stat-value" id="stat-out">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Terlambat</div>
+          <div class="stat-value" id="stat-late">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rata Istirahat</div>
+          <div class="stat-value" id="stat-avg-ist">—</div>
+        </div>
+      </div>
+
+      <!-- LEGEND -->
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(255,200,0,0.5);border:1px solid #ffd700"></div>
+          Terlambat (setelah 08:06)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(0,220,255,0.3);border:1px solid #00d4ff"></div>
+          Pulang awal (sebelum 17:00)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(255,100,180,0.4);border:1px solid #ff80c0"></div>
+          Istirahat tidak lengkap (1x scan)
+        </div>
+      </div>
+
+      <!-- TABLE LIVE -->
+      <div class="table-wrap" style="position:relative">
+        <div class="table-header">
+          <span class="table-title">LOG ABSENSI — <span id="tanggal-hari-ini"></span></span>
+          <div style="display:flex;gap:12px;align-items:center">
+            <span id="last-update">Belum ada update</span>
+            <span class="total-badge" id="badge-total">0 karyawan</span>
+          </div>
+        </div>
+        <div class="table-scroll" id="live-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:110px">Tanggal</th>
+                <th style="min-width:160px">Nama</th>
+                <th>Scan Masuk</th>
+                <th>Scan Istirahat 1</th>
+                <th>Scan Istirahat 2</th>
+                <th>Scan Pulang</th>
+                <th>Istirahat (mnt)</th>
+              </tr>
+            </thead>
+            <tbody id="live-tbody">
+              <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Menunggu data absensi...</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: FILTER -->
+    <!-- TAB: ADMIN -->
+  </div>
+</main>
+
+<!-- MODAL: ADMIN -->
+<div class="modal-overlay" id="modal-admin">
+  <div class="modal-box wide" style="max-width:1100px">
+    <div class="modal-title">🛠️ Menu Admin<button class="modal-close" onclick="closeAdminModal()">×</button></div>
+
+    <div class="admin-stab-bar">
+      <button class="admin-stab-btn active" id="astab-btn-attlog" onclick="switchAdminStab('astab-attlog',this)">📋 Koreksi Absensi</button>
+      <button class="admin-stab-btn" id="astab-btn-pegawai" onclick="switchAdminStab('astab-pegawai',this)">👥 Data Karyawan</button>
+      <button class="admin-stab-btn" id="astab-btn-filter" onclick="switchAdminStab('astab-filter',this)">🔍 Filter & Cari</button>
+      <button class="admin-stab-btn" id="astab-btn-sync" onclick="switchAdminStab('astab-sync',this);loadSyncDevices()">🔄 Sinkronisasi</button>
+    </div>
+
+    <div class="modal-body-scroll">
+
+      <!-- Sub-tab: Koreksi Absensi -->
+      <div class="admin-stab-pane active" id="astab-attlog">
+
+        <div class="admin-form-card">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">＋ Tambah Scan Manual</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+            <div class="filter-group">
+              <label>Karyawan</label>
+              <select id="adm-scan-pin" style="min-width:200px">
+                <option value="">— Pilih Karyawan —</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Waktu Scan</label>
+              <input type="datetime-local" id="adm-scan-dt" />
+            </div>
+            <div class="filter-group">
+              <label>Catatan (opsional, jadi status)</label>
+              <input type="text" id="adm-scan-catatan" placeholder="mis. Izin, Sakit, Dinas Luar..." style="min-width:200px" />
+            </div>
+            <button class="btn btn-primary" onclick="adminAddScan()">Simpan</button>
+          </div>
+          <div class="alert-err" id="adm-scan-err" style="margin-top:10px;margin-bottom:0"></div>
+          <div class="alert-ok"  id="adm-scan-ok"  style="margin-top:10px;margin-bottom:0"></div>
+        </div>
+
+        <div class="filter-bar" style="margin-bottom:16px">
+          <div class="filter-group">
+            <label>Dari</label>
+            <input type="date" id="adm-dari" />
+          </div>
+          <div class="filter-group">
+            <label>Sampai</label>
+            <input type="date" id="adm-sampai" />
+          </div>
+          <div class="filter-group">
+            <label>Karyawan (opsional)</label>
+            <select id="adm-filter-pin" style="min-width:180px">
+              <option value="">— Semua —</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="adminLoadScans()">Tampilkan</button>
+        </div>
+
+        <div class="table-wrap" style="position:relative" id="adm-raw-wrap">
+          <div class="table-header">
+            <span class="table-title">RAW SCAN LOG</span>
+            <span class="total-badge" id="adm-raw-badge">0 record</span>
+          </div>
+          <div class="table-scroll">
+            <table class="raw-scan-table">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th style="width:70px">PIN</th>
+                  <th>Waktu Scan</th>
+                  <th style="width:100px">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="adm-raw-tbody">
+                <tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-tab: Data Karyawan -->
+      <div class="admin-stab-pane" id="astab-pegawai">
+
+        <div class="admin-form-card">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">＋ Tambah Karyawan Baru</div>
+          <div class="form-row" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px">
+            <div class="filter-group"><label>PIN *</label><input type="text" id="np-pin" placeholder="mis. 123" /></div>
+            <div class="filter-group"><label>Nama *</label><input type="text" id="np-nama" placeholder="Nama lengkap" /></div>
+            <div class="filter-group"><label>NIP</label><input type="text" id="np-nip" placeholder="NIP (opsional)" /></div>
+            <div class="filter-group"><label>Telp</label><input type="text" id="np-telp" placeholder="No. telepon" /></div>
+          </div>
+          <button class="btn btn-primary" style="font-size:13px" onclick="adminAddPegawai()">Tambah Karyawan</button>
+          <div class="alert-err" id="adm-peg-err" style="margin-top:10px;margin-bottom:0"></div>
+          <div class="alert-ok"  id="adm-peg-ok"  style="margin-top:10px;margin-bottom:0"></div>
+        </div>
+
+        <div class="table-wrap" id="adm-peg-wrap">
+          <div class="table-header">
+            <span class="table-title">DAFTAR KARYAWAN</span>
+            <span class="total-badge" id="adm-peg-badge">0 karyawan</span>
+          </div>
+          <div class="table-scroll">
+            <table class="raw-scan-table">
+              <thead>
+                <tr>
+                  <th style="width:70px">PIN</th>
+                  <th>Nama</th>
+                  <th>NIP</th>
+                  <th>Telepon</th>
+                  <th style="width:80px">Status</th>
+                  <th style="width:90px">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="adm-peg-tbody">
+                <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">Memuat data...</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-tab: Filter & Cari -->
+      <div class="admin-stab-pane" id="astab-filter">
+
+        <div class="filter-bar" style="margin-bottom:16px">
+          <div class="filter-group">
+            <label>Tanggal Dari</label>
+            <input type="date" id="f-dari" />
+          </div>
+          <div class="filter-group">
+            <label>Tanggal Sampai</label>
+            <input type="date" id="f-sampai" />
+          </div>
+          <div class="filter-group">
+            <label>Nama Karyawan</label>
+            <input type="text" id="f-nama" placeholder="Ketik nama..." style="min-width:160px" />
+          </div>
+          <button class="btn btn-primary" onclick="applyFilter()">Tampilkan</button>
+          <button class="btn btn-ghost" onclick="resetFilter()">Reset</button>
+          <button class="btn btn-ghost" onclick="exportFilter()" style="color:#217346;border-color:#217346" title="Export ke Excel">⬇ Excel</button>
+        </div>
+
+        <div class="table-wrap" style="position:relative" id="filter-wrap">
+          <div class="table-header">
+            <span class="table-title">HASIL FILTER</span>
+            <span class="total-badge" id="filter-badge">0 record</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:70px">PIN</th>
+                  <th style="width:110px">Tanggal</th>
+                  <th style="min-width:150px">Nama</th>
+                  <th>Scan Masuk</th>
+                  <th>Scan Istirahat 1</th>
+                  <th>Scan Istirahat 2</th>
+                  <th>Scan Pulang</th>
+                  <th>Ist (mnt)</th>
+                </tr>
+              </thead>
+              <tbody id="filter-tbody">
+                <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-tab: Sinkronisasi -->
+      <div class="admin-stab-pane" id="astab-sync">
+        <div class="admin-form-card">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">🔄 Backfill Data dari Fingerspot API</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Tarik data absensi yang terlewat (misal saat server mati) langsung dari server Fingerspot.io. Maksimal 60 hari ke belakang.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+            <div class="filter-group">
+              <label>Mesin</label>
+              <select id="sync-device" style="min-width:200px">
+                <option value="">— Semua Mesin —</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Dari Tanggal</label>
+              <input type="date" id="sync-dari" />
+            </div>
+            <div class="filter-group">
+              <label>Sampai Tanggal</label>
+              <input type="date" id="sync-sampai" />
+            </div>
+            <button class="btn btn-primary" id="sync-btn" onclick="runBackfill()">🔄 Sinkronisasi</button>
+          </div>
+          <div class="alert-err" id="sync-err" style="margin-top:12px;margin-bottom:0"></div>
+          <div class="alert-ok"  id="sync-ok"  style="margin-top:12px;margin-bottom:0"></div>
+        </div>
+      </div>
+
+    </div><!-- /modal-body-scroll -->
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAdminModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PIN -->
+<div class="modal-overlay" id="modal-pin">
+  <div class="modal-box">
+    <div class="modal-title">🔐 Masukkan PIN<button class="modal-close" onclick="closePinModal()">×</button></div>
+    <div class="alert-err" id="pin-err">PIN salah, coba lagi.</div>
+    <div class="form-group">
+      <label>PIN Pengaturan</label>
+      <div class="pin-input-wrap">
+        <input type="password" id="pin-input" maxlength="20" placeholder="••••" onkeydown="if(event.key==='Enter')submitPin()" autocomplete="off" />
+      </div>
+      <div class="hint">Default PIN: 1234</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closePinModal()">Batal</button>
+      <button class="btn btn-primary" onclick="submitPin()">Masuk</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SETTINGS -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-box wide">
+    <div class="modal-title">⚙️ Pengaturan<button class="modal-close" onclick="closeSettingsModal()">×</button></div>
+    <div class="alert-err" id="settings-err"></div>
+    <div class="alert-ok"  id="settings-ok">Settings berhasil disimpan.</div>
+
+    <!-- Tab bar -->
+    <div class="stab-bar">
+      <button class="stab-btn active" onclick="switchStab('stab-shifts',this)">📋 Shift Kerja</button>
+      <button class="stab-btn" onclick="switchStab('stab-assign',this)">👤 Penugasan</button>
+      <button class="stab-btn" onclick="switchStab('stab-global',this)">🕐 Jadwal Global</button>
+      <button class="stab-btn" onclick="switchStab('stab-holidays',this)">🗓️ Hari Libur</button>
+      <button class="stab-btn" onclick="switchStab('stab-overrides',this)">📅 Override Harian</button>
+      <button class="stab-btn" onclick="switchStab('stab-sec',this)">🔐 Keamanan</button>
+    </div>
+
+    <div class="modal-body-scroll">
+
+      <!-- Tab: Shift Kerja -->
+      <div class="stab-pane active" id="stab-shifts">
+        <table class="settings-table" id="shifts-table">
+          <thead>
+            <tr>
+              <th>Nama Shift</th>
+              <th>Jam Masuk</th>
+              <th>Batas Terlambat</th>
+              <th>Jam Pulang</th>
+              <th style="width:80px"></th>
+            </tr>
+          </thead>
+          <tbody id="shifts-tbody"></tbody>
+        </table>
+
+        <!-- Form tambah shift -->
+        <div style="margin-top:12px">
+          <button class="btn btn-ghost" style="font-size:13px" onclick="toggleAddShift()">＋ Tambah Shift</button>
+        </div>
+        <div class="add-shift-form" id="add-shift-form">
+          <div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+            <div class="form-group" style="margin:0">
+              <label>Nama</label>
+              <input type="text" id="ns-nama" placeholder="contoh: Shift B" />
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Jam Masuk</label>
+              <input type="time" id="ns-masuk" value="08:00" oninput="autoFillBatasNew()" />
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Batas Terlambat</label>
+              <input type="time" id="ns-batas" value="08:06" />
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Jam Pulang</label>
+              <input type="time" id="ns-pulang" value="17:00" />
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" style="font-size:13px" onclick="addShift()">Tambah</button>
+            <button class="btn btn-ghost"   style="font-size:13px" onclick="toggleAddShift()">Batal</button>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:12px">Batas terlambat = jam masuk lewat ini → kuning. Jam pulang = pulang sebelum ini → cyan.</div>
+      </div>
+
+      <!-- Tab: Penugasan -->
+      <div class="stab-pane" id="stab-assign">
+        <input type="text" class="emp-search" id="emp-search" placeholder="🔍 Cari nama atau PIN..." oninput="filterEmpRows()" />
+        <table class="settings-table">
+          <thead>
+            <tr>
+              <th style="width:80px">PIN</th>
+              <th>Nama Karyawan</th>
+              <th style="width:160px">Shift</th>
+            </tr>
+          </thead>
+          <tbody id="assign-tbody">
+            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Memuat data karyawan...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tab: Jadwal Global -->
+      <div class="stab-pane" id="stab-global">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Window ini menentukan scan mana yang dikategorikan sebagai istirahat vs masuk/pulang. Berlaku untuk semua shift.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Window Istirahat Dari</label>
+            <input type="time" id="s-ist-dari" />
+            <div class="hint">Scan sebelum jam ini = masuk</div>
+          </div>
+          <div class="form-group">
+            <label>Window Istirahat Sampai</label>
+            <input type="time" id="s-ist-sampai" />
+            <div class="hint">Scan setelah jam ini = pulang</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Hari Libur -->
+      <div class="stab-pane" id="stab-holidays">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Tanggal yang ditandai libur tidak dihitung alpha di rekap karyawan.</p>
+
+        <!-- Form tambah libur -->
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="date" id="hl-tanggal" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;flex:1;min-width:140px" />
+          <input type="text" id="hl-nama" placeholder="Nama hari libur (mis. Idul Fitri)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;flex:2;min-width:180px" />
+          <button class="btn btn-primary" style="font-size:13px" onclick="addHoliday()">＋ Tambah</button>
+        </div>
+
+        <table class="settings-table" id="holidays-table">
+          <thead>
+            <tr>
+              <th style="width:130px">Tanggal</th>
+              <th>Nama Hari Libur</th>
+              <th style="width:50px"></th>
+            </tr>
+          </thead>
+          <tbody id="holidays-tbody">
+            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada hari libur</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tab: Override Harian -->
+      <div class="stab-pane" id="stab-overrides">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Override berlaku satu hari untuk karyawan tertentu atau semua. Contoh: pulang setengah hari, atau ganti shift sementara.</p>
+
+        <!-- Form tambah override -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="form-group" style="margin:0">
+              <label>Tanggal</label>
+              <input type="date" id="ov-tanggal" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>Keterangan</label>
+              <input type="text" id="ov-nama" placeholder="mis. Acara keluarga" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="form-group" style="margin:0">
+              <label>Tipe Override</label>
+              <select id="ov-tipe" onchange="toggleOvFields()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
+                <option value="pulang_awal">⏰ Pulang Lebih Awal</option>
+                <option value="ganti_shift">🔄 Ganti Shift Harian</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0" id="ov-field-pulang">
+              <label>Jam Pulang Baru</label>
+              <input type="time" id="ov-jam-pulang" value="13:00" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+            </div>
+            <div class="form-group" style="margin:0;display:none" id="ov-field-shift">
+              <label>Shift Pengganti</label>
+              <select id="ov-shift-id" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom:10px">
+            <div class="form-group" style="margin:0">
+              <label>Berlaku Untuk</label>
+              <select id="ov-berlaku" onchange="toggleOvKaryawan()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
+                <option value="semua">Semua Karyawan</option>
+                <option value="tertentu">Karyawan Tertentu</option>
+              </select>
+            </div>
+          </div>
+          <div id="ov-karyawan-wrap" style="display:none;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button type="button" class="btn btn-ghost" style="font-size:13px" onclick="openOvKaryawanPicker()">👥 Pilih Karyawan...</button>
+              <span id="ov-karyawan-label" style="font-size:13px;color:var(--text-muted)">Belum ada dipilih</span>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="font-size:13px" onclick="addOverride()">＋ Tambah Override</button>
+        </div>
+
+        <table class="settings-table" id="overrides-table">
+          <thead>
+            <tr>
+              <th style="width:110px">Tanggal</th>
+              <th>Keterangan</th>
+              <th style="width:140px">Tipe</th>
+              <th style="width:120px">Berlaku Untuk</th>
+              <th style="width:40px"></th>
+            </tr>
+          </thead>
+          <tbody id="overrides-tbody">
+            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada override</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tab: Keamanan -->
+      <div class="stab-pane" id="stab-sec">
+        <div class="form-row">
+          <div class="form-group">
+            <label>PIN Baru (opsional)</label>
+            <input type="password" id="s-pin-baru" placeholder="Kosongkan jika tidak diganti" maxlength="20" autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label>Konfirmasi PIN Baru</label>
+            <input type="password" id="s-pin-konfirm" placeholder="Ulangi PIN baru" maxlength="20" autocomplete="new-password" />
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /modal-body-scroll -->
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="margin-right:auto" onclick="openAdminModal()">🛠️ Menu Admin</button>
+      <button class="btn btn-ghost" onclick="closeSettingsModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- POPUP: PILIH KARYAWAN OVERRIDE -->
+<div id="ov-picker-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;width:360px;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.5)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-weight:600;font-size:15px">Pilih Karyawan</span>
+      <button class="modal-close" onclick="closeOvKaryawanPicker()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <input type="text" id="ov-picker-search" placeholder="🔍 Cari nama atau PIN..." oninput="filterOvPicker()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;margin-bottom:10px;width:100%;box-sizing:border-box" />
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button type="button" class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="ovPickerSelectAll()">Pilih Semua</button>
+      <button type="button" class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="ovPickerClearAll()">Hapus Semua</button>
+    </div>
+    <div id="ov-picker-list" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:4px"></div>
+    <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+      <button type="button" class="btn btn-ghost" onclick="closeOvKaryawanPicker()">Batal</button>
+      <button type="button" class="btn btn-primary" onclick="confirmOvKaryawanPicker()">Pilih</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── EMPLOYEE PICKER ──
+let _selectedEmployee = null; // { pin, nama }
+let _pegawaiList      = [];   // [{pin,nama}]
+let _currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+
+async function initPicker() {
+  try {
+    const res = await fetch('/api/pegawai');
+    const { data } = await res.json();
+    _pegawaiList = data || [];
+  } catch (e) { _pegawaiList = []; }
+  populatePickerSelect();
+}
+
+function populatePickerSelect() {
+  const sel = document.getElementById('picker-select');
+  sel.innerHTML = `<option value="">— Pilih nama karyawan —</option>` +
+    _pegawaiList.map(p =>
+      `<option value="${escHtml(String(p.pin))}">${escHtml(p.nama)}</option>`
+    ).join('');
+}
+
+function confirmPickerSelect() {
+  const sel = document.getElementById('picker-select');
+  const pin  = sel.value;
+  if (!pin) { sel.focus(); return; }
+  const emp = _pegawaiList.find(p => String(p.pin) === pin);
+  if (emp) selectEmployee(emp.pin, emp.nama);
+}
+
+function showPicker() {
+  document.getElementById('picker-overlay').classList.remove('hidden');
+  document.getElementById('picker-select').value = '';
+}
+
+async function selectEmployee(pin, nama) {
+  _selectedEmployee = { pin, nama };
+  document.getElementById('picker-overlay').classList.add('hidden');
+
+  // Update personal header
+  document.getElementById('p-avatar').textContent = (nama || '?')[0].toUpperCase();
+  document.getElementById('p-name').textContent = nama;
+  updatePersonalMeta();
+
+  // Switch to personal tab
+  switchTab('tab-personal', document.getElementById('tab-btn-personal'));
+
+  // Load data
+  await loadPersonalAbsensi();
+}
+
+function updatePersonalMeta() {
+  if (!_selectedEmployee) return;
+  const shift = getShiftForPin(_selectedEmployee.pin);
+  const shiftNama = shift ? shift.nama : '—';
+  document.getElementById('p-meta').textContent =
+    `PIN ${_selectedEmployee.pin} | Shift: ${shiftNama}`;
+}
+
+async function loadPersonalAbsensi() {
+  if (!_selectedEmployee) return;
+  const wrap = document.getElementById('personal-wrap');
+  const loading = document.createElement('div');
+  loading.className = 'loading-overlay';
+  loading.innerHTML = '<div class="spinner"></div>';
+  wrap.appendChild(loading);
+
+  // Update month label
+  const [year, month] = _currentMonth.split('-').map(Number);
+  const label = new Date(year, month - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  document.getElementById('p-month-label').textContent = label;
+  document.getElementById('p-table-month').textContent = label.toUpperCase();
+
+  try {
+    const res = await fetch(`/api/absensi/karyawan/${encodeURIComponent(_selectedEmployee.pin)}?bulan=${_currentMonth}`);
+    const { data } = await res.json();
+    renderPersonalTable(data || []);
+  } catch (e) {
+    document.getElementById('personal-tbody').innerHTML =
+      `<tr><td colspan="8" style="text-align:center;color:var(--danger);padding:20px">Gagal memuat data: ${escHtml(e.message)}</td></tr>`;
+  } finally {
+    if (wrap.contains(loading)) wrap.removeChild(loading);
+  }
+}
+
+function changeMonth(delta) {
+  let [y, m] = _currentMonth.split('-').map(Number);
+  m += delta;
+  if (m > 12) { m = 1; y++; }
+  if (m < 1)  { m = 12; y--; }
+  _currentMonth = `${y}-${String(m).padStart(2,'0')}`;
+  loadPersonalAbsensi();
+}
+
+const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+
+function renderPersonalTable(data) {
+  const tbody = document.getElementById('personal-tbody');
+  const [year, month] = _currentMonth.split('-').map(Number);
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  // Build map tanggal → row
+  const map = {};
+  for (const r of data) map[r.tanggal] = r;
+
+  const shift   = _selectedEmployee ? getShiftForPin(_selectedEmployee.pin) : null;
+  const todayStr = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD local
+
+  let totalKerja = 0, hadir = 0, telat = 0, pulangAwal = 0, alpha = 0;
+  const rows = [];
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr   = `${_currentMonth}-${String(d).padStart(2,'0')}`;
+    const dayOfWeek = new Date(dateStr + 'T00:00:00').getDay();
+    const isWeekend = dayOfWeek === 0; // Minggu saja libur, Sabtu tetap masuk
+    const holiday   = _appHolidays.find(h => h.tanggal === dateStr) || null;
+    const isHoliday = !!holiday;
+    const isFuture  = dateStr > todayStr;
+    const row       = map[dateStr];
+
+    if (!isWeekend && !isHoliday && !isFuture) {
+      totalKerja++;
+      if (row && row.scan_masuk) {
+        hadir++;
+        const batas = shift && shift.batas_terlambat ? shift.batas_terlambat + ':00' : null;
+        if (batas && row.scan_masuk > batas) telat++;
+        if (row.scan_pulang) {
+          const jamPulang = ((shift && shift.jam_pulang) || '17:00') + ':00';
+          if (row.scan_pulang < jamPulang) pulangAwal++;
+        }
+      } else if (!row || !row.scan_masuk) {
+        alpha++;
+      }
+    }
+
+    const ist1Only = row && row.scan_istirahat1 && !row.scan_istirahat2;
+    const istIncomplete = ist1Only || (row && !row.scan_istirahat1 && row.scan_istirahat2);
+
+    const ist1Cell = !row ? `<span class="td-time empty">—</span>`
+      : istIncomplete ? `<span class="cell-ist-incomplete">${row.scan_istirahat1 || row.scan_istirahat2}</span>`
+      : timeCell(row ? row.scan_istirahat1 : null, 'ist', shift);
+    const ist2Cell = !row || istIncomplete ? `<span class="td-time empty">—</span>`
+      : timeCell(row ? row.scan_istirahat2 : null, 'ist', shift);
+
+    const durasi = row && row.durasi_istirahat != null
+      ? `<span class="td-durasi${row.durasi_istirahat === 0 ? ' zero' : ''}">${row.durasi_istirahat}</span>`
+      : `<span class="td-durasi zero">—</span>`;
+
+    let statusHtml;
+    if (isWeekend) {
+      statusHtml = `<span class="td-status status-libur">Libur</span>`;
+    } else if (isHoliday) {
+      statusHtml = `<span class="td-status status-libur" title="${escHtml(holiday.nama)}">🗓️ ${escHtml(holiday.nama)}</span>`;
+    } else if (isFuture) {
+      statusHtml = `<span class="td-status status-future">—</span>`;
+    } else if (row && row.catatan) {
+      statusHtml = `<span class="td-status status-catatan" title="${escHtml(row.catatan)}">📝 ${escHtml(row.catatan)}</span>`;
+    } else if (row && row.override) {
+      const ovLabel = escHtml(row.override.nama || (row.override.tipe === 'pulang_awal' ? 'Pulang Awal' : 'Ganti Shift'));
+      statusHtml = `<span class="td-status status-override" title="${ovLabel}">✏️ ${ovLabel}</span>`;
+    } else if (row && row.scan_masuk) {
+      statusHtml = `<span class="td-status status-hadir">Hadir</span>`;
+    } else {
+      statusHtml = `<span class="td-status status-alpha">Tidak Hadir</span>`;
+    }
+
+    rows.push(`<tr class="${(isWeekend || isHoliday || isFuture) ? 'td-weekend' : ''}">
+      <td class="td-tanggal">${formatTanggal(dateStr)}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${HARI[dayOfWeek]}</td>
+      <td>${timeCell(row ? row.scan_masuk : null, 'masuk', shift)}</td>
+      <td>${ist1Cell}</td>
+      <td>${ist2Cell}</td>
+      <td>${timeCell(row ? row.scan_pulang : null, 'pulang', shift)}</td>
+      <td>${durasi}</td>
+      <td>${statusHtml}</td>
+    </tr>`);
+  }
+
+  tbody.innerHTML = rows.join('');
+  document.getElementById('p-badge').textContent = `${daysInMonth} hari`;
+
+  // Update stats
+  document.getElementById('ps-total').textContent  = totalKerja;
+  document.getElementById('ps-hadir').textContent  = hadir;
+  document.getElementById('ps-telat').textContent  = telat;
+  document.getElementById('ps-awal').textContent   = pulangAwal;
+  document.getElementById('ps-alpha').textContent  = alpha;
+}
+
+// ── POLLING (ganti Socket.io) ──
+const POLL_INTERVAL = 5000;
+let prevTotal = 0;
+let _pollOnline = false;
+
+async function pollAbsensi() {
+  try {
+    const res  = await fetch('/api/absensi/hari-ini');
+    const json = await res.json();
+    if (!json.success) throw new Error();
+
+    const { data, total } = json;
+    const timestamp = new Date().toISOString();
+
+    renderTable('live-tbody', data, true);
+    updateStats(data);
+    updateLastUpdate(timestamp);
+    document.getElementById('badge-total').textContent = `${total} karyawan`;
+
+    if (total > prevTotal && prevTotal > 0) {
+      const latest = data.find(r => r.scan_masuk);
+      if (latest) showToast('✅ Update Absensi', `${latest.nama || 'PIN ' + latest.pin}`);
+    }
+    prevTotal = total;
+
+    if (!_pollOnline) { _pollOnline = true; setStatus(true); }
+  } catch (_) {
+    if (_pollOnline) { _pollOnline = false; setStatus(false); }
+  }
+}
+
+pollAbsensi();
+setInterval(pollAbsensi, POLL_INTERVAL);
+
+// ── RENDER TABLE ──
+function timeCell(val, type, shift) {
+  if (!val) return `<span class="td-time empty">—</span>`;
+
+  if (type === 'masuk') {
+    const batas = shift && shift.batas_terlambat ? shift.batas_terlambat + ':00' : null;
+    if (batas && val > batas) return `<span class="cell-late">${val}</span>`;
+    return `<span class="td-time cell-ok">${val}</span>`;
+  }
+
+  if (type === 'pulang') {
+    const pulang = ((shift && shift.jam_pulang) || '17:00') + ':00';
+    return val < pulang
+      ? `<span class="cell-early">${val}</span>`
+      : `<span class="td-time cell-ok">${val}</span>`;
+  }
+
+  return `<span class="td-time">${val}</span>`;
+}
+
+function formatTanggal(str) {
+  if (!str) return '—';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function renderTable(tbodyId, data, isLive) {
+  const tbody = document.getElementById(tbodyId);
+
+  if (!data || !data.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-text">Belum ada data absensi</div>
+    </div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map((row, i) => {
+    const shift    = getShiftForPin(row.pin);
+    const absent   = !row.scan_masuk && !row.scan_pulang;
+    const rowClass = absent ? 'row-absent' : (i === 0 && isLive && prevTotal > 0 ? 'new-entry' : '');
+
+    const durasi = row.durasi_istirahat;
+    const durasiCell = durasi != null
+      ? `<span class="td-durasi${durasi === 0 ? ' zero' : ''}">${durasi}</span>`
+      : `<span class="td-durasi zero">—</span>`;
+
+    const ist1Only     = row.scan_istirahat1 && !row.scan_istirahat2;
+    const ist2Only     = !row.scan_istirahat1 && row.scan_istirahat2;
+    const istIncomplete = ist1Only || ist2Only;
+
+    const ist1Cell = istIncomplete
+      ? `<span class="cell-ist-incomplete">${row.scan_istirahat1 || row.scan_istirahat2}</span>`
+      : timeCell(row.scan_istirahat1, 'ist', shift);
+    const ist2Cell = istIncomplete
+      ? `<span class="td-time empty">—</span>`
+      : timeCell(row.scan_istirahat2, 'ist', shift);
+
+    const shiftLabel = shift ? `<span class="td-pin">${escHtml(shift.nama)}</span>` : '';
+
+    return `<tr class="${rowClass}">
+      <td class="td-tanggal">${formatTanggal(row.tanggal)}</td>
+      <td>
+        <div class="td-name">${escHtml(row.nama || '—')}</div>
+        <span class="td-pin">${escHtml(String(row.pin))}</span>${shiftLabel}
+      </td>
+      <td>${timeCell(row.scan_masuk, 'masuk', shift)}</td>
+      <td>${ist1Cell}</td>
+      <td>${ist2Cell}</td>
+      <td>${timeCell(row.scan_pulang, 'pulang', shift)}</td>
+      <td>${durasiCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── STATS ──
+function updateStats(data) {
+  const total  = data.length;
+  const sudahMasuk  = data.filter(r => r.scan_masuk).length;
+  const sudahPulang = data.filter(r => r.scan_pulang).length;
+  const terlambat = data.filter(r => {
+    if (!r.scan_masuk) return false;
+    const shift = getShiftForPin(r.pin);
+    const batas = shift && shift.batas_terlambat ? shift.batas_terlambat + ':00' : null;
+    return batas ? r.scan_masuk > batas : false;
+  }).length;
+
+  const durasiList = data
+    .filter(r => r.durasi_istirahat != null && r.durasi_istirahat > 0)
+    .map(r => r.durasi_istirahat);
+  const avgIst = durasiList.length
+    ? Math.round(durasiList.reduce((a,b) => a+b, 0) / durasiList.length)
+    : null;
+
+  document.getElementById('stat-total').textContent  = total;
+  document.getElementById('stat-in').textContent     = sudahMasuk;
+  document.getElementById('stat-out').textContent    = sudahPulang;
+  document.getElementById('stat-late').textContent   = terlambat;
+  document.getElementById('stat-avg-ist').textContent = avgIst != null ? avgIst + ' mnt' : '—';
+}
+
+function updateLastUpdate(ts) {
+  document.getElementById('last-update').textContent =
+    'Update: ' + new Date(ts).toLocaleTimeString('id-ID');
+}
+
+// ── FILTER TAB ──
+async function applyFilter() {
+  const dari   = document.getElementById('f-dari').value;
+  const sampai = document.getElementById('f-sampai').value;
+  const nama   = (document.getElementById('f-nama').value || '').trim().toLowerCase();
+
+  const wrap = document.getElementById('filter-wrap');
+  const loading = document.createElement('div');
+  loading.className = 'loading-overlay';
+  loading.innerHTML = '<div class="spinner"></div>';
+  wrap.appendChild(loading);
+
+  try {
+    const params = new URLSearchParams();
+    if (dari)   params.append('tanggal_dari', dari);
+    if (sampai) params.append('tanggal_sampai', sampai);
+
+    const res  = await fetch(`/api/absensi/filter?${params}`);
+    const { data } = await res.json();
+
+    let filtered = data || [];
+    if (nama) filtered = filtered.filter(r => (r.nama || '').toLowerCase().includes(nama));
+
+    // sort: PIN numerik asc, lalu tanggal asc
+    filtered.sort((a, b) => {
+      const pa = parseInt(a.pin) || 0, pb = parseInt(b.pin) || 0;
+      return pa !== pb ? pa - pb : a.tanggal.localeCompare(b.tanggal);
+    });
+
+    _lastFilterData = filtered;
+    renderFilterTable(filtered);
+    document.getElementById('filter-badge').textContent = `${filtered.length} record`;
+  } catch (e) {
+    alert('Gagal mengambil data: ' + e.message);
+  } finally {
+    if (wrap.contains(loading)) wrap.removeChild(loading);
+  }
+}
+
+function renderFilterTable(data) {
+  const tbody = document.getElementById('filter-tbody');
+  if (!data || !data.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Tidak ada data</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(row => {
+    const shift = getShiftForPin(row.pin);
+    const durasi = row.durasi_istirahat != null
+      ? `<span class="td-durasi${row.durasi_istirahat===0?' zero':''}">${row.durasi_istirahat}</span>`
+      : `<span class="td-durasi zero">—</span>`;
+    const ist1Only = row.scan_istirahat1 && !row.scan_istirahat2;
+    const ist2Only = !row.scan_istirahat1 && row.scan_istirahat2;
+    const istInc   = ist1Only || ist2Only;
+    const ist1Cell = istInc ? `<span class="cell-ist-incomplete">${row.scan_istirahat1||row.scan_istirahat2}</span>` : timeCell(row.scan_istirahat1,'ist',shift);
+    const ist2Cell = istInc ? `<span class="td-time empty">—</span>` : timeCell(row.scan_istirahat2,'ist',shift);
+    return `<tr>
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">${escHtml(String(row.pin))}</td>
+      <td class="td-tanggal">${formatTanggal(row.tanggal)}</td>
+      <td><div class="td-name">${escHtml(row.nama||'—')}</div></td>
+      <td>${timeCell(row.scan_masuk,'masuk',shift)}</td>
+      <td>${ist1Cell}</td>
+      <td>${ist2Cell}</td>
+      <td>${timeCell(row.scan_pulang,'pulang',shift)}</td>
+      <td>${durasi}</td>
+    </tr>`;
+  }).join('');
+}
+
+let _lastFilterData = [];
+
+function exportFilter() {
+  if (!_lastFilterData || !_lastFilterData.length) {
+    alert('Tampilkan data dulu sebelum export.');
+    return;
+  }
+
+  // Hanya baris yang punya scan_masuk (skip hari kosong)
+  const rows = _lastFilterData
+    .filter(r => r.scan_masuk)
+    .map(r => {
+      const dt = (jam) => jam ? `${r.tanggal} ${jam}` : '';
+      return [
+        `Attendance: ${r.nama || r.pin}`,
+        r.nama || String(r.pin),
+        'Attendance',
+        dt(r.scan_masuk),
+        dt(r.scan_istirahat1),
+        dt(r.scan_istirahat2),
+        dt(r.scan_pulang)
+      ];
+    });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+
+  const dari   = document.getElementById('f-dari').value   || 'dari';
+  const sampai = document.getElementById('f-sampai').value || 'sampai';
+  XLSX.writeFile(wb, `Attendance_${dari}_${sampai}.xlsx`);
+}
+
+function resetFilter() {
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('f-dari').value   = today;
+  document.getElementById('f-sampai').value = today;
+  document.getElementById('f-nama').value   = '';
+  document.getElementById('filter-tbody').innerHTML =
+    `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>`;
+  document.getElementById('filter-badge').textContent = '0 record';
+}
+
+// ── UI HELPERS ──
+function setStatus(online) {
+  const dot    = document.getElementById('live-dot');
+  const status = document.getElementById('conn-status');
+  if (online) {
+    dot.className = 'live-dot';
+    status.textContent = 'LIVE';
+    status.style.color = 'var(--accent2)';
+  } else {
+    dot.className = 'live-dot offline';
+    status.textContent = 'OFFLINE';
+    status.style.color = 'var(--danger)';
+  }
+}
+
+function showToast(title, body) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<div class="toast-title">${escHtml(title)}</div><div class="toast-body">${escHtml(body)}</div>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4200);
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// Clock
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('id-ID');
+}, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-ID');
+
+// Tanggal header
+document.getElementById('tanggal-hari-ini').textContent =
+  new Date().toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+// Default filter date
+const todayStr = new Date().toISOString().slice(0, 10);
+document.getElementById('f-dari').value   = todayStr;
+document.getElementById('f-sampai').value = todayStr;
+
+// ── SETTINGS ──
+let _sessionPin   = null;
+let _appShifts      = [];      // [{id,nama,jam_masuk,batas_terlambat,jam_pulang}]
+let _empShifts      = {};      // {pin: shift_id}
+let _appHolidays    = [];      // [{tanggal:'YYYY-MM-DD', nama:'...'}]
+let _dailyOverrides = [];      // [{id,tanggal,nama,tipe,jam_pulang,shift_id,berlaku_untuk}]
+// _pegawaiList declared above in picker section
+
+// Cari shift untuk PIN tertentu, fallback ke shift pertama / default
+function getShiftForPin(pin) {
+  const id = _empShifts[String(pin)];
+  return _appShifts.find(s => s.id === id) || _appShifts[0] || { batas_terlambat:'', jam_pulang:'17:00' };
+}
+
+async function loadAppSettings() {
+  try {
+    const res  = await fetch('/api/settings');
+    const { data } = await res.json();
+    _appShifts      = data.shifts          || [];
+    _empShifts      = data.employee_shifts || {};
+    _appHolidays    = data.holidays        || [];
+    _dailyOverrides = data.daily_overrides || [];
+    updatePersonalMeta();
+  } catch (e) { /* pakai default */ }
+}
+
+// Init on load
+(async () => {
+  await loadAppSettings();
+  await initPicker(); // loads pegawai list and shows picker
+})();
+
+// ── PIN MODAL ──
+let _pinModalMode = 'settings'; // 'settings' | 'admin'
+let _adminPin = null;
+
+function openAdminPinModal() {
+  _pinModalMode = 'admin';
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-err').classList.remove('show');
+  document.getElementById('modal-pin').classList.add('open');
+  setTimeout(() => document.getElementById('pin-input').focus(), 100);
+}
+
+function openPinModal() {
+  _pinModalMode = 'settings';
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-err').classList.remove('show');
+  document.getElementById('modal-pin').classList.add('open');
+  setTimeout(() => document.getElementById('pin-input').focus(), 100);
+}
+function closePinModal() { document.getElementById('modal-pin').classList.remove('open'); }
+
+async function submitPin() {
+  const pin = document.getElementById('pin-input').value.trim();
+  if (!pin) return;
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin, data: {} })
+    });
+    if (res.status === 401) {
+      document.getElementById('pin-err').classList.add('show');
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-input').focus();
+      return;
+    }
+    _sessionPin = pin;
+    closePinModal();
+    if (_pinModalMode === 'admin') {
+      _adminPin = pin;
+      adminInit();
+      document.getElementById('modal-admin').classList.add('open');
+    } else {
+      openSettingsModal();
+    }
+  } catch (e) {
+    document.getElementById('pin-err').textContent = 'Gagal terhubung ke server.';
+    document.getElementById('pin-err').classList.add('show');
+  }
+}
+
+// ── SETTINGS MODAL ──
+async function openSettingsModal() {
+  document.getElementById('settings-err').classList.remove('show');
+  document.getElementById('settings-ok').classList.remove('show');
+  document.getElementById('s-pin-baru').value    = '';
+  document.getElementById('s-pin-konfirm').value = '';
+
+  // Pastikan tab pertama aktif
+  switchStab('stab-shifts', document.querySelector('.stab-btn'));
+
+  try {
+    const res  = await fetch('/api/settings');
+    const { data } = await res.json();
+    _appShifts      = data.shifts          || [];
+    _empShifts      = data.employee_shifts || {};
+    _appHolidays    = data.holidays        || [];
+    _dailyOverrides = data.daily_overrides || [];
+    document.getElementById('s-ist-dari').value   = data.ist_window_dari   || '10:00';
+    document.getElementById('s-ist-sampai').value = data.ist_window_sampai || '16:10';
+  } catch (e) {}
+
+  renderShiftsTable();
+  renderHolidaysTable();
+  renderOverridesTable();
+  await loadEmployeesForAssign();
+  document.getElementById('modal-settings').classList.add('open');
+}
+
+function closeSettingsModal() {
+  document.getElementById('modal-settings').classList.remove('open');
+}
+
+function switchStab(id, btn) {
+  document.querySelectorAll('.stab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.stab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ── SHIFTS TABLE ──
+function renderShiftsTable() {
+  const tbody = document.getElementById('shifts-tbody');
+  if (!_appShifts.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada shift</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = _appShifts.map((s, i) => `
+    <tr id="shift-row-${i}">
+      <td><span id="sv-nama-${i}">${escHtml(s.nama)}</span>
+          <input id="si-nama-${i}" type="text" value="${escHtml(s.nama)}" style="display:none" /></td>
+      <td><span id="sv-masuk-${i}">${s.jam_masuk}</span>
+          <input id="si-masuk-${i}" type="time" value="${s.jam_masuk}" style="display:none" oninput="autoFillBatas(${i})" /></td>
+      <td><span id="sv-batas-${i}">${s.batas_terlambat}</span>
+          <input id="si-batas-${i}" type="time" value="${s.batas_terlambat}" style="display:none" /></td>
+      <td><span id="sv-pulang-${i}">${s.jam_pulang}</span>
+          <input id="si-pulang-${i}" type="time" value="${s.jam_pulang}" style="display:none" /></td>
+      <td style="white-space:nowrap">
+        <span id="shift-view-btns-${i}">
+          <button class="btn-icon" onclick="editShiftRow(${i})" title="Edit">✏️</button>
+          <button class="btn-icon del" onclick="deleteShift(${i})" title="Hapus">🗑️</button>
+        </span>
+        <span id="shift-edit-btns-${i}" style="display:none">
+          <button class="btn-icon" onclick="saveShiftRow(${i})" title="Simpan">✅</button>
+          <button class="btn-icon" onclick="cancelShiftRow(${i})" title="Batal">❌</button>
+        </span>
+      </td>
+    </tr>`).join('');
+}
+
+function editShiftRow(i) {
+  ['nama','masuk','batas','pulang'].forEach(f => {
+    document.getElementById(`sv-${f}-${i}`).style.display = 'none';
+    document.getElementById(`si-${f}-${i}`).style.display = '';
+  });
+  document.getElementById(`shift-view-btns-${i}`).style.display = 'none';
+  document.getElementById(`shift-edit-btns-${i}`).style.display = '';
+}
+
+function cancelShiftRow(i) {
+  // Reset inputs ke nilai asal
+  const s = _appShifts[i];
+  document.getElementById(`si-nama-${i}`).value  = s.nama;
+  document.getElementById(`si-masuk-${i}`).value = s.jam_masuk;
+  document.getElementById(`si-batas-${i}`).value = s.batas_terlambat;
+  document.getElementById(`si-pulang-${i}`).value= s.jam_pulang;
+  ['nama','masuk','batas','pulang'].forEach(f => {
+    document.getElementById(`sv-${f}-${i}`).style.display = '';
+    document.getElementById(`si-${f}-${i}`).style.display = 'none';
+  });
+  document.getElementById(`shift-view-btns-${i}`).style.display = '';
+  document.getElementById(`shift-edit-btns-${i}`).style.display = 'none';
+}
+
+function saveShiftRow(i) {
+  _appShifts[i] = {
+    ..._appShifts[i],
+    nama:             document.getElementById(`si-nama-${i}`).value.trim(),
+    jam_masuk:        document.getElementById(`si-masuk-${i}`).value,
+    batas_terlambat:  document.getElementById(`si-batas-${i}`).value,
+    jam_pulang:       document.getElementById(`si-pulang-${i}`).value,
+  };
+  renderShiftsTable();
+  renderAssignTable();
+}
+
+function addMinutesToTime(hhmm, menit) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const total = h * 60 + m + menit;
+  const hh = String(Math.floor(total / 60) % 24).padStart(2, '0');
+  const mm = String(total % 60).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
+function autoFillBatas(i) {
+  const masuk = document.getElementById(`si-masuk-${i}`).value;
+  if (!masuk) return;
+  document.getElementById(`si-batas-${i}`).value = addMinutesToTime(masuk, 6);
+}
+
+function autoFillBatasNew() {
+  const masuk = document.getElementById('ns-masuk').value;
+  if (!masuk) return;
+  document.getElementById('ns-batas').value = addMinutesToTime(masuk, 6);
+}
+
+function deleteShift(i) {
+  if (!confirm(`Hapus shift "${_appShifts[i].nama}"?`)) return;
+  const deletedId = _appShifts[i].id;
+  _appShifts.splice(i, 1);
+  // Karyawan yang pakai shift ini → hapus penugasan
+  for (const pin of Object.keys(_empShifts)) {
+    if (_empShifts[pin] === deletedId) delete _empShifts[pin];
+  }
+  renderShiftsTable();
+  renderAssignTable();
+}
+
+function toggleAddShift() {
+  document.getElementById('add-shift-form').classList.toggle('open');
+}
+
+function addShift() {
+  const nama   = document.getElementById('ns-nama').value.trim();
+  const masuk  = document.getElementById('ns-masuk').value;
+  const batas  = document.getElementById('ns-batas').value;
+  const pulang = document.getElementById('ns-pulang').value;
+  if (!nama) { alert('Nama shift tidak boleh kosong'); return; }
+  const id = nama.toLowerCase().replace(/\s+/g,'-') + '-' + Date.now();
+  _appShifts.push({ id, nama, jam_masuk: masuk, batas_terlambat: batas, jam_pulang: pulang });
+  document.getElementById('ns-nama').value = '';
+  document.getElementById('add-shift-form').classList.remove('open');
+  renderShiftsTable();
+  renderAssignTable();
+}
+
+// ── EMPLOYEE ASSIGN ──
+async function loadEmployeesForAssign() {
+  if (!_pegawaiList.length) {
+    try {
+      const res = await fetch('/api/pegawai');
+      const { data } = await res.json();
+      _pegawaiList = data || [];
+    } catch (e) { _pegawaiList = []; }
+  }
+  renderAssignTable();
+}
+
+function renderAssignTable(filter) {
+  const tbody   = document.getElementById('assign-tbody');
+  const keyword = (filter || document.getElementById('emp-search').value || '').toLowerCase();
+  const list    = keyword
+    ? _pegawaiList.filter(p => p.nama.toLowerCase().includes(keyword) || String(p.pin).includes(keyword))
+    : _pegawaiList;
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Tidak ada karyawan</td></tr>`;
+    return;
+  }
+
+  const shiftOpts = _appShifts.map(s =>
+    `<option value="${escHtml(s.id)}">${escHtml(s.nama)}</option>`
+  ).join('');
+
+  tbody.innerHTML = list.map(p => {
+    const assigned = _empShifts[String(p.pin)] || '';
+    const opts = `<option value="">— Default —</option>` +
+      _appShifts.map(s =>
+        `<option value="${escHtml(s.id)}" ${assigned === s.id ? 'selected' : ''}>${escHtml(s.nama)}</option>`
+      ).join('');
+    return `<tr>
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">${escHtml(String(p.pin))}</td>
+      <td>${escHtml(p.nama)}</td>
+      <td><select onchange="assignShift('${escHtml(String(p.pin))}',this.value)">${opts}</select></td>
+    </tr>`;
+  }).join('');
+}
+
+function assignShift(pin, shiftId) {
+  if (shiftId) _empShifts[pin] = shiftId;
+  else delete _empShifts[pin];
+}
+
+function filterEmpRows() {
+  renderAssignTable(document.getElementById('emp-search').value);
+}
+
+// ── HOLIDAYS ──
+function renderHolidaysTable() {
+  const tbody = document.getElementById('holidays-tbody');
+  if (!_appHolidays.length) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada hari libur</td></tr>`;
+    return;
+  }
+  const sorted = [..._appHolidays].sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+  tbody.innerHTML = sorted.map((h, i) => {
+    const d = new Date(h.tanggal + 'T00:00:00');
+    const label = d.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    return `<tr>
+      <td style="font-family:var(--font-mono);font-size:12px">${h.tanggal}</td>
+      <td>
+        <div style="font-size:13px">${escHtml(h.nama || '—')}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${label}</div>
+      </td>
+      <td><button class="btn-icon del" onclick="deleteHoliday('${escHtml(h.tanggal)}')" title="Hapus">🗑️</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function addHoliday() {
+  const tanggal = document.getElementById('hl-tanggal').value;
+  const nama    = document.getElementById('hl-nama').value.trim();
+  if (!tanggal) { alert('Pilih tanggal hari libur'); return; }
+  if (_appHolidays.find(h => h.tanggal === tanggal)) { alert('Tanggal ini sudah ada di daftar libur'); return; }
+  _appHolidays.push({ tanggal, nama: nama || 'Hari Libur' });
+  document.getElementById('hl-tanggal').value = '';
+  document.getElementById('hl-nama').value    = '';
+  renderHolidaysTable();
+}
+
+function deleteHoliday(tanggal) {
+  _appHolidays = _appHolidays.filter(h => h.tanggal !== tanggal);
+  renderHolidaysTable();
+}
+
+// ── DAILY OVERRIDES ──
+function toggleOvFields() {
+  const tipe = document.getElementById('ov-tipe').value;
+  document.getElementById('ov-field-pulang').style.display = tipe === 'pulang_awal' ? '' : 'none';
+  document.getElementById('ov-field-shift').style.display  = tipe === 'ganti_shift' ? '' : 'none';
+}
+
+function toggleOvKaryawan() {
+  const val = document.getElementById('ov-berlaku').value;
+  document.getElementById('ov-karyawan-wrap').style.display = val === 'tertentu' ? '' : 'none';
+}
+
+function populateOvShiftSelect() {
+  const sel = document.getElementById('ov-shift-id');
+  sel.innerHTML = _appShifts.map(s =>
+    `<option value="${escHtml(s.id)}">${escHtml(s.nama)}</option>`
+  ).join('') || '<option value="">— Belum ada shift —</option>';
+}
+
+function populateOvKaryawanSelect() { /* no-op, replaced by picker */ }
+
+let _ovSelectedPins = [];
+
+function openOvKaryawanPicker() {
+  document.getElementById('ov-picker-search').value = '';
+  renderOvPickerList('');
+  document.getElementById('ov-picker-overlay').style.display = 'flex';
+}
+
+function closeOvKaryawanPicker() {
+  document.getElementById('ov-picker-overlay').style.display = 'none';
+}
+
+function filterOvPicker() {
+  renderOvPickerList(document.getElementById('ov-picker-search').value);
+}
+
+function renderOvPickerList(keyword) {
+  const kw = (keyword || '').toLowerCase();
+  const list = kw
+    ? _pegawaiList.filter(p => p.nama.toLowerCase().includes(kw) || String(p.pin).includes(kw))
+    : _pegawaiList;
+  const el = document.getElementById('ov-picker-list');
+  if (!list.length) { el.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:13px">Tidak ditemukan</div>`; return; }
+  el.innerHTML = list.map(p => {
+    const checked = _ovSelectedPins.includes(String(p.pin)) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;background:${checked ? 'rgba(0,180,255,0.08)' : 'transparent'};border:1px solid ${checked ? 'var(--accent)' : 'transparent'};transition:.15s" id="ov-row-${p.pin}">
+      <input type="checkbox" value="${escHtml(String(p.pin))}" ${checked} onchange="toggleOvPin('${escHtml(String(p.pin))}')" style="accent-color:var(--accent);width:16px;height:16px" />
+      <div>
+        <div style="font-size:13px">${escHtml(p.nama)}</div>
+        <div style="font-size:11px;color:var(--text-muted)">PIN ${escHtml(String(p.pin))}</div>
+      </div>
+    </label>`;
+  }).join('');
+}
+
+function toggleOvPin(pin) {
+  const idx = _ovSelectedPins.indexOf(pin);
+  if (idx === -1) _ovSelectedPins.push(pin); else _ovSelectedPins.splice(idx, 1);
+  renderOvPickerList(document.getElementById('ov-picker-search').value);
+}
+
+function ovPickerSelectAll() {
+  _ovSelectedPins = _pegawaiList.map(p => String(p.pin));
+  renderOvPickerList(document.getElementById('ov-picker-search').value);
+}
+
+function ovPickerClearAll() {
+  _ovSelectedPins = [];
+  renderOvPickerList(document.getElementById('ov-picker-search').value);
+}
+
+function confirmOvKaryawanPicker() {
+  closeOvKaryawanPicker();
+  const label = document.getElementById('ov-karyawan-label');
+  if (!_ovSelectedPins.length) {
+    label.textContent = 'Belum ada dipilih';
+  } else {
+    const names = _ovSelectedPins.map(pin => {
+      const p = _pegawaiList.find(x => String(x.pin) === pin);
+      return p ? p.nama.split(' ')[0] : pin;
+    });
+    label.textContent = names.length <= 3
+      ? names.join(', ')
+      : `${names.slice(0,3).join(', ')} +${names.length-3} lainnya`;
+  }
+}
+
+function updateOvKaryawanLabel() {
+  confirmOvKaryawanPicker(); // re-use label logic without closing picker
+}
+
+function addOverride() {
+  const tanggal = document.getElementById('ov-tanggal').value;
+  const nama    = document.getElementById('ov-nama').value.trim();
+  const tipe    = document.getElementById('ov-tipe').value;
+  const berlaku = document.getElementById('ov-berlaku').value;
+
+  if (!tanggal) { alert('Pilih tanggal'); return; }
+
+  const entry = {
+    id: 'ov-' + Date.now(),
+    tanggal,
+    nama: nama || (tipe === 'pulang_awal' ? 'Pulang Awal' : 'Ganti Shift'),
+    tipe
+  };
+
+  if (tipe === 'pulang_awal') {
+    const jamPulang = document.getElementById('ov-jam-pulang').value;
+    if (!jamPulang) { alert('Isi jam pulang baru'); return; }
+    entry.jam_pulang = jamPulang;
+  } else {
+    const shiftId = document.getElementById('ov-shift-id').value;
+    if (!shiftId) { alert('Pilih shift pengganti'); return; }
+    entry.shift_id = shiftId;
+    const shift = _appShifts.find(s => s.id === shiftId);
+    entry.jam_pulang = shift ? shift.jam_pulang : '17:00';
+  }
+
+  if (berlaku === 'semua') {
+    entry.berlaku_untuk = 'semua';
+  } else {
+    if (!_ovSelectedPins.length) { alert('Pilih minimal satu karyawan'); return; }
+    entry.berlaku_untuk = [..._ovSelectedPins];
+  }
+
+  _dailyOverrides.push(entry);
+  document.getElementById('ov-tanggal').value = '';
+  document.getElementById('ov-nama').value    = '';
+  _ovSelectedPins = [];
+  document.getElementById('ov-karyawan-label').textContent = 'Belum ada dipilih';
+  renderOverridesTable();
+}
+
+function deleteOverride(id) {
+  _dailyOverrides = _dailyOverrides.filter(o => o.id !== id);
+  renderOverridesTable();
+}
+
+function renderOverridesTable() {
+  // Refresh selects saat tab dibuka
+  populateOvShiftSelect();
+  populateOvKaryawanSelect();
+
+  const tbody = document.getElementById('overrides-tbody');
+  const sorted = [..._dailyOverrides].sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+  if (!sorted.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada override</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = sorted.map(o => {
+    const d = new Date(o.tanggal + 'T00:00:00');
+    const label = d.toLocaleDateString('id-ID', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+    const tipeLabel = o.tipe === 'pulang_awal'
+      ? `⏰ Pulang ${o.jam_pulang}`
+      : `🔄 ${_appShifts.find(s => s.id === o.shift_id)?.nama || o.shift_id}`;
+    const berlakuLabel = o.berlaku_untuk === 'semua'
+      ? 'Semua'
+      : Array.isArray(o.berlaku_untuk)
+        ? o.berlaku_untuk.map(pin => {
+            const p = _pegawaiList.find(x => String(x.pin) === String(pin));
+            return p ? p.nama.split(' ')[0] : pin;
+          }).join(', ')
+        : String(o.berlaku_untuk);
+    return `<tr>
+      <td style="font-size:12px">
+        <div style="font-family:var(--font-mono)">${o.tanggal}</div>
+        <div style="color:var(--text-muted);font-size:11px">${label}</div>
+      </td>
+      <td style="font-size:13px">${escHtml(o.nama)}</td>
+      <td style="font-size:12px">${tipeLabel}</td>
+      <td style="font-size:12px;color:var(--text-muted)" title="${escHtml(berlakuLabel)}">${escHtml(berlakuLabel.length > 30 ? berlakuLabel.slice(0,28)+'…' : berlakuLabel)}</td>
+      <td><button class="btn-icon del" onclick="deleteOverride('${escHtml(o.id)}')" title="Hapus">🗑️</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SAVE SETTINGS ──
+async function saveSettings() {
+  const pinBaru    = document.getElementById('s-pin-baru').value.trim();
+  const pinKonfirm = document.getElementById('s-pin-konfirm').value.trim();
+  const errEl = document.getElementById('settings-err');
+  const okEl  = document.getElementById('settings-ok');
+  errEl.classList.remove('show');
+  okEl.classList.remove('show');
+
+  if (pinBaru && pinBaru !== pinKonfirm) {
+    errEl.textContent = 'Konfirmasi PIN tidak cocok.';
+    errEl.classList.add('show');
+    switchStab('stab-sec', document.querySelectorAll('.stab-btn')[3]);
+    return;
+  }
+
+  const payload = {
+    shifts:            _appShifts,
+    employee_shifts:   _empShifts,
+    holidays:          _appHolidays,
+    daily_overrides:   _dailyOverrides,
+    ist_window_dari:   document.getElementById('s-ist-dari').value,
+    ist_window_sampai: document.getElementById('s-ist-sampai').value,
+  };
+  if (pinBaru) payload.pin_baru = pinBaru;
+
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: _sessionPin, data: payload })
+    });
+    const json = await res.json();
+    if (!json.success) {
+      errEl.textContent = json.message || 'Gagal menyimpan.';
+      errEl.classList.add('show');
+      return;
+    }
+    if (pinBaru) _sessionPin = pinBaru;
+    await loadAppSettings();
+    okEl.classList.add('show');
+    setTimeout(closeSettingsModal, 1200);
+  } catch (e) {
+    errEl.textContent = 'Gagal terhubung ke server.';
+    errEl.classList.add('show');
+  }
+}
+
+// Tutup modal klik di luar box
+document.getElementById('modal-pin').addEventListener('click', function(e) {
+  if (e.target === this) closePinModal();
+});
+document.getElementById('modal-settings').addEventListener('click', function(e) {
+  if (e.target === this) closeSettingsModal();
+});
+
+// ── ADMIN ──
+function openAdminModal() {
+  _adminPin = _sessionPin;
+  closeSettingsModal();
+  adminInit();
+  document.getElementById('modal-admin').classList.add('open');
+}
+
+function closeAdminModal() {
+  document.getElementById('modal-admin').classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('modal-admin').addEventListener('click', function(e) {
+    if (e.target === this) closeAdminModal();
+  });
+});
+
+async function loadSyncDevices() {
+  try {
+    const res  = await fetch('/api/sync/devices', {
+      headers: { 'x-admin-pin': _sessionPin }
+    });
+    const json = await res.json();
+    if (!json.success) return;
+    const sel = document.getElementById('sync-device');
+    sel.innerHTML = '<option value="">— Semua Mesin —</option>' +
+      json.data.map(id => `<option value="${escHtml(id)}">${escHtml(id)}</option>`).join('');
+  } catch (_) {}
+}
+
+async function runBackfill() {
+  const dari     = document.getElementById('sync-dari').value;
+  const sampai   = document.getElementById('sync-sampai').value;
+  const cloudId  = document.getElementById('sync-device').value;
+  const errEl    = document.getElementById('sync-err');
+  const okEl     = document.getElementById('sync-ok');
+  const btn      = document.getElementById('sync-btn');
+
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+
+  if (!dari || !sampai) {
+    errEl.textContent = 'Pilih rentang tanggal terlebih dahulu.';
+    errEl.classList.add('show'); return;
+  }
+  if (dari > sampai) {
+    errEl.textContent = 'Tanggal dari tidak boleh lebih besar dari sampai.';
+    errEl.classList.add('show'); return;
+  }
+
+  btn.textContent = '⏳ Memproses...'; btn.disabled = true;
+
+  try {
+    const payload = { start_date: dari, end_date: sampai };
+    if (cloudId) payload.cloud_id = cloudId;
+
+    const res  = await fetch('/api/sync/backfill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _sessionPin },
+      body: JSON.stringify({ pin: _sessionPin, data: payload })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.message);
+    const mesin = cloudId || 'semua mesin';
+    okEl.textContent = `✅ Selesai (${mesin}) — ${json.inserted} data baru, ${json.duplicate} duplikat diabaikan (total dari API: ${json.total}).`;
+    okEl.classList.add('show');
+  } catch (e) {
+    errEl.textContent = '❌ ' + e.message;
+    errEl.classList.add('show');
+  } finally {
+    btn.textContent = '🔄 Sinkronisasi'; btn.disabled = false;
+  }
+}
+
+function switchAdminStab(id, btn) {
+  document.querySelectorAll('.admin-stab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.admin-stab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function adminInit() {
+  // Populate dropdown karyawan
+  const opts = `<option value="">— Semua —</option>` +
+    _pegawaiList.map(p => `<option value="${escHtml(String(p.pin))}">${escHtml(p.nama)} (${escHtml(String(p.pin))})</option>`).join('');
+  document.getElementById('adm-filter-pin').innerHTML = opts;
+  document.getElementById('adm-scan-pin').innerHTML =
+    `<option value="">— Pilih Karyawan —</option>` +
+    _pegawaiList.map(p => `<option value="${escHtml(String(p.pin))}">${escHtml(p.nama)} (${escHtml(String(p.pin))})</option>`).join('');
+
+  // Default filter today
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('adm-dari').value   = today;
+  document.getElementById('adm-sampai').value = today;
+  if (document.getElementById('f-dari') && !document.getElementById('f-dari').value)
+    document.getElementById('f-dari').value = today;
+  if (document.getElementById('f-sampai') && !document.getElementById('f-sampai').value)
+    document.getElementById('f-sampai').value = today;
+
+  // Default datetime-local = now
+  const now = new Date();
+  now.setSeconds(0, 0);
+  document.getElementById('adm-scan-dt').value = now.toISOString().slice(0, 16);
+
+  adminLoadPegawai();
+}
+
+// ── ATT_LOG CRUD ──
+async function adminLoadScans() {
+  const dari   = document.getElementById('adm-dari').value;
+  const sampai = document.getElementById('adm-sampai').value;
+  const pin    = document.getElementById('adm-filter-pin').value;
+  const wrap   = document.getElementById('adm-raw-wrap');
+  const loading = document.createElement('div');
+  loading.className = 'loading-overlay';
+  loading.innerHTML = '<div class="spinner"></div>';
+  wrap.appendChild(loading);
+
+  try {
+    const params = new URLSearchParams({ dari, sampai });
+    if (pin) params.append('pin', pin);
+    const res  = await fetch(`/api/att_log/raw?${params}`);
+    const { data } = await res.json();
+    renderRawScans(data || []);
+    document.getElementById('adm-raw-badge').textContent = `${(data||[]).length} record`;
+  } catch (e) {
+    document.getElementById('adm-raw-tbody').innerHTML =
+      `<tr><td colspan="5" style="color:var(--danger);padding:20px;text-align:center">${escHtml(e.message)}</td></tr>`;
+  } finally {
+    if (wrap.contains(loading)) wrap.removeChild(loading);
+  }
+}
+
+function renderRawScans(data) {
+  const tbody = document.getElementById('adm-raw-tbody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Tidak ada data</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map((r, i) => `
+    <tr id="raw-row-${i}">
+      <td>${escHtml(r.nama || '—')}</td>
+      <td style="font-family:var(--font-mono);font-size:12px">${escHtml(String(r.pin))}</td>
+      <td>
+        <span id="raw-view-dt-${i}" style="font-family:var(--font-mono);font-size:13px">${escHtml(r.scan_date)}</span>
+        <input id="raw-edit-dt-${i}" type="datetime-local" value="${r.scan_date.replace(' ','T').slice(0,16)}" style="display:none" />
+      </td>
+      <td style="white-space:nowrap">
+        <span id="raw-view-btns-${i}">
+          <button class="btn-icon" onclick="adminEditScanRow(${i})" title="Edit">✏️</button>
+          <button class="btn-icon del" onclick="adminDeleteScan(${i},'${escHtml(r.sn)}','${escHtml(r.scan_date)}','${escHtml(String(r.pin))}')" title="Hapus">🗑️</button>
+        </span>
+        <span id="raw-edit-btns-${i}" style="display:none">
+          <button class="btn-icon" onclick="adminSaveScan(${i},'${escHtml(r.sn)}','${escHtml(r.scan_date)}','${escHtml(String(r.pin))}')" title="Simpan">✅</button>
+          <button class="btn-icon" onclick="adminCancelScanRow(${i})" title="Batal">❌</button>
+        </span>
+      </td>
+    </tr>`).join('');
+  // simpan data untuk referensi
+  window._rawScanData = data;
+}
+
+function adminEditScanRow(i) {
+  document.getElementById(`raw-view-dt-${i}`).style.display = 'none';
+  document.getElementById(`raw-edit-dt-${i}`).style.display = '';
+  document.getElementById(`raw-view-btns-${i}`).style.display = 'none';
+  document.getElementById(`raw-edit-btns-${i}`).style.display = '';
+}
+
+function adminCancelScanRow(i) {
+  document.getElementById(`raw-view-dt-${i}`).style.display = '';
+  document.getElementById(`raw-edit-dt-${i}`).style.display = 'none';
+  document.getElementById(`raw-view-btns-${i}`).style.display = '';
+  document.getElementById(`raw-edit-btns-${i}`).style.display = 'none';
+}
+
+async function adminSaveScan(i, sn, scan_date_lama, pin) {
+  const newDt = document.getElementById(`raw-edit-dt-${i}`).value;
+  if (!newDt) return;
+  const scan_date_baru = newDt.replace('T', ' ') + ':00';
+  try {
+    const res = await fetch('/api/att_log/scan', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      body: JSON.stringify({ data: { sn, scan_date_lama, pin, scan_date_baru } })
+    });
+    const json = await res.json();
+    if (!json.success) { alert(json.message); return; }
+    showToast('✅ Berhasil', 'Waktu scan diperbarui');
+    adminLoadScans();
+  } catch (e) { alert(e.message); }
+}
+
+async function adminDeleteScan(i, sn, scan_date, pin) {
+  if (!confirm(`Hapus scan:\n${pin} — ${scan_date}?`)) return;
+  try {
+    const res = await fetch('/api/att_log/scan', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      body: JSON.stringify({ data: { sn, scan_date, pin } })
+    });
+    const json = await res.json();
+    if (!json.success) { alert(json.message); return; }
+    showToast('🗑️ Dihapus', `Scan ${scan_date} dihapus`);
+    adminLoadScans();
+  } catch (e) { alert(e.message); }
+}
+
+async function adminAddScan() {
+  const pin = document.getElementById('adm-scan-pin').value;
+  const dt  = document.getElementById('adm-scan-dt').value;
+  const errEl = document.getElementById('adm-scan-err');
+  const okEl  = document.getElementById('adm-scan-ok');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+
+  if (!pin || !dt) { errEl.textContent = 'Pilih karyawan dan waktu scan'; errEl.classList.add('show'); return; }
+  const scan_date = dt.replace('T', ' ') + ':00';
+  const catatan   = document.getElementById('adm-scan-catatan').value.trim();
+  try {
+    const res = await fetch('/api/att_log/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      body: JSON.stringify({ data: { pin, scan_date, catatan } })
+    });
+    const json = await res.json();
+    if (!json.success) { errEl.textContent = json.message; errEl.classList.add('show'); return; }
+    okEl.textContent = catatan ? `Scan ditambahkan — catatan: "${catatan}"` : 'Scan manual berhasil ditambahkan';
+    okEl.classList.add('show');
+    document.getElementById('adm-scan-catatan').value = '';
+    showToast('✅ Berhasil', 'Scan manual ditambahkan');
+  } catch (e) { errEl.textContent = e.message; errEl.classList.add('show'); }
+}
+
+// ── PEGAWAI CRUD ──
+async function adminLoadPegawai() {
+  try {
+    const res  = await fetch('/api/pegawai');
+    const { data } = await res.json();
+    _pegawaiList = data || [];
+    renderAdminPegawai();
+    document.getElementById('adm-peg-badge').textContent = `${_pegawaiList.length} karyawan`;
+  } catch (e) { /* skip */ }
+}
+
+function renderAdminPegawai() {
+  const tbody = document.getElementById('adm-peg-tbody');
+  if (!_pegawaiList.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">Tidak ada karyawan</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = _pegawaiList.map((p, i) => `
+    <tr id="peg-row-${i}">
+      <td style="font-family:var(--font-mono);font-size:12px">${escHtml(String(p.pin))}</td>
+      <td>
+        <span id="pv-nama-${i}">${escHtml(p.nama)}</span>
+        <input id="pi-nama-${i}" type="text" value="${escHtml(p.nama)}" style="display:none;width:140px" />
+      </td>
+      <td>
+        <span id="pv-nip-${i}">${escHtml(p.nip||'—')}</span>
+        <input id="pi-nip-${i}" type="text" value="${escHtml(p.nip||'')}" style="display:none;width:110px" />
+      </td>
+      <td>
+        <span id="pv-telp-${i}">${escHtml(p.telp||'—')}</span>
+        <input id="pi-telp-${i}" type="text" value="${escHtml(p.telp||'')}" style="display:none;width:120px" />
+      </td>
+      <td>
+        <span id="pv-status-${i}" class="td-status ${p.status==1?'status-hadir':'status-alpha'}">${p.status==1?'Aktif':'Nonaktif'}</span>
+        <select id="pi-status-${i}" style="display:none;font-size:12px">
+          <option value="1" ${p.status==1?'selected':''}>Aktif</option>
+          <option value="0" ${p.status==0?'selected':''}>Nonaktif</option>
+        </select>
+      </td>
+      <td style="white-space:nowrap">
+        <span id="peg-view-btns-${i}">
+          <button class="btn-icon" onclick="adminEditPegawaiRow(${i})" title="Edit">✏️</button>
+          <button class="btn-icon del" onclick="adminDeletePegawai('${escHtml(String(p.pin))}','${escHtml(p.nama)}')" title="Hapus">🗑️</button>
+        </span>
+        <span id="peg-edit-btns-${i}" style="display:none">
+          <button class="btn-icon" onclick="adminSavePegawai(${i},'${escHtml(String(p.pin))}')" title="Simpan">✅</button>
+          <button class="btn-icon" onclick="adminCancelPegawaiRow(${i})" title="Batal">❌</button>
+        </span>
+      </td>
+    </tr>`).join('');
+}
+
+function adminEditPegawaiRow(i) {
+  ['nama','nip','telp','status'].forEach(f => {
+    document.getElementById(`pv-${f}-${i}`).style.display = 'none';
+    document.getElementById(`pi-${f}-${i}`).style.display = '';
+  });
+  document.getElementById(`peg-view-btns-${i}`).style.display = 'none';
+  document.getElementById(`peg-edit-btns-${i}`).style.display = '';
+}
+
+function adminCancelPegawaiRow(i) {
+  ['nama','nip','telp','status'].forEach(f => {
+    document.getElementById(`pv-${f}-${i}`).style.display = '';
+    document.getElementById(`pi-${f}-${i}`).style.display = 'none';
+  });
+  document.getElementById(`peg-view-btns-${i}`).style.display = '';
+  document.getElementById(`peg-edit-btns-${i}`).style.display = 'none';
+}
+
+async function adminSavePegawai(i, pin) {
+  const nama   = document.getElementById(`pi-nama-${i}`).value.trim();
+  const nip    = document.getElementById(`pi-nip-${i}`).value.trim();
+  const telp   = document.getElementById(`pi-telp-${i}`).value.trim();
+  const status = document.getElementById(`pi-status-${i}`).value;
+  if (!nama) { alert('Nama tidak boleh kosong'); return; }
+  try {
+    const res = await fetch(`/api/pegawai/${encodeURIComponent(pin)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      body: JSON.stringify({ data: { pegawai_nama: nama, pegawai_nip: nip, pegawai_telp: telp, pegawai_status: parseInt(status) } })
+    });
+    const json = await res.json();
+    if (!json.success) { alert(json.message); return; }
+    showToast('✅ Berhasil', `${nama} diperbarui`);
+    await adminLoadPegawai();
+    populatePickerSelect();
+  } catch (e) { alert(e.message); }
+}
+
+async function adminDeletePegawai(pin, nama) {
+  if (!confirm(`Hapus karyawan "${nama}" (PIN: ${pin})?\nData absensi tidak ikut terhapus.`)) return;
+  try {
+    const res = await fetch(`/api/pegawai/${encodeURIComponent(pin)}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      body: JSON.stringify({})
+    });
+    const json = await res.json();
+    if (!json.success) { alert(json.message); return; }
+    showToast('🗑️ Dihapus', `${nama} dihapus`);
+    await adminLoadPegawai();
+    populatePickerSelect();
+  } catch (e) { alert(e.message); }
+}
+
+async function adminAddPegawai() {
+  const pin  = document.getElementById('np-pin').value.trim();
+  const nama = document.getElementById('np-nama').value.trim();
+  const nip  = document.getElementById('np-nip').value.trim();
+  const telp = document.getElementById('np-telp').value.trim();
+  const errEl = document.getElementById('adm-peg-err');
+  const okEl  = document.getElementById('adm-peg-ok');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+
+  if (!pin || !nama) { errEl.textContent = 'PIN dan Nama wajib diisi'; errEl.classList.add('show'); return; }
+  try {
+    const res = await fetch('/api/pegawai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      body: JSON.stringify({ data: { pegawai_pin: pin, pegawai_nama: nama, pegawai_nip: nip, pegawai_telp: telp } })
+    });
+    const json = await res.json();
+    if (!json.success) { errEl.textContent = json.message; errEl.classList.add('show'); return; }
+    okEl.textContent = `Karyawan "${nama}" berhasil ditambahkan`;
+    okEl.classList.add('show');
+    document.getElementById('np-pin').value = document.getElementById('np-nama').value =
+    document.getElementById('np-nip').value = document.getElementById('np-telp').value = '';
+    await adminLoadPegawai();
+    populatePickerSelect();
+    showToast('✅ Berhasil', `${nama} ditambahkan`);
+  } catch (e) { errEl.textContent = e.message; errEl.classList.add('show'); }
+}
+
+// ── THEME ──
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+  document.getElementById('theme-btn').textContent = dark ? '☀️' : '🌙';
+}
+
+
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = !isDark;
+  localStorage.setItem('theme', next ? 'dark' : 'light');
+  applyTheme(next);
+}
+
+// Init theme dari localStorage, default light
+const savedTheme = localStorage.getItem('theme');
+applyTheme(savedTheme === 'dark');
+</script>
+</body>
+</html>
