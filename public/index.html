@@ -1470,9 +1470,13 @@
             <div style="margin-bottom:10px">
               <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px">Hari Kerja</label>
               <div style="display:flex;gap:8px;flex-wrap:wrap">
-                ${[['1','Sen'],['2','Sel'],['3','Rab'],['4','Kam'],['5','Jum'],['6','Sab'],['0','Min']].map(([v,l])=>
-                  `<label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="${v}" ${['1','2','3','4','5','6'].includes(v)?'checked':''}> ${l}</label>`
-                ).join('')}
+                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="1" checked> Sen</label>
+                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="2" checked> Sel</label>
+                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="3" checked> Rab</label>
+                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="4" checked> Kam</label>
+                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="5" checked> Jum</label>
+                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="6"> Sab</label>
+                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="0"> Min</label>
               </div>
             </div>
             <div style="display:flex;gap:8px">
@@ -2554,7 +2558,7 @@ function renderShiftsTable() {
           <input id="si-pulang-${i}" type="time" value="${s.jam_pulang}" style="display:none" /></td>
       <td>
         <span id="sv-hari-${i}" style="font-size:11px">${formatHariKerja(hari)}</span>
-        <div id="si-hari-${i}" style="display:none;display:flex;gap:4px;flex-wrap:wrap">${hariCheckboxes}</div>
+        <div id="si-hari-${i}" style="display:none;gap:4px;flex-wrap:wrap">${hariCheckboxes}</div>
       </td>
       <td style="white-space:nowrap">
         <span id="shift-view-btns-${i}">
