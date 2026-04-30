@@ -31,8 +31,15 @@ class AbsensiMandiriController extends Controller
         // Verifikasi password user
         $password = $request->input('password', '');
         $pegawai  = DB::table('pegawai')->where('pegawai_pin', $pin)->first();
-        if (! $pegawai || ! $pegawai->password || ! Hash::check($password, $pegawai->password)) {
-            return response()->json(['success' => false, 'message' => 'Password salah'], 401);
+
+        if (! $pegawai) {
+            return response()->json(['success' => false, 'message' => 'Data karyawan tidak ditemukan'], 404);
+        }
+        if (! $pegawai->password) {
+            return response()->json(['success' => false, 'message' => 'Anda belum mengatur password. Ganti password dulu di ⚙️ Pengaturan Akun.'], 403);
+        }
+        if (! Hash::check($password, $pegawai->password)) {
+            return response()->json(['success' => false, 'message' => 'Password salah, coba lagi.'], 401);
         }
 
         $tanggal  = $request->input('tanggal');

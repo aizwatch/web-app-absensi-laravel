@@ -1357,6 +1357,7 @@
           <button class="btn btn-primary" onclick="applyFilter()">Tampilkan</button>
           <button class="btn btn-ghost" onclick="resetFilter()">Reset</button>
           <button class="btn btn-ghost" onclick="exportFilter()" style="color:#217346;border-color:#217346" title="Export ke Excel">⬇ Excel</button>
+          <button class="btn btn-ghost" onclick="openLaporanModal()" style="color:#c0392b;border-color:#c0392b" title="Cetak Laporan PDF">🖨 Laporan</button>
         </div>
 
         <div class="table-wrap" style="position:relative" id="filter-wrap">
@@ -1647,6 +1648,26 @@
 </div>
 
 <div id="toast-container"></div>
+
+<!-- MODAL: LAPORAN PDF -->
+<div class="modal-overlay" id="modal-laporan">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-title">🖨 Cetak Laporan<button class="modal-close" onclick="closeLaporanModal()">×</button></div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px" id="lap-range-info">Memuat...</div>
+    <div class="form-group">
+      <label>Karyawan</label>
+      <select id="lap-pin" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
+        <option value="">— Semua Karyawan —</option>
+      </select>
+    </div>
+    <div class="hint" style="margin-bottom:12px">Sumber data: rekap Filter & Cari yang sedang aktif.</div>
+    <div class="alert-err" id="lap-err" style="margin-bottom:10px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeLaporanModal()">Batal</button>
+      <button class="btn btn-primary" id="lap-btn" onclick="generateLaporan()">🖨 Generate PDF</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: KONFIRMASI PASSWORD ABSENSI MANDIRI -->
 <div class="modal-overlay" id="modal-am-confirm">
@@ -3264,6 +3285,289 @@ async function adminAddPegawai() {
   } catch (e) { errEl.textContent = e.message; errEl.classList.add('show'); }
 }
 
+// ── LAPORAN PDF ──
+
+function openLaporanModal() {
+  const errEl = document.getElementById('lap-err');
+  errEl.classList.remove('show');
+
+  // Cek apakah filter sudah dijalankan
+  if (!_lastFilterData || !_lastFilterData.length) {
+    errEl.textContent = 'Tampilkan data di Filter & Cari dulu sebelum cetak laporan.';
+    errEl.classList.add('show');
+    document.getElementById('modal-laporan').classList.add('open');
+    return;
+  }
+
+  // Deteksi range dari data (bulan pertama yang muncul)
+  const dari   = document.getElementById('f-dari').value;
+  const sampai = document.getElementById('f-sampai').value;
+  const bulanInfo = dari
+    ? `${dari} s/d ${sampai || dari}`
+    : 'sesuai filter aktif';
+  document.getElementById('lap-range-info').textContent = `Data: ${bulanInfo} (${_lastFilterData.length} record)`;
+
+  // Populate dropdown dari data yang sudah ada
+  const pins = {};
+  _lastFilterData.forEach(r => { pins[String(r.pin)] = r.nama; });
+  const sel = document.getElementById('lap-pin');
+  sel.innerHTML = '<option value="">— Semua Karyawan —</option>' +
+    Object.entries(pins)
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([pin, nama]) =>
+        `<option value="${escHtml(pin)}">${escHtml(nama)} (${escHtml(pin)})</option>`
+      ).join('');
+
+  document.getElementById('modal-laporan').classList.add('open');
+}
+
+function closeLaporanModal() {
+  document.getElementById('modal-laporan').classList.remove('open');
+}
+
+function generateLaporan() {
+  const pin   = document.getElementById('lap-pin').value;
+  const errEl = document.getElementById('lap-err');
+  errEl.classList.remove('show');
+
+  if (!_lastFilterData || !_lastFilterData.length) {
+    errEl.textContent = 'Tidak ada data. Tampilkan dulu di Filter & Cari.';
+    errEl.classList.add('show'); return;
+  }
+
+  // Pakai data dari filter yang sudah dimuat — tidak fetch ulang
+  let data = [..._lastFilterData];
+  if (pin) data = data.filter(r => String(r.pin) === pin);
+
+  if (!data.length) {
+    errEl.textContent = 'Tidak ada data untuk karyawan ini.'; errEl.classList.add('show'); return;
+  }
+
+  // Deteksi bulan dari tanggal di data / dari input filter
+  const dari   = document.getElementById('f-dari').value;
+  const bulan  = dari ? dari.slice(0, 7)
+    : data[0].tanggal.slice(0, 7);
+
+  closeLaporanModal();
+  printLaporanPdf(data, bulan, pin);
+}
+
+function printLaporanPdf(data, bulan, filterPin) {
+  const [yr, mo]   = bulan.split('-');
+  const bulanLabel = new Date(yr, mo - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+  // Semua hari dalam bulan
+  const daysInMonth = new Date(+yr, +mo, 0).getDate();
+  const allDays = Array.from({ length: daysInMonth }, (_, i) => {
+    const d = String(i + 1).padStart(2, '0');
+    return `${yr}-${mo}-${d}`;
+  });
+
+  // Group by pin dari att_log → index by tanggal per pin
+  const byPin = {};
+  data.forEach(r => {
+    const key = String(r.pin);
+    if (!byPin[key]) byPin[key] = { nama: r.nama, pin: key, byDate: {} };
+    byPin[key].byDate[r.tanggal] = r;
+  });
+
+  // Kalau filter pin spesifik + tidak ada data sama sekali → tambah entry kosong
+  if (filterPin && !byPin[filterPin]) {
+    const emp = (_pegawaiList || []).find(p => String(p.pin) === filterPin);
+    if (emp) byPin[filterPin] = { nama: emp.nama, pin: filterPin, byDate: {} };
+  }
+
+  // Build rows per pegawai: 1 row per hari (ada data atau kosong)
+  const pegawaiList = Object.values(byPin)
+    .sort((a, b) => a.nama.localeCompare(b.nama))
+    .map(p => ({
+      ...p,
+      rows: allDays.map(tgl => p.byDate[tgl] || { tanggal: tgl, pin: p.pin }) // kosong jika tidak ada
+    }));
+
+  // Ambil shift settings dari app state
+  const appShifts = _appShifts || [];
+  const empShifts = _empShifts || {};
+
+  function getShift(pin) {
+    const id = empShifts[String(pin)];
+    return appShifts.find(s => s.id === id) || appShifts[0] || { batas_terlambat: '08:06', jam_pulang: '17:00' };
+  }
+
+  function t(val) { return val ? val.slice(0, 5) : ''; }
+
+  // Hari libur dari settings
+  const holidays = (_appHolidays || []).map(h => h.tanggal);
+
+  function rowHtml(r, shift) {
+    const tglDate   = new Date(r.tanggal + 'T00:00:00');
+    const dayOfWeek = tglDate.getDay(); // 0=Minggu
+    const isSunday  = dayOfWeek === 0;
+    const isHoliday = holidays.includes(r.tanggal);
+    const tglFmt    = tglDate.toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+    const dayName   = tglDate.toLocaleDateString('id-ID', { weekday:'short' });
+
+    // Hari libur / Minggu → tampil abu-abu, tidak alpha
+    if (isSunday || isHoliday) {
+      const label = isHoliday
+        ? ((_appHolidays||[]).find(h=>h.tanggal===r.tanggal)?.nama || 'Libur')
+        : 'Minggu';
+      return `<tr style="background:#f0f0f0;color:#999">
+        <td>${tglFmt} <span style="font-size:7.5px">${dayName}</span></td>
+        <td colspan="5" style="text-align:center;font-style:italic;font-size:8px">${label}</td>
+        <td></td>
+      </tr>`;
+    }
+
+    const absent     = !r.scan_masuk;
+    const batas      = shift ? (shift.batas_terlambat + ':00') : null;
+    const jamPulang  = ((shift && shift.jam_pulang) || '17:00') + ':00';
+    const terlambat  = r.scan_masuk && batas && r.scan_masuk > batas;
+    const pulangCepat= r.scan_pulang && r.scan_pulang < jamPulang;
+
+    let rowBg = '', statusCell = '';
+    if (r.catatan) {
+      rowBg = '#fff3cd';
+      statusCell = `<span class="s-ket">${r.catatan}</span>`;
+    } else if (absent) {
+      rowBg = '#fde8ec';
+      statusCell = `<span class="s-alpha">Tidak Hadir</span>`;
+    } else if (terlambat) {
+      rowBg = '#fff8e1';
+      statusCell = `<span class="s-late">Terlambat</span>`;
+    } else {
+      statusCell = `<span class="s-hadir">Hadir</span>`;
+    }
+
+    const masukStyle  = terlambat    ? 'color:#b7791f;font-weight:700' : (r.scan_masuk  ? 'color:#276749;font-weight:700' : '');
+    const pulangStyle = pulangCepat  ? 'color:#2b6cb0'                 : (r.scan_pulang ? 'color:#276749' : '');
+    const ist1 = r.scan_istirahat1 && !r.scan_istirahat2
+      ? `<span style="color:#e67e22">${t(r.scan_istirahat1)}</span>` : (t(r.scan_istirahat1) || '—');
+    const durasi = r.durasi_istirahat != null ? r.durasi_istirahat : '—';
+
+    return `<tr style="background:${rowBg}">
+      <td>${tglFmt} <span style="font-size:7.5px;color:#888">${dayName}</span></td>
+      <td style="${masukStyle}">${t(r.scan_masuk) || '—'}</td>
+      <td>${ist1}</td>
+      <td>${t(r.scan_istirahat2) || '—'}</td>
+      <td style="${pulangStyle}">${t(r.scan_pulang) || '—'}</td>
+      <td style="text-align:center">${durasi}</td>
+      <td>${statusCell}</td>
+    </tr>`;
+  }
+
+  function cardHtml(p) {
+    const shift  = getShift(p.pin);
+    const rows   = p.rows.map(r => rowHtml(r, shift)).join('');
+
+    // Hanya hitung hari kerja (bukan Minggu & hari libur)
+    const workDays = p.rows.filter(r => {
+      const d = new Date(r.tanggal + 'T00:00:00');
+      return d.getDay() !== 0 && !holidays.includes(r.tanggal);
+    });
+    const hadir = workDays.filter(r => r.scan_masuk && !r.catatan).length;
+    const alpha = workDays.filter(r => !r.scan_masuk && !r.catatan).length;
+    const ket   = workDays.filter(r => r.catatan).length;
+    const telat = workDays.filter(r => {
+      if (!r.scan_masuk || r.catatan) return false;
+      const batas = shift ? (shift.batas_terlambat + ':00') : null;
+      return batas && r.scan_masuk > batas;
+    }).length;
+
+    return `
+      <div class="emp-card">
+        <div class="emp-title">PT. LONG TIME — Laporan Absensi ${escHtml(bulanLabel)}</div>
+        <div class="emp-header">
+          <span class="emp-name">${escHtml(p.nama)}</span>
+          <span class="emp-pin">PIN: ${escHtml(p.pin)}</span>
+          <span class="emp-shift">${shift ? escHtml(shift.nama || '') : ''}</span>
+        </div>
+        <table class="rec-table">
+          <thead>
+            <tr>
+              <th style="width:44px">Tgl</th>
+              <th>Masuk</th>
+              <th>Ist 1</th>
+              <th>Ist 2</th>
+              <th>Pulang</th>
+              <th style="width:34px;text-align:center">Ist(m)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="summary">
+          <span class="s-hadir">Hadir: <b>${hadir}</b></span>
+          <span class="s-late">Terlambat: <b>${telat}</b></span>
+          <span class="s-alpha">Tidak Hadir: <b>${alpha}</b></span>
+          <span class="s-ket">Keterangan: <b>${ket}</b></span>
+          <span style="margin-left:auto;color:#333">Hari Kerja: <b>${workDays.length}</b> | Total: <b>${p.rows.length}</b> hari</span>
+        </div>
+      </div>`;
+  }
+
+  // 2 karyawan per halaman — masing2 punya judul sendiri (bisa dipotong jadi 2)
+  let pages = '';
+  for (let i = 0; i < pegawaiList.length; i += 2) {
+    const a = pegawaiList[i];
+    const b = pegawaiList[i + 1];
+    pages += `<div class="page">
+      <div class="two-col">
+        ${cardHtml(a)}
+        ${b ? cardHtml(b) : '<div class="emp-card" style="visibility:hidden"></div>'}
+      </div>
+    </div>`;
+  }
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Laporan Absensi ${escHtml(bulanLabel)}</title>
+<style>
+  @page { size: A4 landscape; margin: 8mm; }
+  * { box-sizing: border-box; font-family: Arial, sans-serif; }
+  body { margin: 0; font-size: 9px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width:100%; page-break-after: always; }
+  .page:last-child { page-break-after: avoid; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:0; border:1px solid #333; }
+  .emp-card { padding:7px 8px; border-right:1px solid #aaa; }
+  .emp-card:last-child { border-right:none; }
+  .emp-title {
+    text-align:center; font-size:9.5px; font-weight:700; letter-spacing:.3px;
+    background:#1a365d; color:#fff; padding:4px 6px; margin:-7px -8px 6px;
+  }
+  .emp-header { display:flex; align-items:center; gap:8px;
+    border-bottom:2px solid #1a365d; padding-bottom:4px; margin-bottom:4px; }
+  .emp-name  { font-weight:700; font-size:10px; flex:1; }
+  .emp-pin   { color:#555; font-size:8.5px; }
+  .emp-shift { color:#2b6cb0; font-size:8.5px; margin-left:auto; }
+  .rec-table { width:100%; border-collapse:collapse; font-size:8.5px; }
+  .rec-table th {
+    background:#2d3748; color:#fff; padding:3px 4px; text-align:left; font-weight:600;
+  }
+  .rec-table td { padding:2px 4px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+  .rec-table tr:nth-child(even) td { filter: brightness(0.97); }
+  .summary {
+    display:flex; gap:10px; align-items:center; margin-top:5px;
+    padding-top:4px; border-top:2px solid #2d3748; font-size:8px; flex-wrap:wrap;
+  }
+  /* Status colors — semua ada di print */
+  .s-hadir { color:#276749; font-weight:700; }
+  .s-late  { color:#b7791f; font-weight:700; }
+  .s-alpha { color:#c53030; font-weight:700; }
+  .s-ket   { color:#744210; font-weight:700; }
+</style></head><body>${pages}</body></html>`;
+
+  const win = window.open('', '_blank', 'width=1280,height=900');
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('modal-laporan').addEventListener('click', function(e) {
+    if (e.target === this) closeLaporanModal();
+  });
+});
+
 // ── ABSENSI MANDIRI ──
 
 const AM_TIPE_HINTS = {
@@ -3348,11 +3652,14 @@ function closeAmConfirm() {
 }
 
 async function submitAmConfirmed() {
-  const pw   = document.getElementById('am-confirm-pw').value;
-  const ceEl = document.getElementById('am-confirm-err');
+  const pw    = document.getElementById('am-confirm-pw').value;
+  const ceEl  = document.getElementById('am-confirm-err');
+  const kirimBtn = document.querySelector('#modal-am-confirm .btn-primary');
   ceEl.classList.remove('show');
 
   if (!pw) { ceEl.textContent = 'Password wajib diisi.'; ceEl.classList.add('show'); return; }
+
+  kirimBtn.textContent = '⏳ Memproses...'; kirimBtn.disabled = true;
 
   const tanggal = document.getElementById('am-tanggal').value;
   const jam     = document.getElementById('am-jam').value;
@@ -3376,13 +3683,10 @@ async function submitAmConfirmed() {
     });
     const json = await res.json();
 
-    if (res.status === 401) {
-      ceEl.textContent = json.message || 'Password salah.'; ceEl.classList.add('show'); return;
-    }
+    // Semua error (auth, password salah, validasi) tetap tampil di modal
     if (!json.success) {
-      closeAmConfirm();
-      const errEl = document.getElementById('am-err');
-      errEl.textContent = json.message; errEl.classList.add('show'); return;
+      ceEl.textContent = json.message || 'Terjadi kesalahan.';
+      ceEl.classList.add('show'); return;
     }
 
     closeAmConfirm();
@@ -3396,6 +3700,8 @@ async function submitAmConfirmed() {
     if (_authUser?.role === 'admin') await loadAdminRequests();
   } catch (e) {
     ceEl.textContent = 'Gagal terhubung ke server.'; ceEl.classList.add('show');
+  } finally {
+    kirimBtn.textContent = 'Kirim'; kirimBtn.disabled = false;
   }
 }
 
