@@ -3468,7 +3468,7 @@ function printLaporanPdf(data, bulan, filterPin) {
     if (isSunday || isHoliday || isNonWorkDay) {
       const label = isHoliday
         ? ((_appHolidays||[]).find(h=>h.tanggal===r.tanggal)?.nama || 'Libur')
-        : isSunday ? 'Minggu' : 'Libur';
+        : isSunday ? 'Minggu' : (shift && shift.nama ? shift.nama : 'Libur');
       return `<tr style="background:#f0f0f0;color:#999">
         <td>${tglFmt} <span style="font-size:7.5px">${dayName}</span></td>
         <td colspan="5" style="text-align:center;font-style:italic;font-size:8px">${label}</td>
