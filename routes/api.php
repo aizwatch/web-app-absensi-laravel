@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\AbsensiMandiriController;
 use App\Http\Controllers\AttLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PegawaiController;
@@ -54,6 +55,18 @@ Route::post('webhook/fingerspot', [WebhookController::class, 'fingerspot']);
 // ── Sync / Backfill ──
 Route::get('sync/devices', [SyncController::class, 'devices']);
 Route::middleware([AuthMiddleware::class . ':admin'])->post('sync/backfill', [SyncController::class, 'backfill']);
+
+// ── Absensi Mandiri ──
+Route::middleware(AuthMiddleware::class)->group(function () {
+    Route::post('absensi-mandiri',              [AbsensiMandiriController::class, 'store']);
+    Route::get('absensi-mandiri/mine',          [AbsensiMandiriController::class, 'myRequests']);
+    Route::get('absensi-mandiri/{id}/attachment',[AbsensiMandiriController::class, 'attachment']);
+});
+Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
+    Route::get('absensi-mandiri',               [AbsensiMandiriController::class, 'adminList']);
+    Route::post('absensi-mandiri/{id}/approve', [AbsensiMandiriController::class, 'approve']);
+    Route::post('absensi-mandiri/{id}/reject',  [AbsensiMandiriController::class, 'reject']);
+});
 
 // ── Departemen placeholder ──
 Route::get('departemen', fn() => response()->json(['success' => true, 'data' => []]));

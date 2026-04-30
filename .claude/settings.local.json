@@ -7,7 +7,8 @@
       "Bash(rtk tree *)",
       "Bash(rtk wc *)",
       "Bash(rtk grep *)",
-      "Bash(rtk git *)"
+      "Bash(rtk git *)",
+      "Bash(php artisan *)"
     ]
   }
 }
