@@ -351,6 +351,14 @@
     padding: 4px 10px;
     display: inline-block;
   }
+  .cell-very-late {
+    background: rgba(220,34,68,0.18);
+    color: var(--danger);
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 4px 10px;
+    display: inline-block;
+  }
 
   .cell-early {
     background: rgba(0,220,255,0.15);
@@ -1938,6 +1946,7 @@ function timeCell(val, type, shift) {
 
   if (type === 'masuk') {
     const batas = shift && shift.batas_terlambat ? shift.batas_terlambat + ':00' : null;
+    if (val >= '08:30:00') return `<span class="cell-very-late">${val}</span>`;
     if (batas && val > batas) return `<span class="cell-late">${val}</span>`;
     return `<span class="td-time cell-ok">${val}</span>`;
   }
@@ -3422,7 +3431,8 @@ function printLaporanPdf(data, bulan, filterPin) {
     const absent     = !r.scan_masuk;
     const batas      = shift ? (shift.batas_terlambat + ':00') : null;
     const jamPulang  = ((shift && shift.jam_pulang) || '17:00') + ':00';
-    const terlambat  = r.scan_masuk && batas && r.scan_masuk > batas;
+    const veryLate   = r.scan_masuk && r.scan_masuk >= '08:30:00';
+    const terlambat  = !veryLate && r.scan_masuk && batas && r.scan_masuk > batas;
     const pulangCepat= r.scan_pulang && r.scan_pulang < jamPulang;
 
     let rowBg = '', statusCell = '';
@@ -3432,6 +3442,9 @@ function printLaporanPdf(data, bulan, filterPin) {
     } else if (absent) {
       rowBg = '#fde8ec';
       statusCell = `<span class="s-alpha">Tidak Hadir</span>`;
+    } else if (veryLate) {
+      rowBg = '#fde8ec';
+      statusCell = `<span class="s-alpha">1/2 Hari</span>`;
     } else if (terlambat) {
       rowBg = '#fff8e1';
       statusCell = `<span class="s-late">Terlambat</span>`;
@@ -3439,7 +3452,9 @@ function printLaporanPdf(data, bulan, filterPin) {
       statusCell = `<span class="s-hadir">Hadir</span>`;
     }
 
-    const masukStyle  = terlambat    ? 'color:#b7791f;font-weight:700' : (r.scan_masuk  ? 'color:#276749;font-weight:700' : '');
+    const masukStyle  = veryLate     ? 'color:#c53030;font-weight:700'
+                      : terlambat    ? 'color:#b7791f;font-weight:700'
+                      : (r.scan_masuk ? 'color:#276749;font-weight:700' : '');
     const pulangStyle = pulangCepat  ? 'color:#2b6cb0'                 : (r.scan_pulang ? 'color:#276749' : '');
     const ist1 = r.scan_istirahat1 && !r.scan_istirahat2
       ? `<span style="color:#e67e22">${t(r.scan_istirahat1)}</span>` : (t(r.scan_istirahat1) || '—');
@@ -3468,8 +3483,9 @@ function printLaporanPdf(data, bulan, filterPin) {
     const hadir = workDays.filter(r => r.scan_masuk && !r.catatan).length;
     const alpha = workDays.filter(r => !r.scan_masuk && !r.catatan).length;
     const ket   = workDays.filter(r => r.catatan).length;
+    const telatSekali = workDays.filter(r => r.scan_masuk && !r.catatan && r.scan_masuk >= '08:30:00').length;
     const telat = workDays.filter(r => {
-      if (!r.scan_masuk || r.catatan) return false;
+      if (!r.scan_masuk || r.catatan || r.scan_masuk >= '08:30:00') return false;
       const batas = shift ? (shift.batas_terlambat + ':00') : null;
       return batas && r.scan_masuk > batas;
     }).length;
@@ -3499,6 +3515,7 @@ function printLaporanPdf(data, bulan, filterPin) {
         <div class="summary">
           <span class="s-hadir">Hadir: <b>${hadir}</b></span>
           <span class="s-late">Terlambat: <b>${telat}</b></span>
+          <span class="s-alpha">1/2 Hari: <b>${telatSekali}</b></span>
           <span class="s-alpha">Tidak Hadir: <b>${alpha}</b></span>
           <span class="s-ket">Keterangan: <b>${ket}</b></span>
           <span style="margin-left:auto;color:#333">Hari Kerja: <b>${workDays.length}</b> | Total: <b>${p.rows.length}</b> hari</span>

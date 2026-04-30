@@ -91,6 +91,36 @@ class AbsensiService
             ];
         }
 
+        // Tambah virtual rows dari scan_notes yang tidak punya att_log (misal: izin tanpa scan)
+        $existingKeys = array_flip(array_map(fn($r) => "{$r['tanggal']}|{$r['pin']}", $result));
+        foreach ($settings['scan_notes'] ?? [] as $note) {
+            $pin     = (string)($note['pin']     ?? '');
+            $tanggal = $note['tanggal'] ?? '';
+            if (! $pin || ! $tanggal) continue;
+            if ($tanggal < $dari || $tanggal > $sampai) continue;
+            if (isset($existingKeys["{$tanggal}|{$pin}"])) continue; // sudah ada dari att_log
+
+            $pegawai = DB::table('pegawai')->where('pegawai_pin', $pin)->first();
+            $shiftId = $settings['employee_shifts'][(string)$pin] ?? 'normal';
+            $shift   = collect($settings['shifts'])->firstWhere('id', $shiftId) ?? $settings['shifts'][0] ?? null;
+
+            $result[] = [
+                'tanggal'          => $tanggal,
+                'pin'              => $pin,
+                'nama'             => $pegawai?->pegawai_nama ?? $pin,
+                'scan_masuk'       => null,
+                'scan_istirahat1'  => null,
+                'scan_istirahat2'  => null,
+                'scan_pulang'      => null,
+                'durasi_istirahat' => null,
+                'shift_id'         => $shiftId,
+                'shift_nama'       => $shift['nama'] ?? $shiftId,
+                'jam_pulang_efektif' => $shift['jam_pulang'] ?? '17:00',
+                'override'         => null,
+                'catatan'          => $note['catatan'] ?? null,
+            ];
+        }
+
         usort($result, fn($a, $b) => strcmp($a['nama'] ?? '', $b['nama'] ?? '') ?: strcmp($a['tanggal'], $b['tanggal']));
 
         return $result;
