@@ -1448,7 +1448,9 @@
                 <th>Nama Shift</th>
                 <th>Jam Masuk</th>
                 <th>Batas Terlambat</th>
+                <th>Batas ½ Hari</th>
                 <th>Jam Pulang</th>
+                <th>Hari Kerja</th>
                 <th style="width:80px"></th>
               </tr>
             </thead>
@@ -1458,18 +1460,27 @@
             <button class="btn btn-ghost" style="font-size:13px" onclick="toggleAddShift()">＋ Tambah Shift</button>
           </div>
           <div class="add-shift-form" id="add-shift-form">
-            <div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
-              <div class="form-group" style="margin:0"><label>Nama</label><input type="text" id="ns-nama" placeholder="contoh: Shift B" /></div>
+            <div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+              <div class="form-group" style="margin:0"><label>Nama</label><input type="text" id="ns-nama" placeholder="contoh: CS" /></div>
               <div class="form-group" style="margin:0"><label>Jam Masuk</label><input type="time" id="ns-masuk" value="08:00" oninput="autoFillBatasNew()" /></div>
-              <div class="form-group" style="margin:0"><label>Batas Terlambat</label><input type="time" id="ns-batas" value="08:06" /></div>
+              <div class="form-group" style="margin:0"><label>Batas Terlambat</label><input type="time" id="ns-batas" value="08:06" placeholder="kosong=tidak ada" /></div>
+              <div class="form-group" style="margin:0"><label>Batas ½ Hari</label><input type="time" id="ns-setengah" value="08:30" /></div>
               <div class="form-group" style="margin:0"><label>Jam Pulang</label><input type="time" id="ns-pulang" value="17:00" /></div>
+            </div>
+            <div style="margin-bottom:10px">
+              <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px">Hari Kerja</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${[['1','Sen'],['2','Sel'],['3','Rab'],['4','Kam'],['5','Jum'],['6','Sab'],['0','Min']].map(([v,l])=>
+                  `<label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="${v}" ${['1','2','3','4','5','6'].includes(v)?'checked':''}> ${l}</label>`
+                ).join('')}
+              </div>
             </div>
             <div style="display:flex;gap:8px">
               <button class="btn btn-primary" style="font-size:13px" onclick="addShift()">Tambah</button>
               <button class="btn btn-ghost"   style="font-size:13px" onclick="toggleAddShift()">Batal</button>
             </div>
           </div>
-          <div class="hint" style="margin-top:12px">Batas terlambat = jam masuk lewat ini → kuning. Jam pulang = pulang sebelum ini → cyan.</div>
+          <div class="hint" style="margin-top:12px">Batas terlambat = masuk lewat ini → kuning (kosongkan jika shift tidak ada keterlambatan). Batas ½ Hari = masuk lewat ini → merah. Hari Kerja = hari non-libur yang dihitung dalam rekap.</div>
         </div>
 
         <!-- pstab: Penugasan -->
@@ -1946,7 +1957,8 @@ function timeCell(val, type, shift) {
 
   if (type === 'masuk') {
     const batas = shift && shift.batas_terlambat ? shift.batas_terlambat + ':00' : null;
-    if (val >= '08:30:00') return `<span class="cell-very-late">${val}</span>`;
+    const batasSetengah = shift && shift.batas_setengah_hari ? shift.batas_setengah_hari + ':00' : '08:30:00';
+    if (val >= batasSetengah) return `<span class="cell-very-late">${val}</span>`;
     if (batas && val > batas) return `<span class="cell-late">${val}</span>`;
     return `<span class="td-time cell-ok">${val}</span>`;
   }
@@ -2372,7 +2384,7 @@ let _dailyOverrides = [];
 
 function getShiftForPin(pin) {
   const id = _empShifts[String(pin)];
-  return _appShifts.find(s => s.id === id) || _appShifts[0] || { batas_terlambat:'', jam_pulang:'17:00' };
+  return _appShifts.find(s => s.id === id) || _appShifts[0] || { batas_terlambat:'', batas_setengah_hari:'08:30', jam_pulang:'17:00', hari_kerja:[1,2,3,4,5,6] };
 }
 
 async function loadAppSettings() {
@@ -2511,22 +2523,39 @@ async function adminChangePassword() {
 }
 
 // ── SHIFTS TABLE ──
+const HARI_LABELS = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+function formatHariKerja(arr) {
+  if (!arr || !arr.length) return 'Sen–Sab';
+  return arr.map(d => HARI_LABELS[d]).join(' ');
+}
+
 function renderShiftsTable() {
   const tbody = document.getElementById('shifts-tbody');
   if (!_appShifts.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada shift</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada shift</td></tr>`;
     return;
   }
-  tbody.innerHTML = _appShifts.map((s, i) => `
+  tbody.innerHTML = _appShifts.map((s, i) => {
+    const hari = s.hari_kerja || [1,2,3,4,5,6];
+    const hariCheckboxes = [['1','Sen'],['2','Sel'],['3','Rab'],['4','Kam'],['5','Jum'],['6','Sab'],['0','Min']].map(([v,l])=>
+      `<label style="font-size:11px;display:flex;align-items:center;gap:2px"><input type="checkbox" class="si-hari-${i}" value="${v}" ${hari.includes(Number(v))?'checked':''}> ${l}</label>`
+    ).join('');
+    return `
     <tr id="shift-row-${i}">
       <td><span id="sv-nama-${i}">${escHtml(s.nama)}</span>
           <input id="si-nama-${i}" type="text" value="${escHtml(s.nama)}" style="display:none" /></td>
       <td><span id="sv-masuk-${i}">${s.jam_masuk}</span>
           <input id="si-masuk-${i}" type="time" value="${s.jam_masuk}" style="display:none" oninput="autoFillBatas(${i})" /></td>
-      <td><span id="sv-batas-${i}">${s.batas_terlambat}</span>
-          <input id="si-batas-${i}" type="time" value="${s.batas_terlambat}" style="display:none" /></td>
+      <td><span id="sv-batas-${i}">${s.batas_terlambat||'—'}</span>
+          <input id="si-batas-${i}" type="time" value="${s.batas_terlambat||''}" style="display:none" /></td>
+      <td><span id="sv-setengah-${i}">${s.batas_setengah_hari||'08:30'}</span>
+          <input id="si-setengah-${i}" type="time" value="${s.batas_setengah_hari||'08:30'}" style="display:none" /></td>
       <td><span id="sv-pulang-${i}">${s.jam_pulang}</span>
           <input id="si-pulang-${i}" type="time" value="${s.jam_pulang}" style="display:none" /></td>
+      <td>
+        <span id="sv-hari-${i}" style="font-size:11px">${formatHariKerja(hari)}</span>
+        <div id="si-hari-${i}" style="display:none;display:flex;gap:4px;flex-wrap:wrap">${hariCheckboxes}</div>
+      </td>
       <td style="white-space:nowrap">
         <span id="shift-view-btns-${i}">
           <button class="btn-icon" onclick="editShiftRow(${i})" title="Edit">✏️</button>
@@ -2537,40 +2566,48 @@ function renderShiftsTable() {
           <button class="btn-icon" onclick="cancelShiftRow(${i})" title="Batal">❌</button>
         </span>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 function editShiftRow(i) {
-  ['nama','masuk','batas','pulang'].forEach(f => {
+  ['nama','masuk','batas','setengah','pulang'].forEach(f => {
     document.getElementById(`sv-${f}-${i}`).style.display = 'none';
-    document.getElementById(`si-${f}-${i}`).style.display = '';
+    document.getElementById(`si-${f}-${i}`).style.display = f === 'hari' ? 'flex' : '';
   });
+  document.getElementById(`sv-hari-${i}`).style.display = 'none';
+  document.getElementById(`si-hari-${i}`).style.display = 'flex';
   document.getElementById(`shift-view-btns-${i}`).style.display = 'none';
   document.getElementById(`shift-edit-btns-${i}`).style.display = '';
 }
 
 function cancelShiftRow(i) {
-  // Reset inputs ke nilai asal
   const s = _appShifts[i];
-  document.getElementById(`si-nama-${i}`).value  = s.nama;
-  document.getElementById(`si-masuk-${i}`).value = s.jam_masuk;
-  document.getElementById(`si-batas-${i}`).value = s.batas_terlambat;
-  document.getElementById(`si-pulang-${i}`).value= s.jam_pulang;
-  ['nama','masuk','batas','pulang'].forEach(f => {
+  document.getElementById(`si-nama-${i}`).value    = s.nama;
+  document.getElementById(`si-masuk-${i}`).value   = s.jam_masuk;
+  document.getElementById(`si-batas-${i}`).value   = s.batas_terlambat || '';
+  document.getElementById(`si-setengah-${i}`).value= s.batas_setengah_hari || '08:30';
+  document.getElementById(`si-pulang-${i}`).value  = s.jam_pulang;
+  ['nama','masuk','batas','setengah','pulang'].forEach(f => {
     document.getElementById(`sv-${f}-${i}`).style.display = '';
     document.getElementById(`si-${f}-${i}`).style.display = 'none';
   });
+  document.getElementById(`sv-hari-${i}`).style.display = '';
+  document.getElementById(`si-hari-${i}`).style.display = 'none';
   document.getElementById(`shift-view-btns-${i}`).style.display = '';
   document.getElementById(`shift-edit-btns-${i}`).style.display = 'none';
 }
 
 function saveShiftRow(i) {
+  const hariChecked = [...document.querySelectorAll(`.si-hari-${i}:checked`)].map(c => Number(c.value));
   _appShifts[i] = {
     ..._appShifts[i],
-    nama:             document.getElementById(`si-nama-${i}`).value.trim(),
-    jam_masuk:        document.getElementById(`si-masuk-${i}`).value,
-    batas_terlambat:  document.getElementById(`si-batas-${i}`).value,
-    jam_pulang:       document.getElementById(`si-pulang-${i}`).value,
+    nama:                document.getElementById(`si-nama-${i}`).value.trim(),
+    jam_masuk:           document.getElementById(`si-masuk-${i}`).value,
+    batas_terlambat:     document.getElementById(`si-batas-${i}`).value,
+    batas_setengah_hari: document.getElementById(`si-setengah-${i}`).value,
+    jam_pulang:          document.getElementById(`si-pulang-${i}`).value,
+    hari_kerja:          hariChecked,
   };
   renderShiftsTable();
   renderAssignTable();
@@ -2587,13 +2624,15 @@ function addMinutesToTime(hhmm, menit) {
 function autoFillBatas(i) {
   const masuk = document.getElementById(`si-masuk-${i}`).value;
   if (!masuk) return;
-  document.getElementById(`si-batas-${i}`).value = addMinutesToTime(masuk, 6);
+  document.getElementById(`si-batas-${i}`).value   = addMinutesToTime(masuk, 6);
+  document.getElementById(`si-setengah-${i}`).value = addMinutesToTime(masuk, 29);
 }
 
 function autoFillBatasNew() {
   const masuk = document.getElementById('ns-masuk').value;
   if (!masuk) return;
-  document.getElementById('ns-batas').value = addMinutesToTime(masuk, 6);
+  document.getElementById('ns-batas').value   = addMinutesToTime(masuk, 6);
+  document.getElementById('ns-setengah').value = addMinutesToTime(masuk, 29);
 }
 
 function deleteShift(i) {
@@ -2613,13 +2652,15 @@ function toggleAddShift() {
 }
 
 function addShift() {
-  const nama   = document.getElementById('ns-nama').value.trim();
-  const masuk  = document.getElementById('ns-masuk').value;
-  const batas  = document.getElementById('ns-batas').value;
-  const pulang = document.getElementById('ns-pulang').value;
+  const nama    = document.getElementById('ns-nama').value.trim();
+  const masuk   = document.getElementById('ns-masuk').value;
+  const batas   = document.getElementById('ns-batas').value;
+  const setengah= document.getElementById('ns-setengah').value;
+  const pulang  = document.getElementById('ns-pulang').value;
   if (!nama) { alert('Nama shift tidak boleh kosong'); return; }
+  const hariChecked = [...document.querySelectorAll('.ns-hari:checked')].map(c => Number(c.value));
   const id = nama.toLowerCase().replace(/\s+/g,'-') + '-' + Date.now();
-  _appShifts.push({ id, nama, jam_masuk: masuk, batas_terlambat: batas, jam_pulang: pulang });
+  _appShifts.push({ id, nama, jam_masuk: masuk, batas_terlambat: batas, batas_setengah_hari: setengah, jam_pulang: pulang, hari_kerja: hariChecked });
   document.getElementById('ns-nama').value = '';
   document.getElementById('add-shift-form').classList.remove('open');
   renderShiftsTable();
@@ -3400,7 +3441,7 @@ function printLaporanPdf(data, bulan, filterPin) {
 
   function getShift(pin) {
     const id = empShifts[String(pin)];
-    return appShifts.find(s => s.id === id) || appShifts[0] || { batas_terlambat: '08:06', jam_pulang: '17:00' };
+    return appShifts.find(s => s.id === id) || appShifts[0] || { batas_terlambat: '08:06', batas_setengah_hari: '08:30', jam_pulang: '17:00', hari_kerja: [1,2,3,4,5,6] };
   }
 
   function t(val) { return val ? val.slice(0, 5) : ''; }
@@ -3409,18 +3450,20 @@ function printLaporanPdf(data, bulan, filterPin) {
   const holidays = (_appHolidays || []).map(h => h.tanggal);
 
   function rowHtml(r, shift) {
-    const tglDate   = new Date(r.tanggal + 'T00:00:00');
-    const dayOfWeek = tglDate.getDay(); // 0=Minggu
-    const isSunday  = dayOfWeek === 0;
-    const isHoliday = holidays.includes(r.tanggal);
-    const tglFmt    = tglDate.toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
-    const dayName   = tglDate.toLocaleDateString('id-ID', { weekday:'short' });
+    const tglDate    = new Date(r.tanggal + 'T00:00:00');
+    const dayOfWeek  = tglDate.getDay(); // 0=Minggu
+    const isSunday   = dayOfWeek === 0;
+    const isHoliday  = holidays.includes(r.tanggal);
+    const workDayNums = shift && shift.hari_kerja && shift.hari_kerja.length ? shift.hari_kerja : [1,2,3,4,5,6];
+    const isNonWorkDay = !workDayNums.includes(dayOfWeek);
+    const tglFmt     = tglDate.toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+    const dayName    = tglDate.toLocaleDateString('id-ID', { weekday:'short' });
 
-    // Hari libur / Minggu → tampil abu-abu, tidak alpha
-    if (isSunday || isHoliday) {
+    // Hari libur / Minggu / non-work day → tampil abu-abu, tidak alpha
+    if (isSunday || isHoliday || isNonWorkDay) {
       const label = isHoliday
         ? ((_appHolidays||[]).find(h=>h.tanggal===r.tanggal)?.nama || 'Libur')
-        : 'Minggu';
+        : isSunday ? 'Minggu' : 'Libur';
       return `<tr style="background:#f0f0f0;color:#999">
         <td>${tglFmt} <span style="font-size:7.5px">${dayName}</span></td>
         <td colspan="5" style="text-align:center;font-style:italic;font-size:8px">${label}</td>
@@ -3429,11 +3472,18 @@ function printLaporanPdf(data, bulan, filterPin) {
     }
 
     const absent     = !r.scan_masuk;
-    const batas      = shift ? (shift.batas_terlambat + ':00') : null;
+    const batas      = shift && shift.batas_terlambat ? (shift.batas_terlambat + ':00') : null;
+    const batasSetengah = ((shift && shift.batas_setengah_hari) || '08:30') + ':00';
     const jamPulang  = ((shift && shift.jam_pulang) || '17:00') + ':00';
-    const veryLate   = r.scan_masuk && r.scan_masuk >= '08:30:00';
+    const veryLate   = r.scan_masuk && r.scan_masuk >= batasSetengah;
     const terlambat  = !veryLate && r.scan_masuk && batas && r.scan_masuk > batas;
     const pulangCepat= r.scan_pulang && r.scan_pulang < jamPulang;
+
+    const istSelisih = r.durasi_istirahat != null && r.scan_masuk ? r.durasi_istirahat - 60 : null;
+    const istPenalty = istSelisih != null && istSelisih >= 60 ? 'merah'
+                     : istSelisih != null && istSelisih >= 30 ? 'pink'
+                     : istSelisih != null && istSelisih >= 15 ? 'kuning'
+                     : null;
 
     let rowBg = '', statusCell = '';
     if (r.catatan) {
@@ -3442,9 +3492,20 @@ function printLaporanPdf(data, bulan, filterPin) {
     } else if (absent) {
       rowBg = '#fde8ec';
       statusCell = `<span class="s-alpha">Tidak Hadir</span>`;
-    } else if (veryLate) {
+    } else if (veryLate || istPenalty === 'merah') {
       rowBg = '#fde8ec';
+      statusCell = veryLate
+        ? `<span class="s-alpha">1/2 Hari</span>`
+        : `<span class="s-alpha">Tidak Hadir</span>`;
+    } else if (istPenalty === 'pink') {
+      rowBg = '#ffd6e7';
       statusCell = `<span class="s-alpha">1/2 Hari</span>`;
+    } else if (terlambat && istPenalty === 'kuning') {
+      rowBg = '#fff8e1';
+      statusCell = `<span class="s-late">Terlambat + 1/4 Hari</span>`;
+    } else if (istPenalty === 'kuning') {
+      rowBg = '#fff8e1';
+      statusCell = `<span class="s-late">1/4 Hari</span>`;
     } else if (terlambat) {
       rowBg = '#fff8e1';
       statusCell = `<span class="s-late">Terlambat</span>`;
@@ -3458,15 +3519,28 @@ function printLaporanPdf(data, bulan, filterPin) {
     const pulangStyle = pulangCepat  ? 'color:#2b6cb0'                 : (r.scan_pulang ? 'color:#276749' : '');
     const ist1 = r.scan_istirahat1 && !r.scan_istirahat2
       ? `<span style="color:#e67e22">${t(r.scan_istirahat1)}</span>` : (t(r.scan_istirahat1) || '—');
-    const durasi = r.durasi_istirahat != null ? r.durasi_istirahat : '—';
+
+    let durasiHtml = '—';
+    if (r.durasi_istirahat != null) {
+      const selisihStr = istSelisih != null
+        ? (istSelisih >= 0 ? `+${istSelisih}` : `${istSelisih}`)
+        : null;
+      const selisihColor = istPenalty === 'merah' ? '#c53030'
+                         : istPenalty === 'pink'  ? '#ad1457'
+                         : istPenalty === 'kuning'? '#b7791f'
+                         : istSelisih != null && istSelisih < 0 ? '#2b6cb0' : '#555';
+      durasiHtml = selisihStr != null
+        ? `${r.durasi_istirahat} <span style="font-size:7.5px;color:${selisihColor};font-weight:700">${selisihStr}</span>`
+        : `${r.durasi_istirahat}`;
+    }
 
     return `<tr style="background:${rowBg}">
       <td>${tglFmt} <span style="font-size:7.5px;color:#888">${dayName}</span></td>
-      <td style="${masukStyle}">${t(r.scan_masuk) || '—'}</td>
-      <td>${ist1}</td>
-      <td>${t(r.scan_istirahat2) || '—'}</td>
-      <td style="${pulangStyle}">${t(r.scan_pulang) || '—'}</td>
-      <td style="text-align:center">${durasi}</td>
+      <td style="text-align:center;${masukStyle}">${t(r.scan_masuk) || '—'}</td>
+      <td style="text-align:center">${ist1}</td>
+      <td style="text-align:center">${t(r.scan_istirahat2) || '—'}</td>
+      <td style="text-align:center;${pulangStyle}">${t(r.scan_pulang) || '—'}</td>
+      <td style="text-align:center">${durasiHtml}</td>
       <td>${statusCell}</td>
     </tr>`;
   }
@@ -3475,20 +3549,46 @@ function printLaporanPdf(data, bulan, filterPin) {
     const shift  = getShift(p.pin);
     const rows   = p.rows.map(r => rowHtml(r, shift)).join('');
 
-    // Hanya hitung hari kerja (bukan Minggu & hari libur)
+    // Hanya hitung hari kerja sesuai shift.hari_kerja (bukan Minggu, libur, & hari off shift)
+    const shiftWorkDays = shift && shift.hari_kerja && shift.hari_kerja.length ? shift.hari_kerja : [1,2,3,4,5,6];
+    const shiftBatasSetengah = ((shift && shift.batas_setengah_hari) || '08:30') + ':00';
     const workDays = p.rows.filter(r => {
       const d = new Date(r.tanggal + 'T00:00:00');
-      return d.getDay() !== 0 && !holidays.includes(r.tanggal);
+      return shiftWorkDays.includes(d.getDay()) && !holidays.includes(r.tanggal);
     });
-    const hadir = workDays.filter(r => r.scan_masuk && !r.catatan).length;
+    const getIstPenalty = r => {
+      if (r.durasi_istirahat == null || !r.scan_masuk) return null;
+      const s = r.durasi_istirahat - 60;
+      return s >= 60 ? 'merah' : s >= 30 ? 'pink' : s >= 15 ? 'kuning' : null;
+    };
     const alpha = workDays.filter(r => !r.scan_masuk && !r.catatan).length;
     const ket   = workDays.filter(r => r.catatan).length;
-    const telatSekali = workDays.filter(r => r.scan_masuk && !r.catatan && r.scan_masuk >= '08:30:00').length;
+    const telatSekali = workDays.filter(r => r.scan_masuk && !r.catatan && r.scan_masuk >= shiftBatasSetengah).length;
     const telat = workDays.filter(r => {
-      if (!r.scan_masuk || r.catatan || r.scan_masuk >= '08:30:00') return false;
-      const batas = shift ? (shift.batas_terlambat + ':00') : null;
+      if (!r.scan_masuk || r.catatan || r.scan_masuk >= shiftBatasSetengah) return false;
+      const batas = shift && shift.batas_terlambat ? (shift.batas_terlambat + ':00') : null;
       return batas && r.scan_masuk > batas;
     }).length;
+
+    // Istirahat penalties (hanya baris yang masuk tepat waktu / terlambat biasa, bukan sudah 1/2 hari)
+    const istMerah     = workDays.filter(r => r.scan_masuk && !r.catatan && getIstPenalty(r) === 'merah'  && r.scan_masuk < shiftBatasSetengah).length;
+    const istPink      = workDays.filter(r => r.scan_masuk && !r.catatan && getIstPenalty(r) === 'pink'   && r.scan_masuk < shiftBatasSetengah).length;
+    const istKuning    = workDays.filter(r => r.scan_masuk && !r.catatan && getIstPenalty(r) === 'kuning' && r.scan_masuk < shiftBatasSetengah).length;
+
+    // Hadir desimal: masuk + tidak veryLate + bukan catatan. ist kuning=0.75, ist merah/pink=0 (sudah di alpha/telatSekali)
+    const hadirDecimal = workDays.reduce((sum, r) => {
+      if (!r.scan_masuk || r.catatan || r.scan_masuk >= shiftBatasSetengah) return sum;
+      const ip = getIstPenalty(r);
+      if (ip === 'merah' || ip === 'pink') return sum;
+      if (ip === 'kuning') return sum + 0.75;
+      return sum + 1;
+    }, 0);
+    const hadir = hadirDecimal % 1 === 0 ? hadirDecimal : +hadirDecimal.toFixed(2);
+
+    const totalIst = p.rows.reduce((sum, r) => sum + (r.durasi_istirahat != null ? r.durasi_istirahat : 0), 0);
+    const hadirCount = workDays.filter(r => r.scan_masuk && !r.catatan).length;
+    const standarIst = hadirCount * 60;
+    const selisihIst = totalIst - standarIst;
 
     return `
       <div class="emp-card">
@@ -3502,11 +3602,11 @@ function printLaporanPdf(data, bulan, filterPin) {
           <thead>
             <tr>
               <th style="width:44px">Tgl</th>
-              <th>Masuk</th>
-              <th>Ist 1</th>
-              <th>Ist 2</th>
-              <th>Pulang</th>
-              <th style="width:34px;text-align:center">Ist(m)</th>
+              <th style="width:38px;text-align:center">Masuk</th>
+              <th style="width:60px;text-align:center">Mulai Istirahat</th>
+              <th style="width:65px;text-align:center">Selesai Istirahat</th>
+              <th style="width:38px;text-align:center">Pulang</th>
+              <th style="width:55px;text-align:center">Istirahat (menit)</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -3518,7 +3618,18 @@ function printLaporanPdf(data, bulan, filterPin) {
           <span class="s-alpha">1/2 Hari: <b>${telatSekali}</b></span>
           <span class="s-alpha">Tidak Hadir: <b>${alpha}</b></span>
           <span class="s-ket">Keterangan: <b>${ket}</b></span>
-          <span style="margin-left:auto;color:#333">Hari Kerja: <b>${workDays.length}</b> | Total: <b>${p.rows.length}</b> hari</span>
+          <span style="margin-left:auto;color:#333">Total Istirahat: ${selisihIst === 0
+            ? `<b style="color:#276749">tepat</b>`
+            : selisihIst > 0
+              ? `<b style="color:#c53030">+${selisihIst}m</b>`
+              : `<b style="color:#2b6cb0">${selisihIst}m</b>`
+          } &nbsp;|&nbsp; Hari Kerja: <b>${workDays.length}</b> | Total: <b>${p.rows.length}</b> hari</span>
+        </div>
+        <div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
+          <span style="color:#555;font-weight:600">Potongan Istirahat:</span>
+          <span style="color:#b7791f">1/4 Hari: <b>${istKuning}</b></span>
+          <span style="color:#ad1457">1/2 Hari: <b>${istPink}</b></span>
+          <span style="color:#c53030">Tidak Hadir: <b>${istMerah}</b></span>
         </div>
       </div>`;
   }
