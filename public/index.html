@@ -1846,7 +1846,8 @@ function renderPersonalTable(data) {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr   = `${_currentMonth}-${String(d).padStart(2,'0')}`;
     const dayOfWeek = new Date(dateStr + 'T00:00:00').getDay();
-    const isWeekend = dayOfWeek === 0; // Minggu saja libur, Sabtu tetap masuk
+    const hariKerja = shift ? (shift.hari_kerja || [1,2,3,4,5,6]) : [1,2,3,4,5,6];
+    const isWeekend = !hariKerja.includes(dayOfWeek);
     const holiday   = _appHolidays.find(h => h.tanggal === dateStr) || null;
     const isHoliday = !!holiday;
     const isFuture  = dateStr > todayStr;
