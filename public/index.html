@@ -1259,30 +1259,33 @@
               <input type="text" id="adm-scan-catatan" placeholder="mis. Izin, Sakit, Dinas Luar..." style="min-width:200px" />
             </div>
             <button class="btn btn-primary" onclick="adminAddScan()">Simpan</button>
+            <button class="btn btn-secondary" id="adm-scan-history-btn" onclick="openScanHistoryModal()" style="display:none">📋 History <span id="adm-scan-history-badge" style="background:var(--accent);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">0</span></button>
           </div>
           <div class="alert-err" id="adm-scan-err" style="margin-top:10px;margin-bottom:0"></div>
           <div class="alert-ok"  id="adm-scan-ok"  style="margin-top:10px;margin-bottom:0"></div>
         </div>
 
-        <!-- History Tambah Scan Manual -->
-        <div class="table-wrap" id="adm-scan-history-wrap" style="margin-bottom:20px;display:none">
-          <div class="table-header">
-            <span class="table-title">HISTORY TAMBAH SCAN MANUAL</span>
-            <span class="total-badge" id="adm-scan-history-badge">0 entri</span>
-          </div>
-          <div class="table-scroll">
-            <table class="raw-scan-table">
-              <thead>
-                <tr>
-                  <th>Karyawan</th>
-                  <th style="width:70px">PIN</th>
-                  <th>Waktu Scan</th>
-                  <th>Catatan</th>
-                  <th>Ditambahkan</th>
-                </tr>
-              </thead>
-              <tbody id="adm-scan-history-tbody"></tbody>
-            </table>
+        <!-- Modal History Scan Manual -->
+        <div id="scan-history-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)closeScanHistoryModal()">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;width:700px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.5)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">📋 History Tambah Scan Manual</div>
+              <button class="btn-icon" onclick="closeScanHistoryModal()" title="Tutup">✕</button>
+            </div>
+            <div style="overflow-y:auto;flex:1">
+              <table class="raw-scan-table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Karyawan</th>
+                    <th style="width:60px">PIN</th>
+                    <th>Waktu Scan</th>
+                    <th>Catatan</th>
+                    <th style="width:130px">Ditambahkan</th>
+                  </tr>
+                </thead>
+                <tbody id="adm-scan-history-tbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -3205,12 +3208,12 @@ async function adminDeleteScan(i, sn, scan_date, pin) {
 }
 
 function renderScanManualHistory() {
-  const wrap  = document.getElementById('adm-scan-history-wrap');
-  const tbody = document.getElementById('adm-scan-history-tbody');
+  const btn   = document.getElementById('adm-scan-history-btn');
   const badge = document.getElementById('adm-scan-history-badge');
-  if (!_scanManualHistory.length) { wrap.style.display = 'none'; return; }
-  wrap.style.display = '';
-  badge.textContent = `${_scanManualHistory.length} entri`;
+  const tbody = document.getElementById('adm-scan-history-tbody');
+  const count = _scanManualHistory.length;
+  btn.style.display = count ? '' : 'none';
+  badge.textContent = count;
   tbody.innerHTML = _scanManualHistory.slice().reverse().map(h => `
     <tr>
       <td>${escHtml(h.nama)}</td>
@@ -3219,6 +3222,14 @@ function renderScanManualHistory() {
       <td>${h.catatan ? escHtml(h.catatan) : '<span style="color:var(--text-muted)">—</span>'}</td>
       <td style="font-size:11px;color:var(--text-muted)">${escHtml(h.added_at)}</td>
     </tr>`).join('');
+}
+
+function openScanHistoryModal() {
+  document.getElementById('scan-history-overlay').style.display = 'flex';
+}
+
+function closeScanHistoryModal() {
+  document.getElementById('scan-history-overlay').style.display = 'none';
 }
 
 async function adminAddScan() {
