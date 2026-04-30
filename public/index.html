@@ -815,6 +815,54 @@
     .personal-stats { grid-template-columns: repeat(2, 1fr); }
     .filter-bar { flex-direction: column; align-items: stretch; }
   }
+
+  /* ── AUTH OVERLAYS ── */
+  .fullscreen-overlay {
+    position: fixed; inset: 0; z-index: 1200;
+    background: var(--bg);
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .fullscreen-overlay.show { display: flex; }
+  .auth-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px;
+    width: 100%; max-width: 400px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  }
+  .auth-logo { text-align: center; margin-bottom: 24px; }
+  .auth-logo .logo-icon { font-size: 30px; }
+  .auth-title {
+    font-family: var(--font-mono); font-size: 18px; font-weight: 600;
+    color: var(--text); margin-bottom: 4px;
+  }
+  .auth-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 22px; }
+  #header-user-info {
+    font-size: 12px; color: var(--text-muted);
+    display: flex; align-items: center; gap: 4px;
+  }
+  #header-user-info strong { color: var(--text); }
+
+  /* ── PENGATURAN SUB-TABS (dalam admin modal) ── */
+  .pstab-bar {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    padding: 14px 20px 0; border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+  .pstab-btn {
+    padding: 8px 14px; border-radius: 8px 8px 0 0;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; background: none; color: var(--text-muted);
+    border: 1px solid transparent; border-bottom: none;
+    transition: color 0.15s, background 0.15s;
+  }
+  .pstab-btn.active {
+    color: var(--accent); background: var(--surface);
+    border-color: var(--border);
+  }
+  .pstab-pane { display: none; padding: 18px 0 0; }
+  .pstab-pane.active { display: block; }
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -839,6 +887,54 @@
   </div>
 </div>
 
+<!-- OVERLAY: LOGIN -->
+<div class="fullscreen-overlay" id="overlay-login">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="logo-icon">👁</div>
+      <div class="logo-text" style="font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--text)">ABSENSI MONITOR</div>
+    </div>
+    <div class="auth-title">Masuk</div>
+    <div class="auth-sub">Pilih akun dan masukkan password</div>
+    <div class="form-group">
+      <label>Pengguna</label>
+      <select id="login-username" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--text);outline:none;box-sizing:border-box">
+        <option value="">— Memuat daftar pengguna… —</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <div class="pin-input-wrap">
+        <input type="password" id="login-password" placeholder="Kosongkan jika login pertama kali" style="width:100%;box-sizing:border-box;font-size:13px" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password" />
+      </div>
+    </div>
+    <div class="alert-err" id="login-err" style="margin-bottom:12px"></div>
+    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="doLogin()">Masuk →</button>
+  </div>
+</div>
+
+<!-- OVERLAY: WAJIB GANTI PASSWORD -->
+<div class="fullscreen-overlay" id="overlay-force-pw">
+  <div class="auth-box">
+    <div class="auth-title">🔐 Buat Password Baru</div>
+    <div class="auth-sub">Login pertama — wajib atur password (min. 6 karakter).</div>
+    <div class="form-group">
+      <label>Password Baru</label>
+      <div class="pin-input-wrap">
+        <input type="password" id="fcp-password" placeholder="Min. 6 karakter" style="width:100%;box-sizing:border-box;font-size:13px" autocomplete="new-password" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Konfirmasi Password</label>
+      <div class="pin-input-wrap">
+        <input type="password" id="fcp-confirm" placeholder="Ulangi password baru" style="width:100%;box-sizing:border-box;font-size:13px" onkeydown="if(event.key==='Enter')doForceChangePw()" autocomplete="new-password" />
+      </div>
+    </div>
+    <div class="alert-err" id="fcp-err" style="margin-bottom:12px"></div>
+    <button class="btn btn-primary" style="width:100%;padding:12px;font-size:14px" onclick="doForceChangePw()">Simpan Password</button>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header>
   <div class="container">
@@ -856,9 +952,11 @@
           <span id="conn-status">CONNECTING</span>
         </div>
         <div id="clock">--:--:--</div>
+        <div id="header-user-info" style="display:none"><strong id="header-username"></strong></div>
         <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-        <button class="theme-toggle" onclick="openPinModal()" title="Pengaturan">⚙️</button>
-        <button class="theme-toggle" onclick="openAdminPinModal()" title="Menu Admin">🛠️</button>
+        <button class="theme-toggle" id="btn-user-settings" onclick="openUserSettingsModal()" title="Pengaturan Akun" style="display:none">⚙️</button>
+        <button class="theme-toggle" id="btn-admin" onclick="openAdminModal()" title="Menu Admin" style="display:none">🛠️</button>
+        <button class="theme-toggle" id="btn-logout" onclick="doLogout()" title="Logout" style="display:none">🚪</button>
       </div>
     </div>
   </div>
@@ -1035,6 +1133,7 @@
       <button class="admin-stab-btn" id="astab-btn-pegawai" onclick="switchAdminStab('astab-pegawai',this)">👥 Data Karyawan</button>
       <button class="admin-stab-btn" id="astab-btn-filter" onclick="switchAdminStab('astab-filter',this)">🔍 Filter & Cari</button>
       <button class="admin-stab-btn" id="astab-btn-sync" onclick="switchAdminStab('astab-sync',this);loadSyncDevices()">🔄 Sinkronisasi</button>
+      <button class="admin-stab-btn" id="astab-btn-pengaturan" onclick="switchAdminStab('astab-pengaturan',this);openPengaturanSettings()">⚙️ Pengaturan</button>
     </div>
 
     <div class="modal-body-scroll">
@@ -1222,6 +1321,179 @@
         </div>
       </div>
 
+      <!-- Sub-tab: Pengaturan -->
+      <div class="admin-stab-pane" id="astab-pengaturan">
+
+        <!-- Sub-tab bar Pengaturan -->
+        <div class="pstab-bar">
+          <button class="pstab-btn active" onclick="switchPengaturanStab('pstab-shifts',this)">📋 Shift Kerja</button>
+          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-assign',this)">👤 Penugasan</button>
+          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-global',this)">🕐 Jadwal Global</button>
+          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-holidays',this)">🗓️ Hari Libur</button>
+          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-overrides',this)">📅 Override Harian</button>
+          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-sec',this)">🔐 Ganti Password Admin</button>
+        </div>
+
+        <div style="padding:0 4px">
+          <div class="alert-err" id="pengaturan-err" style="margin-top:12px"></div>
+          <div class="alert-ok"  id="pengaturan-ok"  style="margin-top:12px">Settings berhasil disimpan.</div>
+        </div>
+
+        <!-- pstab: Shift Kerja -->
+        <div class="pstab-pane active" id="pstab-shifts">
+          <table class="settings-table" id="shifts-table">
+            <thead>
+              <tr>
+                <th>Nama Shift</th>
+                <th>Jam Masuk</th>
+                <th>Batas Terlambat</th>
+                <th>Jam Pulang</th>
+                <th style="width:80px"></th>
+              </tr>
+            </thead>
+            <tbody id="shifts-tbody"></tbody>
+          </table>
+          <div style="margin-top:12px">
+            <button class="btn btn-ghost" style="font-size:13px" onclick="toggleAddShift()">＋ Tambah Shift</button>
+          </div>
+          <div class="add-shift-form" id="add-shift-form">
+            <div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+              <div class="form-group" style="margin:0"><label>Nama</label><input type="text" id="ns-nama" placeholder="contoh: Shift B" /></div>
+              <div class="form-group" style="margin:0"><label>Jam Masuk</label><input type="time" id="ns-masuk" value="08:00" oninput="autoFillBatasNew()" /></div>
+              <div class="form-group" style="margin:0"><label>Batas Terlambat</label><input type="time" id="ns-batas" value="08:06" /></div>
+              <div class="form-group" style="margin:0"><label>Jam Pulang</label><input type="time" id="ns-pulang" value="17:00" /></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary" style="font-size:13px" onclick="addShift()">Tambah</button>
+              <button class="btn btn-ghost"   style="font-size:13px" onclick="toggleAddShift()">Batal</button>
+            </div>
+          </div>
+          <div class="hint" style="margin-top:12px">Batas terlambat = jam masuk lewat ini → kuning. Jam pulang = pulang sebelum ini → cyan.</div>
+        </div>
+
+        <!-- pstab: Penugasan -->
+        <div class="pstab-pane" id="pstab-assign">
+          <input type="text" class="emp-search" id="emp-search" placeholder="🔍 Cari nama atau PIN..." oninput="filterEmpRows()" />
+          <table class="settings-table">
+            <thead><tr><th style="width:80px">PIN</th><th>Nama Karyawan</th><th style="width:160px">Shift</th></tr></thead>
+            <tbody id="assign-tbody">
+              <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Memuat data karyawan...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- pstab: Jadwal Global -->
+        <div class="pstab-pane" id="pstab-global">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Window ini menentukan scan mana yang dikategorikan sebagai istirahat vs masuk/pulang. Berlaku untuk semua shift.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Window Istirahat Dari</label>
+              <input type="time" id="s-ist-dari" />
+              <div class="hint">Scan sebelum jam ini = masuk</div>
+            </div>
+            <div class="form-group">
+              <label>Window Istirahat Sampai</label>
+              <input type="time" id="s-ist-sampai" />
+              <div class="hint">Scan setelah jam ini = pulang</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- pstab: Hari Libur -->
+        <div class="pstab-pane" id="pstab-holidays">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Tanggal yang ditandai libur tidak dihitung alpha di rekap karyawan.</p>
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+            <input type="date" id="hl-tanggal" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;flex:1;min-width:140px" />
+            <input type="text" id="hl-nama" placeholder="Nama hari libur (mis. Idul Fitri)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;flex:2;min-width:180px" />
+            <button class="btn btn-primary" style="font-size:13px" onclick="addHoliday()">＋ Tambah</button>
+          </div>
+          <table class="settings-table" id="holidays-table">
+            <thead><tr><th style="width:130px">Tanggal</th><th>Nama Hari Libur</th><th style="width:50px"></th></tr></thead>
+            <tbody id="holidays-tbody">
+              <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada hari libur</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- pstab: Override Harian -->
+        <div class="pstab-pane" id="pstab-overrides">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Override berlaku satu hari untuk karyawan tertentu atau semua.</p>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div class="form-group" style="margin:0"><label>Tanggal</label><input type="date" id="ov-tanggal" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" /></div>
+              <div class="form-group" style="margin:0"><label>Keterangan</label><input type="text" id="ov-nama" placeholder="mis. Acara keluarga" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" /></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div class="form-group" style="margin:0">
+                <label>Tipe Override</label>
+                <select id="ov-tipe" onchange="toggleOvFields()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
+                  <option value="pulang_awal">⏰ Pulang Lebih Awal</option>
+                  <option value="ganti_shift">🔄 Ganti Shift Harian</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0" id="ov-field-pulang">
+                <label>Jam Pulang Baru</label>
+                <input type="time" id="ov-jam-pulang" value="13:00" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+              </div>
+              <div class="form-group" style="margin:0;display:none" id="ov-field-shift">
+                <label>Shift Pengganti</label>
+                <select id="ov-shift-id" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box"></select>
+              </div>
+            </div>
+            <div style="margin-bottom:10px">
+              <div class="form-group" style="margin:0">
+                <label>Berlaku Untuk</label>
+                <select id="ov-berlaku" onchange="toggleOvKaryawan()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
+                  <option value="semua">Semua Karyawan</option>
+                  <option value="tertentu">Karyawan Tertentu</option>
+                </select>
+              </div>
+            </div>
+            <div id="ov-karyawan-wrap" style="display:none;margin-bottom:10px">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <button type="button" class="btn btn-ghost" style="font-size:13px" onclick="openOvKaryawanPicker()">👥 Pilih Karyawan...</button>
+                <span id="ov-karyawan-label" style="font-size:13px;color:var(--text-muted)">Belum ada dipilih</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="font-size:13px" onclick="addOverride()">＋ Tambah Override</button>
+          </div>
+          <table class="settings-table" id="overrides-table">
+            <thead><tr><th style="width:110px">Tanggal</th><th>Keterangan</th><th style="width:140px">Tipe</th><th style="width:120px">Berlaku Untuk</th><th style="width:40px"></th></tr></thead>
+            <tbody id="overrides-tbody">
+              <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada override</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- pstab: Ganti Password Admin -->
+        <div class="pstab-pane" id="pstab-sec">
+          <div style="max-width:420px">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Ganti password akun admin yang sedang login.</p>
+            <div class="form-group">
+              <label>Password Baru</label>
+              <div class="pin-input-wrap">
+                <input type="password" id="adm-pw-baru" placeholder="Min. 6 karakter" maxlength="100" autocomplete="new-password" style="font-size:13px" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Konfirmasi Password Baru</label>
+              <div class="pin-input-wrap">
+                <input type="password" id="adm-pw-konfirm" placeholder="Ulangi password baru" maxlength="100" autocomplete="new-password" style="font-size:13px" />
+              </div>
+            </div>
+            <div class="alert-err" id="adm-pw-err" style="margin-bottom:12px"></div>
+            <div class="alert-ok"  id="adm-pw-ok"  style="margin-bottom:12px"></div>
+            <button class="btn btn-primary" onclick="adminChangePassword()">Simpan Password</button>
+          </div>
+        </div>
+
+        <!-- Footer Pengaturan: Simpan Settings -->
+        <div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 0;border-top:1px solid var(--border);margin-top:16px">
+          <button class="btn btn-primary" onclick="saveSettings()">💾 Simpan Pengaturan</button>
+        </div>
+
+      </div><!-- /astab-pengaturan -->
+
     </div><!-- /modal-body-scroll -->
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeAdminModal()">Tutup</button>
@@ -1229,237 +1501,55 @@
   </div>
 </div>
 
-<!-- MODAL: PIN -->
-<div class="modal-overlay" id="modal-pin">
-  <div class="modal-box">
-    <div class="modal-title">🔐 Masukkan PIN<button class="modal-close" onclick="closePinModal()">×</button></div>
-    <div class="alert-err" id="pin-err">PIN salah, coba lagi.</div>
-    <div class="form-group">
-      <label>PIN Pengaturan</label>
-      <div class="pin-input-wrap">
-        <input type="password" id="pin-input" maxlength="20" placeholder="••••" onkeydown="if(event.key==='Enter')submitPin()" autocomplete="off" />
-      </div>
-      <div class="hint">Default PIN: 1234</div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closePinModal()">Batal</button>
-      <button class="btn btn-primary" onclick="submitPin()">Masuk</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: SETTINGS -->
+<!-- MODAL: USER SETTINGS -->
 <div class="modal-overlay" id="modal-settings">
-  <div class="modal-box wide">
-    <div class="modal-title">⚙️ Pengaturan<button class="modal-close" onclick="closeSettingsModal()">×</button></div>
-    <div class="alert-err" id="settings-err"></div>
-    <div class="alert-ok"  id="settings-ok">Settings berhasil disimpan.</div>
+  <div class="modal-box">
+    <div class="modal-title">⚙️ Pengaturan Akun<button class="modal-close" onclick="closeSettingsModal()">×</button></div>
 
-    <!-- Tab bar -->
     <div class="stab-bar">
-      <button class="stab-btn active" onclick="switchStab('stab-shifts',this)">📋 Shift Kerja</button>
-      <button class="stab-btn" onclick="switchStab('stab-assign',this)">👤 Penugasan</button>
-      <button class="stab-btn" onclick="switchStab('stab-global',this)">🕐 Jadwal Global</button>
-      <button class="stab-btn" onclick="switchStab('stab-holidays',this)">🗓️ Hari Libur</button>
-      <button class="stab-btn" onclick="switchStab('stab-overrides',this)">📅 Override Harian</button>
-      <button class="stab-btn" onclick="switchStab('stab-sec',this)">🔐 Keamanan</button>
+      <button class="stab-btn active" onclick="switchStab('us-profil',this)">👤 Profil</button>
+      <button class="stab-btn" onclick="switchStab('us-password',this)">🔐 Ganti Password</button>
     </div>
 
     <div class="modal-body-scroll">
 
-      <!-- Tab: Shift Kerja -->
-      <div class="stab-pane active" id="stab-shifts">
-        <table class="settings-table" id="shifts-table">
-          <thead>
-            <tr>
-              <th>Nama Shift</th>
-              <th>Jam Masuk</th>
-              <th>Batas Terlambat</th>
-              <th>Jam Pulang</th>
-              <th style="width:80px"></th>
-            </tr>
-          </thead>
-          <tbody id="shifts-tbody"></tbody>
-        </table>
-
-        <!-- Form tambah shift -->
-        <div style="margin-top:12px">
-          <button class="btn btn-ghost" style="font-size:13px" onclick="toggleAddShift()">＋ Tambah Shift</button>
-        </div>
-        <div class="add-shift-form" id="add-shift-form">
-          <div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
-            <div class="form-group" style="margin:0">
-              <label>Nama</label>
-              <input type="text" id="ns-nama" placeholder="contoh: Shift B" />
-            </div>
-            <div class="form-group" style="margin:0">
-              <label>Jam Masuk</label>
-              <input type="time" id="ns-masuk" value="08:00" oninput="autoFillBatasNew()" />
-            </div>
-            <div class="form-group" style="margin:0">
-              <label>Batas Terlambat</label>
-              <input type="time" id="ns-batas" value="08:06" />
-            </div>
-            <div class="form-group" style="margin:0">
-              <label>Jam Pulang</label>
-              <input type="time" id="ns-pulang" value="17:00" />
-            </div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-primary" style="font-size:13px" onclick="addShift()">Tambah</button>
-            <button class="btn btn-ghost"   style="font-size:13px" onclick="toggleAddShift()">Batal</button>
+      <!-- Tab: Profil -->
+      <div class="stab-pane active" id="us-profil">
+        <div id="us-profil-content" style="font-size:14px;line-height:1.8">
+          <div style="display:grid;grid-template-columns:120px 1fr;gap:6px 12px">
+            <span style="color:var(--text-muted)">Nama</span>      <strong id="us-nama">—</strong>
+            <span style="color:var(--text-muted)">Username</span>  <span id="us-username" style="font-family:var(--font-mono)">—</span>
+            <span style="color:var(--text-muted)">Role</span>      <span id="us-role">—</span>
+            <span style="color:var(--text-muted)">PIN Karyawan</span><span id="us-pin" style="font-family:var(--font-mono)">—</span>
           </div>
         </div>
-        <div class="hint" style="margin-top:12px">Batas terlambat = jam masuk lewat ini → kuning. Jam pulang = pulang sebelum ini → cyan.</div>
       </div>
 
-      <!-- Tab: Penugasan -->
-      <div class="stab-pane" id="stab-assign">
-        <input type="text" class="emp-search" id="emp-search" placeholder="🔍 Cari nama atau PIN..." oninput="filterEmpRows()" />
-        <table class="settings-table">
-          <thead>
-            <tr>
-              <th style="width:80px">PIN</th>
-              <th>Nama Karyawan</th>
-              <th style="width:160px">Shift</th>
-            </tr>
-          </thead>
-          <tbody id="assign-tbody">
-            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Memuat data karyawan...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Tab: Jadwal Global -->
-      <div class="stab-pane" id="stab-global">
-        <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Window ini menentukan scan mana yang dikategorikan sebagai istirahat vs masuk/pulang. Berlaku untuk semua shift.</p>
-        <div class="form-row">
+      <!-- Tab: Ganti Password -->
+      <div class="stab-pane" id="us-password">
+        <div style="max-width:360px">
           <div class="form-group">
-            <label>Window Istirahat Dari</label>
-            <input type="time" id="s-ist-dari" />
-            <div class="hint">Scan sebelum jam ini = masuk</div>
+            <label>Password Baru</label>
+            <div class="pin-input-wrap">
+              <input type="password" id="us-pw-baru" placeholder="Min. 6 karakter" maxlength="100" autocomplete="new-password" style="font-size:13px" />
+            </div>
           </div>
           <div class="form-group">
-            <label>Window Istirahat Sampai</label>
-            <input type="time" id="s-ist-sampai" />
-            <div class="hint">Scan setelah jam ini = pulang</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab: Hari Libur -->
-      <div class="stab-pane" id="stab-holidays">
-        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Tanggal yang ditandai libur tidak dihitung alpha di rekap karyawan.</p>
-
-        <!-- Form tambah libur -->
-        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-          <input type="date" id="hl-tanggal" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;flex:1;min-width:140px" />
-          <input type="text" id="hl-nama" placeholder="Nama hari libur (mis. Idul Fitri)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;flex:2;min-width:180px" />
-          <button class="btn btn-primary" style="font-size:13px" onclick="addHoliday()">＋ Tambah</button>
-        </div>
-
-        <table class="settings-table" id="holidays-table">
-          <thead>
-            <tr>
-              <th style="width:130px">Tanggal</th>
-              <th>Nama Hari Libur</th>
-              <th style="width:50px"></th>
-            </tr>
-          </thead>
-          <tbody id="holidays-tbody">
-            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada hari libur</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Tab: Override Harian -->
-      <div class="stab-pane" id="stab-overrides">
-        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Override berlaku satu hari untuk karyawan tertentu atau semua. Contoh: pulang setengah hari, atau ganti shift sementara.</p>
-
-        <!-- Form tambah override -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-            <div class="form-group" style="margin:0">
-              <label>Tanggal</label>
-              <input type="date" id="ov-tanggal" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
-            </div>
-            <div class="form-group" style="margin:0">
-              <label>Keterangan</label>
-              <input type="text" id="ov-nama" placeholder="mis. Acara keluarga" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+            <label>Konfirmasi Password Baru</label>
+            <div class="pin-input-wrap">
+              <input type="password" id="us-pw-konfirm" placeholder="Ulangi password baru" maxlength="100" autocomplete="new-password" style="font-size:13px" />
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-            <div class="form-group" style="margin:0">
-              <label>Tipe Override</label>
-              <select id="ov-tipe" onchange="toggleOvFields()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                <option value="pulang_awal">⏰ Pulang Lebih Awal</option>
-                <option value="ganti_shift">🔄 Ganti Shift Harian</option>
-              </select>
-            </div>
-            <div class="form-group" style="margin:0" id="ov-field-pulang">
-              <label>Jam Pulang Baru</label>
-              <input type="time" id="ov-jam-pulang" value="13:00" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
-            </div>
-            <div class="form-group" style="margin:0;display:none" id="ov-field-shift">
-              <label>Shift Pengganti</label>
-              <select id="ov-shift-id" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-              </select>
-            </div>
-          </div>
-          <div style="margin-bottom:10px">
-            <div class="form-group" style="margin:0">
-              <label>Berlaku Untuk</label>
-              <select id="ov-berlaku" onchange="toggleOvKaryawan()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                <option value="semua">Semua Karyawan</option>
-                <option value="tertentu">Karyawan Tertentu</option>
-              </select>
-            </div>
-          </div>
-          <div id="ov-karyawan-wrap" style="display:none;margin-bottom:10px">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-              <button type="button" class="btn btn-ghost" style="font-size:13px" onclick="openOvKaryawanPicker()">👥 Pilih Karyawan...</button>
-              <span id="ov-karyawan-label" style="font-size:13px;color:var(--text-muted)">Belum ada dipilih</span>
-            </div>
-          </div>
-          <button class="btn btn-primary" style="font-size:13px" onclick="addOverride()">＋ Tambah Override</button>
-        </div>
-
-        <table class="settings-table" id="overrides-table">
-          <thead>
-            <tr>
-              <th style="width:110px">Tanggal</th>
-              <th>Keterangan</th>
-              <th style="width:140px">Tipe</th>
-              <th style="width:120px">Berlaku Untuk</th>
-              <th style="width:40px"></th>
-            </tr>
-          </thead>
-          <tbody id="overrides-tbody">
-            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada override</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Tab: Keamanan -->
-      <div class="stab-pane" id="stab-sec">
-        <div class="form-row">
-          <div class="form-group">
-            <label>PIN Baru (opsional)</label>
-            <input type="password" id="s-pin-baru" placeholder="Kosongkan jika tidak diganti" maxlength="20" autocomplete="new-password" />
-          </div>
-          <div class="form-group">
-            <label>Konfirmasi PIN Baru</label>
-            <input type="password" id="s-pin-konfirm" placeholder="Ulangi PIN baru" maxlength="20" autocomplete="new-password" />
-          </div>
+          <div class="alert-err" id="us-pw-err" style="margin-bottom:12px"></div>
+          <div class="alert-ok"  id="us-pw-ok"  style="margin-bottom:12px"></div>
+          <button class="btn btn-primary" onclick="userChangePassword()">Simpan Password</button>
         </div>
       </div>
 
     </div><!-- /modal-body-scroll -->
 
     <div class="modal-footer">
-      <button class="btn btn-ghost" style="margin-right:auto" onclick="openAdminModal()">🛠️ Menu Admin</button>
-      <button class="btn btn-ghost" onclick="closeSettingsModal()">Batal</button>
-      <button class="btn btn-primary" onclick="saveSettings()">Simpan</button>
+      <button class="btn btn-ghost" onclick="closeSettingsModal()">Tutup</button>
     </div>
   </div>
 </div>
@@ -1981,15 +2071,164 @@ const todayStr = new Date().toISOString().slice(0, 10);
 document.getElementById('f-dari').value   = todayStr;
 document.getElementById('f-sampai').value = todayStr;
 
-// ── SETTINGS ──
-let _sessionPin   = null;
-let _appShifts      = [];      // [{id,nama,jam_masuk,batas_terlambat,jam_pulang}]
-let _empShifts      = {};      // {pin: shift_id}
-let _appHolidays    = [];      // [{tanggal:'YYYY-MM-DD', nama:'...'}]
-let _dailyOverrides = [];      // [{id,tanggal,nama,tipe,jam_pulang,shift_id,berlaku_untuk}]
-// _pegawaiList declared above in picker section
+// ── AUTH STATE ──
+let _authToken = null;
+let _authUser  = null;
 
-// Cari shift untuk PIN tertentu, fallback ke shift pertama / default
+function authHeaders() {
+  return _authToken
+    ? { 'Authorization': `Bearer ${_authToken}` }
+    : {};
+}
+
+function saveAuthSession(token, user) {
+  _authToken = token;
+  _authUser  = user;
+  localStorage.setItem('_auth', JSON.stringify({ token, user }));
+}
+
+function clearAuthSession() {
+  _authToken = null;
+  _authUser  = null;
+  localStorage.removeItem('_auth');
+}
+
+async function loadAuthSession() {
+  const raw = localStorage.getItem('_auth');
+  if (!raw) return false;
+  try {
+    const { token, user } = JSON.parse(raw);
+    // Validate token still active
+    const res = await fetch('/api/auth/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) { clearAuthSession(); return false; }
+    const json = await res.json();
+    _authToken = token;
+    _authUser  = json.data;
+    localStorage.setItem('_auth', JSON.stringify({ token, user: _authUser }));
+    return true;
+  } catch (e) { clearAuthSession(); return false; }
+}
+
+function applyAuthUI() {
+  const loggedIn = !!_authUser;
+  const isAdmin  = _authUser?.role === 'admin';
+  document.getElementById('header-user-info').style.display   = loggedIn ? 'flex' : 'none';
+  document.getElementById('header-username').textContent      = _authUser?.name || '';
+  document.getElementById('btn-user-settings').style.display  = loggedIn ? '' : 'none';
+  document.getElementById('btn-admin').style.display          = isAdmin  ? '' : 'none';
+  document.getElementById('btn-logout').style.display         = loggedIn ? '' : 'none';
+}
+
+// ── LOGIN ──
+async function loadLoginUsers() {
+  try {
+    const res  = await fetch('/api/auth/users');
+    const json = await res.json();
+    const sel  = document.getElementById('login-username');
+    sel.innerHTML = `<option value="">— Pilih pengguna —</option>` +
+      (json.data || []).map(u =>
+        `<option value="${escHtml(u.username)}">${escHtml(u.name)} (${escHtml(u.username)})</option>`
+      ).join('');
+  } catch (e) {}
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-err');
+  errEl.classList.remove('show');
+
+  if (!username) {
+    errEl.textContent = 'Pilih pengguna terlebih dahulu.';
+    errEl.classList.add('show'); return;
+  }
+
+  try {
+    const res  = await fetch('/api/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const json = await res.json();
+    if (!json.success) {
+      errEl.textContent = json.message || 'Login gagal.';
+      errEl.classList.add('show'); return;
+    }
+
+    saveAuthSession(json.data.token, json.data.user);
+    document.getElementById('overlay-login').classList.remove('show');
+
+    if (json.data.user.must_change_password) {
+      document.getElementById('overlay-force-pw').classList.add('show');
+      setTimeout(() => document.getElementById('fcp-password').focus(), 100);
+      return;
+    }
+
+    await afterLogin();
+  } catch (e) {
+    errEl.textContent = 'Gagal terhubung ke server.';
+    errEl.classList.add('show');
+  }
+}
+
+async function doForceChangePw() {
+  const pw      = document.getElementById('fcp-password').value;
+  const confirm = document.getElementById('fcp-confirm').value;
+  const errEl   = document.getElementById('fcp-err');
+  errEl.classList.remove('show');
+
+  if (pw.length < 6) {
+    errEl.textContent = 'Password minimal 6 karakter.'; errEl.classList.add('show'); return;
+  }
+  if (pw !== confirm) {
+    errEl.textContent = 'Konfirmasi tidak cocok.'; errEl.classList.add('show'); return;
+  }
+
+  try {
+    const res  = await fetch('/api/auth/change-password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ password: pw, password_confirmation: confirm })
+    });
+    const json = await res.json();
+    if (!json.success) {
+      errEl.textContent = json.message; errEl.classList.add('show'); return;
+    }
+    _authUser.must_change_password = false;
+    saveAuthSession(_authToken, _authUser);
+    document.getElementById('overlay-force-pw').classList.remove('show');
+    await afterLogin();
+  } catch (e) {
+    errEl.textContent = 'Gagal terhubung ke server.'; errEl.classList.add('show');
+  }
+}
+
+async function doLogout() {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', headers: authHeaders() });
+  } catch (_) {}
+  clearAuthSession();
+  applyAuthUI();
+  document.getElementById('overlay-login').classList.add('show');
+  await loadLoginUsers();
+}
+
+async function afterLogin() {
+  applyAuthUI();
+  await loadAppSettings();
+  await initPicker();
+  if (_authUser?.pegawai_pin) {
+    const emp = _pegawaiList.find(p => String(p.pin) === String(_authUser.pegawai_pin));
+    if (emp) selectEmployee(emp.pin, emp.nama);
+  }
+}
+
+// ── SETTINGS ──
+let _appShifts      = [];
+let _empShifts      = {};
+let _appHolidays    = [];
+let _dailyOverrides = [];
+
 function getShiftForPin(pin) {
   const id = _empShifts[String(pin)];
   return _appShifts.find(s => s.id === id) || _appShifts[0] || { batas_terlambat:'', jam_pulang:'17:00' };
@@ -2004,75 +2243,89 @@ async function loadAppSettings() {
     _appHolidays    = data.holidays        || [];
     _dailyOverrides = data.daily_overrides || [];
     updatePersonalMeta();
-  } catch (e) { /* pakai default */ }
+  } catch (e) {}
 }
 
 // Init on load
 (async () => {
-  await loadAppSettings();
-  await initPicker(); // loads pegawai list and shows picker
+  const valid = await loadAuthSession();
+  if (!valid) {
+    await loadLoginUsers();
+    document.getElementById('overlay-login').classList.add('show');
+    return;
+  }
+  await afterLogin();
 })();
 
-// ── PIN MODAL ──
-let _pinModalMode = 'settings'; // 'settings' | 'admin'
-let _adminPin = null;
-
-function openAdminPinModal() {
-  _pinModalMode = 'admin';
-  document.getElementById('pin-input').value = '';
-  document.getElementById('pin-err').classList.remove('show');
-  document.getElementById('modal-pin').classList.add('open');
-  setTimeout(() => document.getElementById('pin-input').focus(), 100);
+// ── USER SETTINGS MODAL ──
+function openUserSettingsModal() {
+  if (!_authUser) return;
+  document.getElementById('us-nama').textContent     = _authUser.name     || '—';
+  document.getElementById('us-username').textContent = _authUser.username  || '—';
+  document.getElementById('us-role').textContent     = _authUser.role      || '—';
+  document.getElementById('us-pin').textContent      = _authUser.pegawai_pin || '(tidak terhubung ke karyawan)';
+  document.getElementById('us-pw-baru').value   = '';
+  document.getElementById('us-pw-konfirm').value = '';
+  document.getElementById('us-pw-err').classList.remove('show');
+  document.getElementById('us-pw-ok').classList.remove('show');
+  switchStab('us-profil', document.querySelector('.stab-btn'));
+  document.getElementById('modal-settings').classList.add('open');
 }
 
-function openPinModal() {
-  _pinModalMode = 'settings';
-  document.getElementById('pin-input').value = '';
-  document.getElementById('pin-err').classList.remove('show');
-  document.getElementById('modal-pin').classList.add('open');
-  setTimeout(() => document.getElementById('pin-input').focus(), 100);
+function closeSettingsModal() {
+  document.getElementById('modal-settings').classList.remove('open');
 }
-function closePinModal() { document.getElementById('modal-pin').classList.remove('open'); }
 
-async function submitPin() {
-  const pin = document.getElementById('pin-input').value.trim();
-  if (!pin) return;
+async function userChangePassword() {
+  const pw      = document.getElementById('us-pw-baru').value;
+  const confirm = document.getElementById('us-pw-konfirm').value;
+  const errEl   = document.getElementById('us-pw-err');
+  const okEl    = document.getElementById('us-pw-ok');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+
+  if (pw.length < 6) {
+    errEl.textContent = 'Password minimal 6 karakter.'; errEl.classList.add('show'); return;
+  }
+  if (pw !== confirm) {
+    errEl.textContent = 'Konfirmasi tidak cocok.'; errEl.classList.add('show'); return;
+  }
+
   try {
-    const res = await fetch('/api/settings', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin, data: {} })
+    const res  = await fetch('/api/auth/change-password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ password: pw, password_confirmation: confirm })
     });
-    if (res.status === 401) {
-      document.getElementById('pin-err').classList.add('show');
-      document.getElementById('pin-input').value = '';
-      document.getElementById('pin-input').focus();
-      return;
-    }
-    _sessionPin = pin;
-    closePinModal();
-    if (_pinModalMode === 'admin') {
-      _adminPin = pin;
-      adminInit();
-      document.getElementById('modal-admin').classList.add('open');
-    } else {
-      openSettingsModal();
-    }
+    const json = await res.json();
+    if (!json.success) { errEl.textContent = json.message; errEl.classList.add('show'); return; }
+    okEl.textContent = 'Password berhasil diubah.'; okEl.classList.add('show');
+    document.getElementById('us-pw-baru').value   = '';
+    document.getElementById('us-pw-konfirm').value = '';
   } catch (e) {
-    document.getElementById('pin-err').textContent = 'Gagal terhubung ke server.';
-    document.getElementById('pin-err').classList.add('show');
+    errEl.textContent = 'Gagal terhubung ke server.'; errEl.classList.add('show');
   }
 }
 
-// ── SETTINGS MODAL ──
-async function openSettingsModal() {
-  document.getElementById('settings-err').classList.remove('show');
-  document.getElementById('settings-ok').classList.remove('show');
-  document.getElementById('s-pin-baru').value    = '';
-  document.getElementById('s-pin-konfirm').value = '';
+function switchStab(id, btn) {
+  document.querySelectorAll('.stab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.stab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
 
-  // Pastikan tab pertama aktif
-  switchStab('stab-shifts', document.querySelector('.stab-btn'));
+function switchPengaturanStab(id, btn) {
+  document.querySelectorAll('.pstab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pstab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
 
+async function openPengaturanSettings() {
+  const errEl = document.getElementById('pengaturan-err');
+  const okEl  = document.getElementById('pengaturan-ok');
+  if (errEl) errEl.classList.remove('show');
+  if (okEl)  okEl.classList.remove('show');
+  // Reset ke tab pertama
+  switchPengaturanStab('pstab-shifts', document.querySelector('.pstab-btn'));
   try {
     const res  = await fetch('/api/settings');
     const { data } = await res.json();
@@ -2083,23 +2336,37 @@ async function openSettingsModal() {
     document.getElementById('s-ist-dari').value   = data.ist_window_dari   || '10:00';
     document.getElementById('s-ist-sampai').value = data.ist_window_sampai || '16:10';
   } catch (e) {}
-
   renderShiftsTable();
   renderHolidaysTable();
   renderOverridesTable();
   await loadEmployeesForAssign();
-  document.getElementById('modal-settings').classList.add('open');
 }
 
-function closeSettingsModal() {
-  document.getElementById('modal-settings').classList.remove('open');
-}
-
-function switchStab(id, btn) {
-  document.querySelectorAll('.stab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.stab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if (btn) btn.classList.add('active');
+async function adminChangePassword() {
+  const pw      = document.getElementById('adm-pw-baru').value;
+  const confirm = document.getElementById('adm-pw-konfirm').value;
+  const errEl   = document.getElementById('adm-pw-err');
+  const okEl    = document.getElementById('adm-pw-ok');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (pw.length < 6) {
+    errEl.textContent = 'Password minimal 6 karakter.'; errEl.classList.add('show'); return;
+  }
+  if (pw !== confirm) {
+    errEl.textContent = 'Konfirmasi tidak cocok.'; errEl.classList.add('show'); return;
+  }
+  try {
+    const res  = await fetch('/api/auth/change-password', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ password: pw, password_confirmation: confirm })
+    });
+    const json = await res.json();
+    if (!json.success) { errEl.textContent = json.message; errEl.classList.add('show'); return; }
+    okEl.textContent = 'Password berhasil diubah.'; okEl.classList.add('show');
+    document.getElementById('adm-pw-baru').value   = '';
+    document.getElementById('adm-pw-konfirm').value = '';
+  } catch (e) {
+    errEl.textContent = 'Gagal terhubung ke server.'; errEl.classList.add('show');
+  }
 }
 
 // ── SHIFTS TABLE ──
@@ -2486,19 +2753,10 @@ function renderOverridesTable() {
 
 // ── SAVE SETTINGS ──
 async function saveSettings() {
-  const pinBaru    = document.getElementById('s-pin-baru').value.trim();
-  const pinKonfirm = document.getElementById('s-pin-konfirm').value.trim();
-  const errEl = document.getElementById('settings-err');
-  const okEl  = document.getElementById('settings-ok');
-  errEl.classList.remove('show');
-  okEl.classList.remove('show');
-
-  if (pinBaru && pinBaru !== pinKonfirm) {
-    errEl.textContent = 'Konfirmasi PIN tidak cocok.';
-    errEl.classList.add('show');
-    switchStab('stab-sec', document.querySelectorAll('.stab-btn')[3]);
-    return;
-  }
+  const errEl = document.getElementById('pengaturan-err');
+  const okEl  = document.getElementById('pengaturan-ok');
+  if (errEl) errEl.classList.remove('show');
+  if (okEl)  okEl.classList.remove('show');
 
   const payload = {
     shifts:            _appShifts,
@@ -2508,41 +2766,33 @@ async function saveSettings() {
     ist_window_dari:   document.getElementById('s-ist-dari').value,
     ist_window_sampai: document.getElementById('s-ist-sampai').value,
   };
-  if (pinBaru) payload.pin_baru = pinBaru;
 
   try {
     const res = await fetch('/api/settings', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: _sessionPin, data: payload })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ data: payload })
     });
     const json = await res.json();
     if (!json.success) {
-      errEl.textContent = json.message || 'Gagal menyimpan.';
-      errEl.classList.add('show');
+      if (errEl) { errEl.textContent = json.message || 'Gagal menyimpan.'; errEl.classList.add('show'); }
       return;
     }
-    if (pinBaru) _sessionPin = pinBaru;
     await loadAppSettings();
-    okEl.classList.add('show');
-    setTimeout(closeSettingsModal, 1200);
+    if (okEl) okEl.classList.add('show');
+    showToast('✅ Tersimpan', 'Pengaturan berhasil disimpan');
   } catch (e) {
-    errEl.textContent = 'Gagal terhubung ke server.';
-    errEl.classList.add('show');
+    if (errEl) { errEl.textContent = 'Gagal terhubung ke server.'; errEl.classList.add('show'); }
   }
 }
 
-// Tutup modal klik di luar box
-document.getElementById('modal-pin').addEventListener('click', function(e) {
-  if (e.target === this) closePinModal();
-});
+// Tutup modal-settings klik di luar box
 document.getElementById('modal-settings').addEventListener('click', function(e) {
   if (e.target === this) closeSettingsModal();
 });
 
 // ── ADMIN ──
 function openAdminModal() {
-  _adminPin = _sessionPin;
-  closeSettingsModal();
   adminInit();
   document.getElementById('modal-admin').classList.add('open');
 }
@@ -2559,9 +2809,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadSyncDevices() {
   try {
-    const res  = await fetch('/api/sync/devices', {
-      headers: { 'x-admin-pin': _sessionPin }
-    });
+    const res  = await fetch('/api/sync/devices', { headers: authHeaders() });
     const json = await res.json();
     if (!json.success) return;
     const sel = document.getElementById('sync-device');
@@ -2571,15 +2819,14 @@ async function loadSyncDevices() {
 }
 
 async function runBackfill() {
-  const dari     = document.getElementById('sync-dari').value;
-  const sampai   = document.getElementById('sync-sampai').value;
-  const cloudId  = document.getElementById('sync-device').value;
-  const errEl    = document.getElementById('sync-err');
-  const okEl     = document.getElementById('sync-ok');
-  const btn      = document.getElementById('sync-btn');
+  const dari    = document.getElementById('sync-dari').value;
+  const sampai  = document.getElementById('sync-sampai').value;
+  const cloudId = document.getElementById('sync-device').value;
+  const errEl   = document.getElementById('sync-err');
+  const okEl    = document.getElementById('sync-ok');
+  const btn     = document.getElementById('sync-btn');
 
   errEl.classList.remove('show'); okEl.classList.remove('show');
-
   if (!dari || !sampai) {
     errEl.textContent = 'Pilih rentang tanggal terlebih dahulu.';
     errEl.classList.add('show'); return;
@@ -2590,15 +2837,13 @@ async function runBackfill() {
   }
 
   btn.textContent = '⏳ Memproses...'; btn.disabled = true;
-
   try {
     const payload = { start_date: dari, end_date: sampai };
     if (cloudId) payload.cloud_id = cloudId;
-
     const res  = await fetch('/api/sync/backfill', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _sessionPin },
-      body: JSON.stringify({ pin: _sessionPin, data: payload })
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ data: payload })
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.message);
@@ -2606,8 +2851,7 @@ async function runBackfill() {
     okEl.textContent = `✅ Selesai (${mesin}) — ${json.inserted} data baru, ${json.duplicate} duplikat diabaikan (total dari API: ${json.total}).`;
     okEl.classList.add('show');
   } catch (e) {
-    errEl.textContent = '❌ ' + e.message;
-    errEl.classList.add('show');
+    errEl.textContent = '❌ ' + e.message; errEl.classList.add('show');
   } finally {
     btn.textContent = '🔄 Sinkronisasi'; btn.disabled = false;
   }
@@ -2722,7 +2966,7 @@ async function adminSaveScan(i, sn, scan_date_lama, pin) {
   try {
     const res = await fetch('/api/att_log/scan', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ data: { sn, scan_date_lama, pin, scan_date_baru } })
     });
     const json = await res.json();
@@ -2737,7 +2981,7 @@ async function adminDeleteScan(i, sn, scan_date, pin) {
   try {
     const res = await fetch('/api/att_log/scan', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ data: { sn, scan_date, pin } })
     });
     const json = await res.json();
@@ -2760,7 +3004,7 @@ async function adminAddScan() {
   try {
     const res = await fetch('/api/att_log/scan', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ data: { pin, scan_date, catatan } })
     });
     const json = await res.json();
@@ -2851,7 +3095,7 @@ async function adminSavePegawai(i, pin) {
   try {
     const res = await fetch(`/api/pegawai/${encodeURIComponent(pin)}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ data: { pegawai_nama: nama, pegawai_nip: nip, pegawai_telp: telp, pegawai_status: parseInt(status) } })
     });
     const json = await res.json();
@@ -2867,7 +3111,7 @@ async function adminDeletePegawai(pin, nama) {
   try {
     const res = await fetch(`/api/pegawai/${encodeURIComponent(pin)}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({})
     });
     const json = await res.json();
@@ -2891,7 +3135,7 @@ async function adminAddPegawai() {
   try {
     const res = await fetch('/api/pegawai', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-pin': _adminPin },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ data: { pegawai_pin: pin, pegawai_nama: nama, pegawai_nip: nip, pegawai_telp: telp } })
     });
     const json = await res.json();

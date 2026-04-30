@@ -14,11 +14,7 @@ class SettingsController extends Controller
 
     public function store(Request $request)
     {
-        $pin  = $request->input('pin');
         $data = $request->input('data', []);
-
-        if (!$pin || $pin !== SettingsManager::get('pin'))
-            return response()->json(['success' => false, 'message' => 'PIN salah'], 401);
 
         if (!empty($data['ist_window_dari']))   SettingsManager::set('ist_window_dari', $data['ist_window_dari']);
         if (!empty($data['ist_window_sampai'])) SettingsManager::set('ist_window_sampai', $data['ist_window_sampai']);
@@ -37,11 +33,8 @@ class SettingsController extends Controller
         if (isset($data['daily_overrides']) && is_array($data['daily_overrides']))
             SettingsManager::set('daily_overrides', array_values(array_filter($data['daily_overrides'], fn($o) => !empty($o['tanggal']))));
 
-        if (!empty($data['pin_baru']) && trim($data['pin_baru']))
-            SettingsManager::set('pin', trim($data['pin_baru']));
-
         SettingsManager::save();
-        \Log::info('Settings diperbarui');
+        \Log::info('Settings diperbarui oleh: ' . $request->attributes->get('auth_user')?->username);
 
         return response()->json(['success' => true, 'message' => 'Settings disimpan']);
     }
