@@ -1264,6 +1264,28 @@
           <div class="alert-ok"  id="adm-scan-ok"  style="margin-top:10px;margin-bottom:0"></div>
         </div>
 
+        <!-- History Tambah Scan Manual -->
+        <div class="table-wrap" id="adm-scan-history-wrap" style="margin-bottom:20px;display:none">
+          <div class="table-header">
+            <span class="table-title">HISTORY TAMBAH SCAN MANUAL</span>
+            <span class="total-badge" id="adm-scan-history-badge">0 entri</span>
+          </div>
+          <div class="table-scroll">
+            <table class="raw-scan-table">
+              <thead>
+                <tr>
+                  <th>Karyawan</th>
+                  <th style="width:70px">PIN</th>
+                  <th>Waktu Scan</th>
+                  <th>Catatan</th>
+                  <th>Ditambahkan</th>
+                </tr>
+              </thead>
+              <tbody id="adm-scan-history-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="filter-bar" style="margin-bottom:16px">
           <div class="filter-group">
             <label>Dari</label>
@@ -1735,6 +1757,7 @@
 // ── EMPLOYEE PICKER ──
 let _selectedEmployee = null; // { pin, nama }
 let _pegawaiList      = [];   // [{pin,nama}]
+let _scanManualHistory = [];  // history tambah scan manual sesi ini
 let _currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
 async function initPicker() {
@@ -3181,6 +3204,23 @@ async function adminDeleteScan(i, sn, scan_date, pin) {
   } catch (e) { alert(e.message); }
 }
 
+function renderScanManualHistory() {
+  const wrap  = document.getElementById('adm-scan-history-wrap');
+  const tbody = document.getElementById('adm-scan-history-tbody');
+  const badge = document.getElementById('adm-scan-history-badge');
+  if (!_scanManualHistory.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  badge.textContent = `${_scanManualHistory.length} entri`;
+  tbody.innerHTML = _scanManualHistory.slice().reverse().map(h => `
+    <tr>
+      <td>${escHtml(h.nama)}</td>
+      <td style="font-family:var(--font-mono);font-size:12px">${escHtml(String(h.pin))}</td>
+      <td>${escHtml(h.scan_date)}</td>
+      <td>${h.catatan ? escHtml(h.catatan) : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${escHtml(h.added_at)}</td>
+    </tr>`).join('');
+}
+
 async function adminAddScan() {
   const pin = document.getElementById('adm-scan-pin').value;
   const dt  = document.getElementById('adm-scan-dt').value;
@@ -3201,6 +3241,15 @@ async function adminAddScan() {
     if (!json.success) { errEl.textContent = json.message; errEl.classList.add('show'); return; }
     okEl.textContent = catatan ? `Scan ditambahkan — catatan: "${catatan}"` : 'Scan manual berhasil ditambahkan';
     okEl.classList.add('show');
+    const emp = _pegawaiList.find(p => String(p.pin) === String(pin));
+    _scanManualHistory.push({
+      pin,
+      nama: emp ? emp.nama : pin,
+      scan_date,
+      catatan,
+      added_at: new Date().toLocaleString('id-ID')
+    });
+    renderScanManualHistory();
     document.getElementById('adm-scan-catatan').value = '';
     showToast('✅ Berhasil', 'Scan manual ditambahkan');
   } catch (e) { errEl.textContent = e.message; errEl.classList.add('show'); }
