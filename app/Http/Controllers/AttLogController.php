@@ -93,6 +93,21 @@ class AttLogController extends Controller
         if (!$affected)
             return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
 
+        // Hapus catatan dari scan_notes jika tidak ada lagi scan manual untuk pin+tanggal ini
+        $tanggal = substr($scanDate, 0, 10);
+        $sisaScan = DB::table('att_log')
+            ->where('sn', 'MANUAL')
+            ->where('pin', (string)$pin)
+            ->whereRaw('DATE(scan_date) = ?', [$tanggal])
+            ->count();
+
+        if ($sisaScan === 0) {
+            $notes = SettingsManager::get('scan_notes', []);
+            $notes = array_values(array_filter($notes, fn($n) => !((string)$n['pin'] === (string)$pin && $n['tanggal'] === $tanggal)));
+            SettingsManager::set('scan_notes', $notes);
+            SettingsManager::save();
+        }
+
         return response()->json(['success' => true, 'message' => 'Scan berhasil dihapus']);
     }
 }
