@@ -31,8 +31,6 @@ class AbsensiService
         }
 
         $settings  = SettingsManager::all();
-        $istDari   = ($settings['ist_window_dari']   ?? '10:00') . ':00';
-        $istSampai = ($settings['ist_window_sampai'] ?? '16:10') . ':00';
 
         $result = [];
         foreach ($map as ['tanggal' => $tanggal, 'pin' => $pin, 'nama' => $nama, 'scans' => $scans]) {
@@ -49,14 +47,23 @@ class AbsensiService
                 $jamPulang = $override ? ($override['jam_pulang'] ?? ($shift['jam_pulang'] ?? '17:00')) : ($shift['jam_pulang'] ?? '17:00');
             }
 
+            $istDari   = isset($shift['ist_window_dari'])   ? $shift['ist_window_dari']   . ':00' : null;
+            $istSampai = isset($shift['ist_window_sampai']) ? $shift['ist_window_sampai'] . ':00' : null;
+
             // Klasifikasi scan
-            $scanMasuk      = $scans[0] ?? null;
-            $restScans      = array_slice($scans, 1);
-            $lastScan       = end($restScans) ?: null;
-            $lastIsPulang   = $lastScan && $lastScan > $istSampai;
-            $scanPulang     = $lastIsPulang ? $lastScan : null;
-            $forIst         = $lastIsPulang ? array_slice($restScans, 0, -1) : $restScans;
-            $istScans       = array_values(array_filter($forIst, fn($t) => $t >= $istDari && $t <= $istSampai));
+            $scanMasuk = $scans[0] ?? null;
+            $restScans = array_slice($scans, 1);
+            $lastScan  = end($restScans) ?: null;
+
+            if ($istDari && $istSampai) {
+                $lastIsPulang = $lastScan && $lastScan > $istSampai;
+                $scanPulang   = $lastIsPulang ? $lastScan : null;
+                $forIst       = $lastIsPulang ? array_slice($restScans, 0, -1) : $restScans;
+                $istScans     = array_values(array_filter($forIst, fn($t) => $t >= $istDari && $t <= $istSampai));
+            } else {
+                $scanPulang = $lastScan ?: null;
+                $istScans   = [];
+            }
             $scanIstirahat1 = $istScans[0] ?? null;
             $scanIstirahat2 = $istScans[1] ?? null;
 
@@ -135,6 +142,7 @@ class AbsensiService
     public static function getActiveOverride(string $pin, string $tanggal, array $settings): ?array
     {
         foreach ($settings['daily_overrides'] ?? [] as $o) {
+            if (($o['tipe'] ?? '') === 'absen_inject') continue;
             if (($o['tanggal'] ?? '') !== $tanggal) continue;
             if (($o['berlaku_untuk'] ?? '') === 'semua') return $o;
             if (is_array($o['berlaku_untuk'] ?? null) && in_array((string)$pin, $o['berlaku_untuk'])) return $o;

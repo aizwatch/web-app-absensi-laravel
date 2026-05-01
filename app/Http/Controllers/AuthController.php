@@ -146,6 +146,34 @@ class AuthController extends Controller
         return response()->json(['success' => true, 'message' => 'Password berhasil diubah']);
     }
 
+    /** POST /api/auth/admin-reset-password  [admin only] */
+    public function adminResetPassword(Request $request)
+    {
+        $pin = trim($request->input('pin', ''));
+        $pw  = $request->input('password', '');
+
+        if (! $pin) {
+            return response()->json(['success' => false, 'message' => 'PIN wajib diisi'], 422);
+        }
+        if (strlen($pw) < 6) {
+            return response()->json(['success' => false, 'message' => 'Password minimal 6 karakter'], 422);
+        }
+
+        $hashed = Hash::make($pw);
+
+        $affected = DB::table('pegawai')->where('pegawai_pin', $pin)->update([
+            'password'             => $hashed,
+            'must_change_password' => true,
+            'auth_token'           => null,
+        ]);
+
+        if (! $affected) {
+            return response()->json(['success' => false, 'message' => 'Karyawan tidak ditemukan'], 404);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Password berhasil direset. User wajib ganti saat login berikutnya.']);
+    }
+
     // ── helpers ──
 
     private function pegawaiPayload(object $pegawai, string $token): array

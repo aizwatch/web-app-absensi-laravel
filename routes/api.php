@@ -18,7 +18,10 @@ Route::prefix('auth')->group(function () {
     Route::middleware(AuthMiddleware::class)->group(function () {
         Route::get('me',                [AuthController::class, 'me']);
         Route::post('logout',           [AuthController::class, 'logout']);
-        Route::post('change-password',  [AuthController::class, 'changePassword']);
+        Route::post('change-password',       [AuthController::class, 'changePassword']);
+    });
+    Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
+        Route::post('admin-reset-password',  [AuthController::class, 'adminResetPassword']);
     });
 });
 
