@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Absensi Realtime — Fingerspot</title>
+<title>Absensi Realtime — PT. Long Time</title>
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1001,7 +1001,7 @@
     <div class="logo-icon">👁</div>
     <div>
       <div class="logo-text" style="font-family:var(--font-mono);font-size:15px;font-weight:600">ABSENSI MONITOR</div>
-      <span style="font-size:11px;color:var(--text-muted)">Fingerspot Realtime Dashboard</span>
+      <span style="font-size:11px;color:var(--text-muted)">Absensi Karyawan Realtime Dashboard</span>
     </div>
   </div>
   <div class="picker-title">Halo! Siapa kamu?</div>
@@ -1070,7 +1070,7 @@
         <div class="logo-icon">👁</div>
         <div>
           <div class="logo-text">ABSENSI MONITOR</div>
-          <span class="logo-sub">Fingerspot Realtime Dashboard</span>
+          <span class="logo-sub">Absensi Karyawan Realtime Dashboard</span>
         </div>
       </div>
       <div class="header-right">
@@ -3367,12 +3367,13 @@ async function confirmInjectModal() {
     const saveSettings  = (data) => fetch('/api/settings', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+_authToken}, body: JSON.stringify({ data }) }).then(r => { if (!r.ok) throw new Error('settings save failed'); });
 
     if (alasan === 'sakit') {
-      const shift    = _appShifts.find(s => s.id === (_empShifts[String(_injPin)] || '')) || _appShifts[0];
-      const jamShift = (shift?.jam_masuk || '08:00') + ':00';
-      await postScan(_injTanggal + ' ' + jamShift, catatan);
-      _dailyOverrides.push({ ...logEntry, jam_masuk: jamShift.slice(0,5), jam_pulang: null });
+      // scan_note saja — scan masuk kolom tetap kosong, tidak inject att_log
       const sData = await fetchSettings();
-      await saveSettings({ ...sData, daily_overrides: _dailyOverrides });
+      const notes = sData.scan_notes || [];
+      const idx = notes.findIndex(n => String(n.pin) === String(_injPin) && n.tanggal === _injTanggal);
+      if (idx >= 0) notes[idx].catatan = catatan; else notes.push({ pin: String(_injPin), tanggal: _injTanggal, catatan });
+      _dailyOverrides.push({ ...logEntry, jam_masuk: null, jam_pulang: null });
+      await saveSettings({ ...sData, scan_notes: notes, daily_overrides: _dailyOverrides });
     } else if (alasan === 'ganti_shift') {
       const shiftId = document.getElementById('inj-shift-id').value;
       const shift   = _appShifts.find(s => s.id === shiftId);
@@ -3474,7 +3475,20 @@ async function deleteOverride(id) {
   }
 
   _dailyOverrides = _dailyOverrides.filter(o => o.id !== id);
+  // Persist hapus absen_inject ke settings
+  if (entry.tipe === 'absen_inject' || entry.tipe === 'ganti_shift') {
+    fetch('/api/settings', { headers: { 'Authorization': 'Bearer ' + _authToken } })
+      .then(r => r.json()).then(j => {
+        const d = j.data || {};
+        d.daily_overrides = _dailyOverrides;
+        return fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _authToken }, body: JSON.stringify({ data: d }) });
+      }).catch(() => {});
+  }
   renderOverridesTable();
+  // Refresh rekap aktif
+  if (document.getElementById('tab-personal')?.classList.contains('active') && _selectedEmployee) {
+    loadPersonalAbsensi();
+  }
 }
 
 function renderOverridesTable() {
