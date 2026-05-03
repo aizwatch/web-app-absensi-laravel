@@ -13,7 +13,10 @@ export function formatTanggal(str) {
   if (!str) return '—';
   const d = new Date(str + 'T00:00:00');
   const full = d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
-  return `<span class="tgl-full">${full}</span><span class="tgl-short">${d.getDate()}</span>`;
+  const hari = HARI[d.getDay()];
+  const tgl  = d.getDate();
+  const bln  = d.toLocaleDateString('id-ID', { month:'short' });
+  return `<span class="tgl-full">${full}</span><span class="tgl-short">${hari}, ${tgl} ${bln}</span>`;
 }
 
 export function fmtTime(val) {

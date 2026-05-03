@@ -330,6 +330,10 @@
     font-family: var(--font-mono); font-size: 14px;
     font-weight: 600; color: var(--text);
   }
+
+  @media (max-width: 640px) {
+    .td-durasi { font-weight: 400; font-size: 10px; }
+  }
   .td-durasi.zero { color: var(--text-dim); }
 
   /* Highlight cells */
@@ -835,29 +839,22 @@
     .t-short { display: inline; }
 
     #tab-personal table,
-    #tab-live table { min-width: unset; width: 100%; }
+    #tab-live table { min-width: unset; width: 100%; table-layout: fixed; }
 
     #tab-personal th, #tab-personal td,
     #tab-live th, #tab-live td {
-      padding: 4px 2px;
+      padding: 5px 3px;
       font-size: 10px;
+      width: auto;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
-
-    #tab-personal th:nth-child(3), #tab-personal td:nth-child(3),
-    #tab-personal th:nth-child(4), #tab-personal td:nth-child(4),
-    #tab-personal th:nth-child(5), #tab-personal td:nth-child(5),
-    #tab-personal th:nth-child(6), #tab-personal td:nth-child(6) { width: 36px; }
-
-    #tab-live th:nth-child(3), #tab-live td:nth-child(3),
-    #tab-live th:nth-child(4), #tab-live td:nth-child(4),
-    #tab-live th:nth-child(5), #tab-live td:nth-child(5),
-    #tab-live th:nth-child(6), #tab-live td:nth-child(6) { width: 36px; }
 
     #tab-personal thead th,
     #tab-live thead th {
-      white-space: normal;
-      word-break: break-word;
-      line-height: 1.2;
+      white-space: nowrap;
+      text-align: center;
     }
 
     #tab-personal .th-hari,
@@ -866,20 +863,22 @@
     #tab-personal .th-status,
     #tab-personal td:nth-child(8) { display: none; }
 
-    #tab-personal th:nth-child(1),
-    #tab-personal td:nth-child(1) { width: 1% !important; white-space: nowrap; }
+    /* tab-personal: 6 visible cols → equal width */
+    #tab-personal th:nth-child(1), #tab-personal td:nth-child(1) { width: 20%; }
+    #tab-personal th:nth-child(3), #tab-personal td:nth-child(3),
+    #tab-personal th:nth-child(4), #tab-personal td:nth-child(4),
+    #tab-personal th:nth-child(5), #tab-personal td:nth-child(5),
+    #tab-personal th:nth-child(6), #tab-personal td:nth-child(6) { width: 16%; }
+    #tab-personal th:nth-child(7), #tab-personal td:nth-child(7) { width: 16%; }
 
-    #tab-personal th:nth-child(7),
-    #tab-personal td:nth-child(7) { width: 26px; }
-
-    #tab-live th:nth-child(1),
-    #tab-live td:nth-child(1) { width: 1% !important; white-space: nowrap; }
-
-    #tab-live th:nth-child(2),
-    #tab-live td:nth-child(2) { min-width: unset !important; width: 65px; word-break: break-word; }
-
-    #tab-live th:nth-child(7),
-    #tab-live td:nth-child(7) { width: 26px; }
+    /* tab-live: col2 nama diberi sedikit lebih lebar, sisanya rata */
+    #tab-live th:nth-child(1), #tab-live td:nth-child(1) { width: 14%; }
+    #tab-live th:nth-child(2), #tab-live td:nth-child(2) { width: 22%; word-break: break-word; white-space: normal; }
+    #tab-live th:nth-child(3), #tab-live td:nth-child(3),
+    #tab-live th:nth-child(4), #tab-live td:nth-child(4),
+    #tab-live th:nth-child(5), #tab-live td:nth-child(5),
+    #tab-live th:nth-child(6), #tab-live td:nth-child(6) { width: 14%; }
+    #tab-live th:nth-child(7), #tab-live td:nth-child(7) { width: 8%; }
 
     #tab-personal .td-time, #tab-live .td-time { font-size: 10px; }
     .td-tanggal { font-size: 10px; }
