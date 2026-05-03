@@ -76,8 +76,17 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const veryLate=r.scan_masuk&&r.scan_masuk>=batasSetengah;
     const terlambat=!veryLate&&r.scan_masuk&&batas&&r.scan_masuk>batas;
     const pulangCepat=r.scan_pulang&&r.scan_pulang<jamPulang;
-    const istSelisih=r.durasi_istirahat!=null&&r.scan_masuk?r.durasi_istirahat-60:null;
-    const istPenalty=istSelisih!=null&&istSelisih>=60?'merah':istSelisih!=null&&istSelisih>=30?'pink':istSelisih!=null&&istSelisih>=15?'kuning':null;
+
+    // Istirahat: hanya hitung jika shift pakai ist_window DAN row hadir (scan_masuk, !catatan, !veryLate)
+    const shiftHasIst=!!(shift&&shift.ist_window_dari&&shift.ist_window_sampai);
+    const isHadirRow=!!(r.scan_masuk&&!r.catatan&&!veryLate);
+    const onlySingleIst=shiftHasIst&&isHadirRow&&((r.scan_istirahat1&&!r.scan_istirahat2)||(!r.scan_istirahat1&&r.scan_istirahat2));
+    let istSelisih=null,istPenalty=null;
+    if(shiftHasIst&&isHadirRow){
+      if(onlySingleIst){istPenalty='pink';}
+      else if(r.durasi_istirahat!=null){istSelisih=r.durasi_istirahat-60;istPenalty=istSelisih>=60?'merah':istSelisih>=30?'pink':istSelisih>=15?'kuning':null;}
+    }
+
     let rowBg='',statusCell='';
     if(r.catatan){rowBg='#fff3cd';statusCell=`<span class="s-ket">${r.catatan}</span>`;}
     else if(absent){rowBg='#fde8ec';statusCell=`<span class="s-alpha">Tidak Hadir</span>`;}
@@ -91,10 +100,13 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const pulangStyle=pulangCepat?'color:#2b6cb0':(r.scan_pulang?'color:#276749':'');
     const ist1=r.scan_istirahat1&&!r.scan_istirahat2?`<span style="color:#e67e22">${t(r.scan_istirahat1)}</span>`:(t(r.scan_istirahat1)||'—');
     let durasiHtml='—';
-    if(r.durasi_istirahat!=null){
-      const selisihStr=istSelisih!=null?(istSelisih>=0?`+${istSelisih}`:`${istSelisih}`):null;
-      const selisihColor=istPenalty==='merah'?'#c53030':istPenalty==='pink'?'#ad1457':istPenalty==='kuning'?'#b7791f':istSelisih!=null&&istSelisih<0?'#2b6cb0':'#555';
-      durasiHtml=selisihStr!=null?`${r.durasi_istirahat} <span style="font-size:7.5px;color:${selisihColor};font-weight:700">${selisihStr}</span>`:`${r.durasi_istirahat}`;
+    if(shiftHasIst&&isHadirRow){
+      if(onlySingleIst){durasiHtml=`<span style="font-size:7.5px;color:#ad1457;font-weight:700">½ hr</span>`;}
+      else if(r.durasi_istirahat!=null){
+        const selisihStr=istSelisih!=null?(istSelisih>=0?`+${istSelisih}`:`${istSelisih}`):null;
+        const selisihColor=istPenalty==='merah'?'#c53030':istPenalty==='pink'?'#ad1457':istPenalty==='kuning'?'#b7791f':istSelisih!=null&&istSelisih<0?'#2b6cb0':'#555';
+        durasiHtml=selisihStr!=null?`${r.durasi_istirahat} <span style="font-size:7.5px;color:${selisihColor};font-weight:700">${selisihStr}</span>`:`${r.durasi_istirahat}`;
+      }
     }
     return `<tr style="background:${rowBg}">
       <td>${tglFmt} <span style="font-size:7.5px;color:#888">${dayName}</span></td>
@@ -112,20 +124,42 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const rows=p.rows.map(r=>rowHtml(r,shift)).join('');
     const shiftWorkDays=shift&&shift.hari_kerja&&shift.hari_kerja.length?shift.hari_kerja:[1,2,3,4,5,6];
     const shiftBatasSetengah=((shift&&shift.batas_setengah_hari)||'08:30')+':00';
+    const shiftHasIst=!!(shift&&shift.ist_window_dari&&shift.ist_window_sampai);
     const workDays=p.rows.filter(r=>{const d=new Date(r.tanggal+'T00:00:00');return shiftWorkDays.includes(d.getDay())&&!holidays.includes(r.tanggal);});
-    const getIstPenalty=r=>{if(r.durasi_istirahat==null||!r.scan_masuk)return null;const s=r.durasi_istirahat-60;return s>=60?'merah':s>=30?'pink':s>=15?'kuning':null;};
+    // getIstPenalty: hanya hitung jika shift pakai ist_window, row hadir (scan_masuk, !catatan, !veryLate)
+    const getIstPenalty=r=>{
+      if(!shiftHasIst||!r.scan_masuk||r.catatan||r.scan_masuk>=shiftBatasSetengah)return null;
+      if((r.scan_istirahat1&&!r.scan_istirahat2)||(!r.scan_istirahat1&&r.scan_istirahat2))return 'pink';
+      if(r.durasi_istirahat==null)return null;
+      const s=r.durasi_istirahat-60;return s>=60?'merah':s>=30?'pink':s>=15?'kuning':null;
+    };
     const alpha=workDays.filter(r=>!r.scan_masuk&&!r.catatan).length;
     const ket=workDays.filter(r=>r.catatan).length;
     const telatSekali=workDays.filter(r=>r.scan_masuk&&!r.catatan&&r.scan_masuk>=shiftBatasSetengah).length;
     const telat=workDays.filter(r=>{if(!r.scan_masuk||r.catatan||r.scan_masuk>=shiftBatasSetengah)return false;const batas=shift&&shift.batas_terlambat?(shift.batas_terlambat+':00'):null;return batas&&r.scan_masuk>batas;}).length;
-    const istMerah=workDays.filter(r=>r.scan_masuk&&!r.catatan&&getIstPenalty(r)==='merah'&&r.scan_masuk<shiftBatasSetengah).length;
-    const istPink=workDays.filter(r=>r.scan_masuk&&!r.catatan&&getIstPenalty(r)==='pink'&&r.scan_masuk<shiftBatasSetengah).length;
-    const istKuning=workDays.filter(r=>r.scan_masuk&&!r.catatan&&getIstPenalty(r)==='kuning'&&r.scan_masuk<shiftBatasSetengah).length;
-    const hadirDecimal=workDays.reduce((sum,r)=>{if(!r.scan_masuk||r.catatan||r.scan_masuk>=shiftBatasSetengah)return sum;const ip=getIstPenalty(r);if(ip==='merah'||ip==='pink')return sum;if(ip==='kuning')return sum+0.75;return sum+1;},0);
-    const hadir=hadirDecimal%1===0?hadirDecimal:+hadirDecimal.toFixed(2);
-    const hadirCount=workDays.filter(r=>r.scan_masuk&&!r.catatan).length;
-    const totalIst=workDays.filter(r=>r.scan_masuk&&!r.catatan).reduce((sum,r)=>sum+(r.durasi_istirahat!=null?r.durasi_istirahat:0),0);
-    const selisihIst=totalIst-(hadirCount*60);
+    const istMerah=workDays.filter(r=>getIstPenalty(r)==='merah').length;
+    const istPink=workDays.filter(r=>getIstPenalty(r)==='pink').length;
+    const istKuning=workDays.filter(r=>getIstPenalty(r)==='kuning').length;
+    const hadirDecimal=workDays.reduce((sum,r)=>{
+      if(!r.scan_masuk||r.catatan)return sum;
+      if(r.scan_masuk>=shiftBatasSetengah)return sum+0.5;
+      const ip=getIstPenalty(r);
+      if(ip==='merah')return sum;
+      if(ip==='pink')return sum+0.5;
+      if(ip==='kuning')return sum+0.75;
+      return sum+1;
+    },0);
+    const nonWorkDays=p.rows.length-workDays.length;
+    const hadirTotal=hadirDecimal+nonWorkDays;
+    const hadir=hadirTotal%1===0?hadirTotal:+hadirTotal.toFixed(2);
+    // totalIst: hanya hadir (scan_masuk, !catatan, !veryLate) dan shift pakai ist_window
+    const hadirRows=shiftHasIst?workDays.filter(r=>{
+      if(!r.scan_masuk||r.catatan||r.scan_masuk>=shiftBatasSetengah)return false;
+      if((r.scan_istirahat1&&!r.scan_istirahat2)||(!r.scan_istirahat1&&r.scan_istirahat2))return false;
+      return true;
+    }):[];
+    const totalIst=hadirRows.reduce((sum,r)=>sum+(r.durasi_istirahat!=null?r.durasi_istirahat:0),0);
+    const selisihIst=totalIst-(hadirRows.length*60);
     return `<div class="emp-card">
       <div class="emp-title">PT. LONG TIME — Laporan Absensi ${escHtml(bulanLabel)}</div>
       <div class="emp-header"><span class="emp-name">${escHtml(p.nama)}</span><span class="emp-pin">PIN: ${escHtml(p.pin)}</span><span class="emp-shift">${shift?escHtml(shift.nama||''):''}</span></div>
@@ -140,14 +174,14 @@ export function printLaporanPdf(data, bulan, filterPin) {
         <span class="s-alpha">1/2 Hari: <b>${telatSekali}</b></span>
         <span class="s-alpha">Tidak Hadir: <b>${alpha}</b></span>
         <span class="s-ket">Keterangan: <b>${ket}</b></span>
-        <span style="margin-left:auto;color:#333">Total Istirahat: ${selisihIst===0?`<b style="color:#276749">tepat</b>`:selisihIst>0?`<b style="color:#c53030">+${selisihIst}m</b>`:`<b style="color:#2b6cb0">${selisihIst}m</b>`} &nbsp;|&nbsp; Hari Kerja: <b>${workDays.length}</b> | Total: <b>${p.rows.length}</b> hari</span>
+        <span style="margin-left:auto;color:#333">${shiftHasIst?`Total Istirahat: ${selisihIst===0?`<b style="color:#276749">tepat</b>`:selisihIst>0?`<b style="color:#c53030">+${selisihIst}m</b>`:`<b style="color:#2b6cb0">${selisihIst}m</b>`} &nbsp;|&nbsp; `:''}Hari Kerja: <b>${workDays.length}</b> | Total: <b>${p.rows.length}</b> hari</span>
       </div>
-      <div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
+      ${shiftHasIst?`<div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
         <span style="color:#555;font-weight:600">Potongan Istirahat:</span>
         <span style="color:#b7791f">1/4 Hari: <b>${istKuning}</b></span>
         <span style="color:#ad1457">1/2 Hari: <b>${istPink}</b></span>
         <span style="color:#c53030">Tidak Hadir: <b>${istMerah}</b></span>
-      </div>
+      </div>`:''}
     </div>`;
   }
 
