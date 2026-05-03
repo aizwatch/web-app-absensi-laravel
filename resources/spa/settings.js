@@ -582,24 +582,41 @@ export function renderOverridesTable() {
 }
 
 // ── DEPARTEMEN ──
+async function saveDepartmentsOnly() {
+  try{
+    const res=await fetch('/api/settings');
+    const {data}=await res.json();
+    data.departments=state.departments;
+    await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({data})});
+  }catch(e){showToast('❌','Gagal menyimpan departemen');}
+}
+
 export function renderDepartmentsCard() {
   const el=document.getElementById('dept-list');
   if(el){
-    if(!state.departments.length){el.innerHTML='<span style="color:var(--text2);font-size:13px">Belum ada departemen</span>';}
+    if(!state.departments.length){el.innerHTML='<p style="color:var(--text2);font-size:13px;margin:0">Belum ada departemen.</p>';}
     else{el.innerHTML=state.departments.map((d,i)=>
-      `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:13px">
-        ${escHtml(d)}
-        <button onclick="removeDepartment(${i})" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:14px;line-height:1;padding:0" title="Hapus">×</button>
-      </span>`
+      `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:13px">
+        <span>${escHtml(d)}</span>
+        <button onclick="removeDepartment(${i})" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:16px;line-height:1;padding:0 2px" title="Hapus">×</button>
+      </div>`
     ).join('');}
   }
-  // sync dropdown tambah karyawan
   const sel=document.getElementById('np-dept');
   if(sel){
     const cur=sel.value;
     sel.innerHTML='<option value="">— Pilih —</option>'+state.departments.map(d=>`<option value="${escHtml(d)}">${escHtml(d)}</option>`).join('');
     sel.value=cur;
   }
+}
+
+export function openDeptModal() {
+  renderDepartmentsCard();
+  document.getElementById('modal-dept').classList.add('open');
+}
+
+export function closeDeptModal() {
+  document.getElementById('modal-dept').classList.remove('open');
 }
 
 export async function addDepartment() {
@@ -610,13 +627,16 @@ export async function addDepartment() {
   state.departments.push(nama);
   inp.value='';
   renderDepartmentsCard();
-  await saveSettings();
+  await saveDepartmentsOnly();
+  showToast('✅ Tersimpan',`Departemen "${nama}" ditambahkan`);
 }
 
 export async function removeDepartment(idx) {
+  const nama=state.departments[idx];
   state.departments.splice(idx,1);
   renderDepartmentsCard();
-  await saveSettings();
+  await saveDepartmentsOnly();
+  showToast('🗑️ Dihapus',`Departemen "${nama}" dihapus`);
 }
 
 // ── ADMIN PASSWORD ──

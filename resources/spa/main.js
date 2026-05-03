@@ -25,6 +25,7 @@ import {
   addOverride,
   adminResetUserPassword,
   renderDepartmentsCard, addDepartment, removeDepartment,
+  openDeptModal, closeDeptModal,
 } from './settings.js';
 import { pollAbsensi, changeMonth, loadPersonalAbsensi } from './table.js';
 import { applyFilter, resetFilter, exportFilter } from './filter.js';
@@ -80,6 +81,7 @@ Object.assign(window, {
   adminResetUserPassword, saveSettings,
   openPengaturanSettings,
   renderDepartmentsCard, addDepartment, removeDepartment,
+  openDeptModal, closeDeptModal,
 
   // filter
   applyFilter, resetFilter, exportFilter,
