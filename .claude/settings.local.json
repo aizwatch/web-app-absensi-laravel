@@ -8,7 +8,15 @@
       "Bash(rtk wc *)",
       "Bash(rtk grep *)",
       "Bash(rtk git *)",
-      "Bash(php artisan *)"
+      "Bash(php artisan *)",
+      "PowerShell(Get-ChildItem d:\\\\GitLT\\\\web-app-absensi-laravel\\\\public\\\\js\\\\,d:\\\\GitLT\\\\web-app-absensi-laravel\\\\public\\\\css\\\\ | Select-Object Name, @{n='Lines';e={\\(Get-Content $_.FullName\\).Count}}, @{n='KB';e={[math]::Round\\($_.Length/1KB,1\\)}} | Format-Table -AutoSize; Write-Host \"\"; Get-Item d:\\\\GitLT\\\\web-app-absensi-laravel\\\\public\\\\index.html | Select-Object Name, @{n='Lines';e={\\(Get-Content $_.FullName\\).Count}}, @{n='KB';e={[math]::Round\\($_.Length/1KB,1\\)}})",
+      "PowerShell(Get-Item d:\\\\GitLT\\\\web-app-absensi-laravel\\\\public\\\\index.html | Select-Object Name, @{n='Lines';e={\\(Get-Content $_.FullName\\).Count}}, @{n='KB';e={[math]::Round\\($_.Length/1KB,1\\)}})",
+      "Bash(rtk du *)",
+      "Bash(npm init *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('vite:', d.get\\('devDependencies',{}\\).get\\('vite','not found'\\)\\)\")",
+      "Bash(npm install *)",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\GitLT\\\\web-app-absensi-laravel\\\\resources\\\\spa\")",
+      "Bash(rtk npm *)"
     ]
   }
 }
