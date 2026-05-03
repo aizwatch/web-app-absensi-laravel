@@ -285,13 +285,16 @@
             <div class="form-group">
               <label>Tipe</label>
               <select id="am-tipe" onchange="toggleAmFields()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                <option value="lembur">💼 Lembur</option>
-                <option value="izin">🙏 Izin</option>
-                <option value="meeting">🗣️ Meeting</option>
-                <option value="setengah_hari_pagi">🌅 Setengah Hari Pagi</option>
-                <option value="setengah_hari_siang">🌇 Setengah Hari Siang</option>
+                <option value="lembur">🌙 Lembur</option>
+                <option value="customer_visit">🚗 Customer Visit</option>
+                <option value="sakit">🏥 Sakit (MC)</option>
+                <option value="ganti_shift">🔄 Ganti Shift</option>
               </select>
-              <div class="hint" id="am-tipe-hint" style="margin-top:6px">Lembur/Izin/Meeting → catatan di rekap. Setengah Hari → ubah jadwal pulang.</div>
+              <div class="hint" id="am-tipe-hint" style="margin-top:6px"></div>
+            </div>
+            <div class="form-group" style="display:none" id="am-shift-wrap">
+              <label>Shift Pengganti <span style="color:#e53e3e">*</span></label>
+              <select id="am-shift-id" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box"></select>
             </div>
             <div class="form-group">
               <label>Catatan <span style="color:var(--text-muted);font-weight:400">(opsional)</span></label>
@@ -875,7 +878,12 @@
         <option value="customer_visit">🚗 Customer Visit</option>
         <option value="sakit">🏥 Sakit (MC)</option>
         <option value="ganti_shift">🔄 Ganti Shift</option>
+        <option value="lainnya">📝 Lainnya</option>
       </select>
+    </div>
+    <div class="form-group" style="display:none" id="inj-wrap-lainnya">
+      <label>Jam <span style="color:#e53e3e">*</span></label>
+      <input type="time" id="inj-jam-lainnya" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="inj-jam-wrap">
       <div class="form-group" style="margin:0" id="inj-wrap-masuk">

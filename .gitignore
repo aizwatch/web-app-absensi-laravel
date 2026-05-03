@@ -14,7 +14,8 @@
 /.zed
 /auth.json
 /node_modules
-/public/build
+/public/build/css
+/public/build/js
 /public/hot
 /public/storage
 /storage/*.key
@@ -25,5 +26,5 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .env.example
-SYSTEM_MAP.md
+SYSTEM_MAP.md   
 .claude/

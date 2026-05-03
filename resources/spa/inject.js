@@ -10,6 +10,7 @@ export function openInjectModal(pin, tanggal, nama) {
   document.getElementById('inj-alasan').value='lembur';
   document.getElementById('inj-jam-masuk').value='';
   document.getElementById('inj-jam-pulang').value='';
+  document.getElementById('inj-jam-lainnya').value='';
   document.getElementById('inj-keterangan').value='';
   const sel=document.getElementById('inj-shift-id');
   sel.innerHTML=state.appShifts.map(s=>`<option value="${escHtml(s.id)}">${escHtml(s.nama)}</option>`).join('')||'<option value="">— Belum ada shift —</option>';
@@ -25,9 +26,11 @@ export function toggleInjAlasan() {
   const alasan=document.getElementById('inj-alasan').value;
   const isShift=alasan==='ganti_shift';
   const isSakit=alasan==='sakit';
-  document.getElementById('inj-jam-wrap').style.display=(isShift||isSakit)?'none':'grid';
+  const isLainnya=alasan==='lainnya';
+  document.getElementById('inj-jam-wrap').style.display=(isShift||isSakit||isLainnya)?'none':'grid';
   document.getElementById('inj-wrap-shift').style.display=isShift?'':'none';
-  const hints={lembur:'Inject scan pulang (masuk opsional). Catatan: Lembur.',customer_visit:'Inject scan pulang (masuk opsional). Catatan: Customer Visit.',sakit:'Hanya tambah keterangan Sakit (MC) ke scan_notes. Tidak inject scan.',ganti_shift:'Tambah override ganti shift. Jam pulang mengikuti shift dipilih.'};
+  document.getElementById('inj-wrap-lainnya').style.display=isLainnya?'':'none';
+  const hints={lembur:'Inject scan pulang (masuk opsional). Catatan: Lembur.',customer_visit:'Inject scan pulang (masuk opsional). Catatan: Customer Visit.',sakit:'Hanya tambah keterangan Sakit (MC) ke scan_notes. Tidak inject scan.',ganti_shift:'Tambah override ganti shift. Jam pulang mengikuti shift dipilih.',lainnya:'Inject 1 scan pada jam yang ditentukan. Keterangan wajib diisi.'};
   document.getElementById('inj-hint').textContent=hints[alasan]||'';
 }
 
@@ -37,10 +40,13 @@ export async function confirmInjectModal() {
   const jamMasuk=document.getElementById('inj-jam-masuk').value;
   const jamPulang=document.getElementById('inj-jam-pulang').value;
   const keterangan=document.getElementById('inj-keterangan').value.trim();
-  const alasanLabel={lembur:'Lembur',customer_visit:'Customer Visit',sakit:'Sakit (MC)',ganti_shift:'Ganti Shift'}[alasan]||alasan;
+  const jamLainnya=document.getElementById('inj-jam-lainnya').value;
+  const alasanLabel={lembur:'Lembur',customer_visit:'Customer Visit',sakit:'Sakit (MC)',ganti_shift:'Ganti Shift',lainnya:'Lainnya'}[alasan]||alasan;
   const catatan=keterangan||alasanLabel;
   if(['lembur','customer_visit'].includes(alasan)&&!jamPulang){alert('Jam pulang wajib diisi');return;}
   if(alasan==='ganti_shift'&&!document.getElementById('inj-shift-id').value){alert('Pilih shift pengganti');return;}
+  if(alasan==='lainnya'&&!jamLainnya){alert('Jam wajib diisi');return;}
+  if(alasan==='lainnya'&&!keterangan){alert('Keterangan wajib diisi untuk alasan Lainnya');return;}
 
   const btn=document.getElementById('inj-confirm-btn');
   btn.disabled=true; btn.textContent='Menyimpan...';
@@ -69,6 +75,11 @@ export async function confirmInjectModal() {
       const ovEntry={id:'ov-'+Date.now(),tanggal:state.injTanggal,nama:catatan,tipe:'ganti_shift',shift_id:shiftId,jam_pulang:shift?.jam_pulang||'17:00',berlaku_untuk:[String(state.injPin)],created_by:logEntry.created_by,created_at:logEntry.created_at};
       state.dailyOverrides.push(ovEntry);
       await saveSettingsInject({...sData,daily_overrides:state.dailyOverrides});
+    } else if(alasan==='lainnya'){
+      await postScan(state.injTanggal+' '+jamLainnya+':00',catatan);
+      state.dailyOverrides.push({...logEntry,jam_masuk:jamLainnya,jam_pulang:null});
+      const sData=await fetchSettings();
+      await saveSettingsInject({...sData,daily_overrides:state.dailyOverrides});
     } else {
       if(jamMasuk) await postScan(state.injTanggal+' '+jamMasuk+':00',catatan);
       await postScan(state.injTanggal+' '+jamPulang+':00',jamMasuk?null:catatan);
@@ -93,7 +104,7 @@ export function openRowHistory(pin, tanggal, nama) {
     if(Array.isArray(o.berlaku_untuk)) return o.berlaku_untuk.includes(String(pin));
     return false;
   });
-  const alasanIcons={lembur:'🌙',sakit:'🏥',customer_visit:'🚗',setengah_hari_pagi:'🌅',setengah_hari_siang:'🌤️',ganti_shift:'🔄'};
+  const alasanIcons={lembur:'🌙',sakit:'🏥',customer_visit:'🚗',setengah_hari_pagi:'🌅',setengah_hari_siang:'🌤️',ganti_shift:'🔄',lainnya:'📝'};
   const body=document.getElementById('hist-body');
   if(!entries.length){
     body.innerHTML=`<p style="color:var(--text-muted);text-align:center;padding:16px">Tidak ada riwayat untuk hari ini.</p>`;

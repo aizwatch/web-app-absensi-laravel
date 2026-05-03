@@ -155,7 +155,8 @@ export function renderPersonalTable(data) {
           const jamPulang=((shift&&shift.jam_pulang)||'17:00')+':00';
           if(row.scan_pulang<jamPulang) pulangAwal++;
         }
-      } else if(!row||!row.scan_masuk) { alpha++; }
+      } else if(row&&row.catatan) { /* keterangan — skip alpha */ }
+      else { alpha++; }
     }
     const ist1Only=row&&row.scan_istirahat1&&!row.scan_istirahat2;
     const istIncomplete=ist1Only||(row&&!row.scan_istirahat1&&row.scan_istirahat2);

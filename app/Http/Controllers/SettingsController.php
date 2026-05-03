@@ -33,6 +33,9 @@ class SettingsController extends Controller
         if (isset($data['daily_overrides']) && is_array($data['daily_overrides']))
             SettingsManager::set('daily_overrides', array_values(array_filter($data['daily_overrides'], fn($o) => !empty($o['tanggal']))));
 
+        if (isset($data['scan_notes']) && is_array($data['scan_notes']))
+            SettingsManager::set('scan_notes', array_values(array_filter($data['scan_notes'], fn($n) => !empty($n['pin']) && !empty($n['tanggal']))));
+
         SettingsManager::save();
         \Log::info('Settings diperbarui oleh: ' . $request->attributes->get('auth_user')?->username);
 

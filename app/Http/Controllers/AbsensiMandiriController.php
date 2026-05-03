@@ -16,6 +16,9 @@ class AbsensiMandiriController extends Controller
         'meeting'            => 'Meeting',
         'setengah_hari_pagi' => 'Setengah Hari Pagi',
         'setengah_hari_siang'=> 'Setengah Hari Siang',
+        'customer_visit'     => 'Customer Visit',
+        'sakit'              => 'Sakit (MC)',
+        'ganti_shift'        => 'Ganti Shift',
     ];
 
     /** POST /api/absensi-mandiri — karyawan submit request */
@@ -45,13 +48,14 @@ class AbsensiMandiriController extends Controller
         $tanggal  = $request->input('tanggal');
         $tipe     = $request->input('tipe');
         $catatan  = $request->input('catatan', '');
-        $isHalfDay = in_array($tipe, ['setengah_hari_pagi', 'setengah_hari_siang']);
-        $jam      = $isHalfDay ? null : $request->input('jam');
+        $noJam    = in_array($tipe, ['setengah_hari_pagi', 'setengah_hari_siang', 'sakit', 'ganti_shift']);
+        $isHalfDay = in_array($tipe, ['setengah_hari_pagi', 'setengah_hari_siang']); // keep for compat
+        $jam      = $noJam ? null : $request->input('jam');
 
         if (! $tanggal || ! $tipe) {
             return response()->json(['success' => false, 'message' => 'Tanggal dan tipe wajib diisi'], 422);
         }
-        if (! $isHalfDay && ! $jam) {
+        if (! $noJam && ! $jam) {
             return response()->json(['success' => false, 'message' => 'Jam wajib diisi untuk tipe ini'], 422);
         }
 
@@ -175,9 +179,20 @@ class AbsensiMandiriController extends Controller
         return response()->json(['success' => true, 'message' => 'Ditolak']);
     }
 
-    /** GET /api/absensi-mandiri/{id}/attachment */
-    public function attachment(int $id)
+    /** GET /api/absensi-mandiri/{id}/attachment?token= */
+    public function attachment(Request $request, int $id)
     {
+        // Validasi token via query param (untuk buka di tab baru)
+        $token = $request->query('token') ?: $request->bearerToken();
+        if (! $token) {
+            return response()->json(['success' => false, 'message' => 'Tidak terautentikasi'], 401);
+        }
+        $valid = DB::table('pegawai')->where('auth_token', $token)->exists()
+              || \App\Models\User::where('auth_token', $token)->exists();
+        if (! $valid) {
+            return response()->json(['success' => false, 'message' => 'Token tidak valid'], 401);
+        }
+
         $row = DB::table('absensi_mandiri')->where('id', $id)->first();
         if (! $row || ! $row->attachment) {
             abort(404);
@@ -197,7 +212,17 @@ class AbsensiMandiriController extends Controller
         $label   = self::$TIPE_LABEL[$row->tipe] ?? $row->tipe;
         $catatan = trim(($label . ($row->catatan ? (' — ' . $row->catatan) : '')));
 
-        if (in_array($row->tipe, ['lembur', 'izin', 'meeting'])) {
+        if (in_array($row->tipe, ['lembur', 'izin', 'meeting', 'customer_visit'])) {
+            // Inject scan pulang ke att_log jika ada jam
+            if ($row->jam) {
+                DB::table('att_log')->insert([
+                    'sn'        => 'MANUAL',
+                    'scan_date' => $tanggal . ' ' . $row->jam,
+                    'pin'       => $pin,
+                    'verifymode'=> 1,
+                    'inoutmode' => 2,
+                ]);
+            }
             // Tambah ke scan_notes
             $notes = SettingsManager::get('scan_notes', []);
             $notes = array_values(array_filter($notes,
@@ -205,6 +230,36 @@ class AbsensiMandiriController extends Controller
             ));
             $notes[] = ['pin' => $pin, 'tanggal' => $tanggal, 'catatan' => $catatan];
             SettingsManager::set('scan_notes', $notes);
+            SettingsManager::save();
+
+        } elseif ($row->tipe === 'sakit') {
+            // Hanya scan_notes, tidak inject att_log
+            $notes = SettingsManager::get('scan_notes', []);
+            $notes = array_values(array_filter($notes,
+                fn($n) => !($n['pin'] === $pin && $n['tanggal'] === $tanggal)
+            ));
+            $notes[] = ['pin' => $pin, 'tanggal' => $tanggal, 'catatan' => $catatan];
+            SettingsManager::set('scan_notes', $notes);
+            SettingsManager::save();
+
+        } elseif ($row->tipe === 'ganti_shift') {
+            // catatan berisi shift_id yang dipilih karyawan
+            $shiftId   = trim($row->catatan ?? '');
+            $shifts    = SettingsManager::get('shifts', []);
+            $shift     = collect($shifts)->firstWhere('id', $shiftId);
+            $overrides = SettingsManager::get('daily_overrides', []);
+            $overrides[] = [
+                'id'           => uniqid('am_'),
+                'tanggal'      => $tanggal,
+                'nama'         => 'Ganti Shift' . ($shift ? ' — ' . $shift['nama'] : ''),
+                'tipe'         => 'ganti_shift',
+                'shift_id'     => $shiftId,
+                'jam_pulang'   => $shift['jam_pulang'] ?? '17:00',
+                'berlaku_untuk'=> [$pin],
+                'created_by'   => $approvedBy,
+                'created_at'   => now()->toISOString(),
+            ];
+            SettingsManager::set('daily_overrides', $overrides);
             SettingsManager::save();
 
         } elseif ($row->tipe === 'setengah_hari_pagi') {

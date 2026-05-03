@@ -60,10 +60,10 @@ Route::get('sync/devices', [SyncController::class, 'devices']);
 Route::middleware([AuthMiddleware::class . ':admin'])->post('sync/backfill', [SyncController::class, 'backfill']);
 
 // ── Absensi Mandiri ──
+Route::get('absensi-mandiri/{id}/attachment', [AbsensiMandiriController::class, 'attachment']);
 Route::middleware(AuthMiddleware::class)->group(function () {
-    Route::post('absensi-mandiri',              [AbsensiMandiriController::class, 'store']);
-    Route::get('absensi-mandiri/mine',          [AbsensiMandiriController::class, 'myRequests']);
-    Route::get('absensi-mandiri/{id}/attachment',[AbsensiMandiriController::class, 'attachment']);
+    Route::post('absensi-mandiri',     [AbsensiMandiriController::class, 'store']);
+    Route::get('absensi-mandiri/mine', [AbsensiMandiriController::class, 'myRequests']);
 });
 Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
     Route::get('absensi-mandiri',               [AbsensiMandiriController::class, 'adminList']);
