@@ -53,7 +53,8 @@ Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
 });
 
 // ── Webhook — validasi via cloud_id, tidak butuh auth ──
-Route::post('webhook/fingerspot', [WebhookController::class, 'fingerspot']);
+Route::post('webhook/fingerspot', [WebhookController::class, 'fingerspot'])
+    ->middleware('throttle:60,1');
 
 // ── Sync / Backfill ──
 Route::get('sync/devices', [SyncController::class, 'devices']);

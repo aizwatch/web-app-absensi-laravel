@@ -15,6 +15,7 @@ export const state = {
   empShifts:        {},
   appHolidays:      [],
   dailyOverrides:   [],
+  departments:      [],
 
   // Filter & Cari
   lastFilterData:   [],

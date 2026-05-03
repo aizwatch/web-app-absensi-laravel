@@ -23,7 +23,8 @@ import {
   openOvKaryawanPicker, closeOvKaryawanPicker, filterOvPicker,
   toggleOvPin, ovPickerSelectAll, ovPickerClearAll, confirmOvKaryawanPicker,
   addOverride,
-  adminChangePassword, adminResetUserPassword,
+  adminResetUserPassword,
+  renderDepartmentsCard, addDepartment, removeDepartment,
 } from './settings.js';
 import { pollAbsensi, changeMonth, loadPersonalAbsensi } from './table.js';
 import { applyFilter, resetFilter, exportFilter } from './filter.js';
@@ -75,9 +76,10 @@ Object.assign(window, {
   toggleOvPin, ovPickerSelectAll, ovPickerClearAll, confirmOvKaryawanPicker,
   addOverride, deleteOverride,
 
-  // settings — password
-  adminChangePassword, adminResetUserPassword, saveSettings,
+  // settings — password + departemen
+  adminResetUserPassword, saveSettings,
   openPengaturanSettings,
+  renderDepartmentsCard, addDepartment, removeDepartment,
 
   // filter
   applyFilter, resetFilter, exportFilter,
@@ -149,6 +151,11 @@ setInterval(pollAbsensi, 5000);
   if (!valid) {
     await loadLoginUsers();
     document.getElementById('overlay-login').classList.add('show');
+    return;
+  }
+  if (state.authUser?.must_change_password) {
+    document.getElementById('overlay-force-pw').classList.add('show');
+    setTimeout(() => document.getElementById('fcp-password').focus(), 100);
     return;
   }
   await afterLogin();

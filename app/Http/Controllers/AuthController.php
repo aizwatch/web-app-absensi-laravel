@@ -182,6 +182,7 @@ class AuthController extends Controller
             '_source'              => 'pegawai',
             'name'                 => $pegawai->pegawai_nama,
             'username'             => $pegawai->pegawai_pin,
+            'nip'                  => $pegawai->pegawai_nip ?? '',
             'role'                 => $pegawai->role ?? 'user',
             'pegawai_pin'          => $pegawai->pegawai_pin,
             'must_change_password' => (bool) $pegawai->must_change_password,
@@ -205,6 +206,7 @@ class AuthController extends Controller
         return [
             'name'                 => $auth->name,
             'username'             => $auth->username,
+            'nip'                  => $auth->nip ?? '',
             'role'                 => $auth->role,
             'pegawai_pin'          => $auth->pegawai_pin,
             'must_change_password' => $auth->must_change_password,

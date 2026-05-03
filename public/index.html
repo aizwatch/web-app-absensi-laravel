@@ -49,7 +49,7 @@
     <div class="form-group">
       <label>Password</label>
       <div class="pin-input-wrap">
-        <input type="password" id="login-password" placeholder="Kosongkan jika login pertama kali" style="width:100%;box-sizing:border-box;font-size:13px" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password" />
+        <input type="password" id="login-password" placeholder="Kosongkan jika login pertama kali" style="width:100%;box-sizing:border-box;font-size:13px;letter-spacing:normal" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password" />
       </div>
     </div>
     <div class="alert-err" id="login-err" style="margin-bottom:12px"></div>
@@ -91,16 +91,20 @@
         </div>
       </div>
       <div class="header-right">
-        <div class="live-badge">
-          <div class="live-dot" id="live-dot"></div>
-          <span id="conn-status">CONNECTING</span>
+        <div class="header-status">
+          <div class="live-badge">
+            <div class="live-dot" id="live-dot"></div>
+            <span id="conn-status">CONNECTING</span>
+          </div>
+          <div id="clock">--:--:--</div>
         </div>
-        <div id="clock">--:--:--</div>
         <div id="header-user-info" style="display:none"><strong id="header-username"></strong></div>
-        <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-        <button class="theme-toggle" id="btn-user-settings" onclick="openUserSettingsModal()" title="Pengaturan Akun" style="display:none">⚙️</button>
-        <button class="theme-toggle" id="btn-admin" onclick="openAdminModal()" title="Menu Admin" style="display:none">🛠️</button>
-        <button class="theme-toggle" id="btn-logout" onclick="doLogout()" title="Logout" style="display:none">🚪</button>
+        <div class="header-btns">
+          <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+          <button class="theme-toggle" id="btn-user-settings" onclick="openUserSettingsModal()" title="Pengaturan Akun" style="display:none">⚙️</button>
+          <button class="theme-toggle" id="btn-admin" onclick="openAdminModal()" title="Menu Admin" style="display:none">🛠️</button>
+          <button class="theme-toggle" id="btn-logout" onclick="doLogout()" title="Logout" style="display:none">🚪</button>
+        </div>
       </div>
     </div>
   </div>
@@ -416,13 +420,27 @@
       <!-- Sub-tab: Data Karyawan -->
       <div class="admin-stab-pane" id="astab-pegawai">
 
+        <div class="admin-form-card" style="margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">🏢 Kelola Departemen</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+            <input type="text" id="dept-input" placeholder="Nama departemen baru" style="width:220px" onkeydown="if(event.key==='Enter')addDepartment()" />
+            <button class="btn btn-primary" style="font-size:13px" onclick="addDepartment()">＋ Tambah</button>
+          </div>
+          <div id="dept-list" style="display:flex;flex-wrap:wrap;gap:8px"><span style="color:var(--text2);font-size:13px">Memuat...</span></div>
+        </div>
+
         <div class="admin-form-card">
           <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">＋ Tambah Karyawan Baru</div>
-          <div class="form-row" style="grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px">
+          <div class="form-row" style="grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px">
             <div class="filter-group"><label>PIN *</label><input type="text" id="np-pin" placeholder="mis. 123" /></div>
             <div class="filter-group"><label>Nama *</label><input type="text" id="np-nama" placeholder="Nama lengkap" /></div>
             <div class="filter-group"><label>NIP</label><input type="text" id="np-nip" placeholder="NIP (opsional)" /></div>
             <div class="filter-group"><label>Telp</label><input type="text" id="np-telp" placeholder="No. telepon" /></div>
+            <div class="filter-group"><label>Departemen</label>
+              <select id="np-dept">
+                <option value="">— Pilih —</option>
+              </select>
+            </div>
           </div>
           <button class="btn btn-primary" style="font-size:13px" onclick="adminAddPegawai()">Tambah Karyawan</button>
           <div class="alert-err" id="adm-peg-err" style="margin-top:10px;margin-bottom:0"></div>
@@ -442,12 +460,13 @@
                   <th>Nama</th>
                   <th>NIP</th>
                   <th>Telepon</th>
+                  <th>Departemen</th>
                   <th style="width:80px">Status</th>
                   <th style="width:90px">Aksi</th>
                 </tr>
               </thead>
               <tbody id="adm-peg-tbody">
-                <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">Memuat data...</div></div></td></tr>
+                <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">Memuat data...</div></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -528,6 +547,7 @@
           <div class="alert-err" id="sync-err" style="margin-top:12px;margin-bottom:0"></div>
           <div class="alert-ok"  id="sync-ok"  style="margin-top:12px;margin-bottom:0"></div>
         </div>
+
       </div>
 
       <!-- Sub-tab: Pengaturan -->
@@ -539,7 +559,6 @@
           <button class="pstab-btn" onclick="switchPengaturanStab('pstab-assign',this)">👤 Penugasan</button>
           <button class="pstab-btn" onclick="switchPengaturanStab('pstab-holidays',this)">🗓️ Hari Libur</button>
           <button class="pstab-btn" onclick="switchPengaturanStab('pstab-overrides',this)">📅 Override Harian</button>
-          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-sec',this)">🔐 Ganti Password Admin</button>
           <button class="pstab-btn" onclick="switchPengaturanStab('pstab-resetpw',this)">👥 Reset Password User</button>
         </div>
 
@@ -709,28 +728,6 @@
           </table>
         </div>
 
-        <!-- pstab: Ganti Password Admin -->
-        <div class="pstab-pane" id="pstab-sec">
-          <div style="max-width:420px">
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Ganti password akun admin yang sedang login.</p>
-            <div class="form-group">
-              <label>Password Baru</label>
-              <div class="pin-input-wrap">
-                <input type="password" id="adm-pw-baru" placeholder="Min. 6 karakter" maxlength="100" autocomplete="new-password" style="font-size:13px" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Konfirmasi Password Baru</label>
-              <div class="pin-input-wrap">
-                <input type="password" id="adm-pw-konfirm" placeholder="Ulangi password baru" maxlength="100" autocomplete="new-password" style="font-size:13px" />
-              </div>
-            </div>
-            <div class="alert-err" id="adm-pw-err" style="margin-bottom:12px"></div>
-            <div class="alert-ok"  id="adm-pw-ok"  style="margin-bottom:12px"></div>
-            <button class="btn btn-primary" onclick="adminChangePassword()">Simpan Password</button>
-          </div>
-        </div>
-
         <!-- pstab: Reset Password User -->
         <div class="pstab-pane" id="pstab-resetpw">
           <div style="max-width:420px">
@@ -790,7 +787,7 @@
         <div id="us-profil-content" style="font-size:14px;line-height:1.8">
           <div style="display:grid;grid-template-columns:120px 1fr;gap:6px 12px">
             <span style="color:var(--text-muted)">Nama</span>      <strong id="us-nama">—</strong>
-            <span style="color:var(--text-muted)">Username</span>  <span id="us-username" style="font-family:var(--font-mono)">—</span>
+            <span style="color:var(--text-muted)">NIP</span>       <span id="us-username" style="font-family:var(--font-mono)">—</span>
             <span style="color:var(--text-muted)">Role</span>      <span id="us-role">—</span>
             <span style="color:var(--text-muted)">PIN Karyawan</span><span id="us-pin" style="font-family:var(--font-mono)">—</span>
           </div>

@@ -100,6 +100,8 @@
   .logo-sub { font-size: 11px; color: var(--text-muted); display: block; margin-top: 1px; }
 
   .header-right { display: flex; align-items: center; gap: 20px; }
+  .header-status { display: flex; align-items: center; gap: 20px; }
+  .header-btns { display: flex; align-items: center; gap: 8px; }
 
   .live-badge {
     display: flex; align-items: center; gap: 7px;
@@ -910,6 +912,17 @@
 
     .table-header { flex-wrap: wrap; gap: 6px; }
     #last-update { font-size: 11px; }
+
+    /* HEADER MOBILE */
+    .logo-sub { display: none; }
+    .header-inner { padding: 8px 0; align-items: center; }
+    .header-right { flex-direction: column; align-items: flex-end; gap: 4px; }
+    .header-status { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+    #clock { font-size: 11px; }
+    .live-badge { font-size: 11px; letter-spacing: 0; }
+    #header-user-info { font-size: 11px; }
+    .header-btns { display: flex; flex-wrap: nowrap; gap: 4px; }
+    .header-btns .theme-toggle { width: 28px; height: 28px; font-size: 13px; }
   }
 
   /* AUTH OVERLAYS */

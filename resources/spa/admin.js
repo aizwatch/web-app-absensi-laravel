@@ -2,7 +2,7 @@ import { state } from './state.js';
 import { escHtml, showToast, switchStab } from './utils.js';
 import { authHeaders } from './auth.js';
 import { populatePickerSelect } from './picker.js';
-import { openPengaturanSettings } from './settings.js';
+import { openPengaturanSettings, renderDepartmentsCard } from './settings.js';
 
 export function openAdminModal() {
   adminInit();
@@ -103,19 +103,28 @@ export async function adminLoadPegawai() {
     const {data}=await res.json();
     state.pegawaiList=data||[];
     renderAdminPegawai();
+    renderDepartmentsCard();
     document.getElementById('adm-peg-badge').textContent=`${state.pegawaiList.length} karyawan`;
   }catch(e){}
 }
 
 export function renderAdminPegawai() {
   const tbody=document.getElementById('adm-peg-tbody');
-  if(!state.pegawaiList.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">Tidak ada karyawan</div></div></td></tr>`;return;}
+  if(!state.pegawaiList.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">Tidak ada karyawan</div></div></td></tr>`;return;}
+  const deptOpts=state.departments.map(d=>`<option value="${escHtml(d)}">${escHtml(d)}</option>`).join('');
   tbody.innerHTML=state.pegawaiList.map((p,i)=>`
     <tr id="peg-row-${i}">
       <td style="font-family:var(--font-mono);font-size:12px">${escHtml(String(p.pin))}</td>
       <td><span id="pv-nama-${i}">${escHtml(p.nama)}</span><input id="pi-nama-${i}" type="text" value="${escHtml(p.nama)}" style="display:none;width:140px" /></td>
       <td><span id="pv-nip-${i}">${escHtml(p.nip||'—')}</span><input id="pi-nip-${i}" type="text" value="${escHtml(p.nip||'')}" style="display:none;width:110px" /></td>
       <td><span id="pv-telp-${i}">${escHtml(p.telp||'—')}</span><input id="pi-telp-${i}" type="text" value="${escHtml(p.telp||'')}" style="display:none;width:120px" /></td>
+      <td>
+        <span id="pv-dept-${i}">${escHtml(p.departemen||'—')}</span>
+        <select id="pi-dept-${i}" style="display:none;font-size:12px;min-width:120px">
+          <option value="">— Pilih —</option>
+          ${deptOpts}
+        </select>
+      </td>
       <td>
         <span id="pv-status-${i}" class="td-status ${p.status==1?'status-hadir':'status-alpha'}">${p.status==1?'Aktif':'Nonaktif'}</span>
         <select id="pi-status-${i}" style="display:none;font-size:12px">
@@ -137,13 +146,16 @@ export function renderAdminPegawai() {
 }
 
 export function adminEditPegawaiRow(i) {
-  ['nama','nip','telp','status'].forEach(f=>{document.getElementById(`pv-${f}-${i}`).style.display='none';document.getElementById(`pi-${f}-${i}`).style.display='';});
+  ['nama','nip','telp','dept','status'].forEach(f=>{document.getElementById(`pv-${f}-${i}`).style.display='none';document.getElementById(`pi-${f}-${i}`).style.display='';});
+  const deptSel=document.getElementById(`pi-dept-${i}`);
+  const p=state.pegawaiList[i];
+  if(deptSel&&p) deptSel.value=p.departemen||'';
   document.getElementById(`peg-view-btns-${i}`).style.display='none';
   document.getElementById(`peg-edit-btns-${i}`).style.display='';
 }
 
 export function adminCancelPegawaiRow(i) {
-  ['nama','nip','telp','status'].forEach(f=>{document.getElementById(`pv-${f}-${i}`).style.display='';document.getElementById(`pi-${f}-${i}`).style.display='none';});
+  ['nama','nip','telp','dept','status'].forEach(f=>{document.getElementById(`pv-${f}-${i}`).style.display='';document.getElementById(`pi-${f}-${i}`).style.display='none';});
   document.getElementById(`peg-view-btns-${i}`).style.display='';
   document.getElementById(`peg-edit-btns-${i}`).style.display='none';
 }
@@ -152,10 +164,11 @@ export async function adminSavePegawai(i, pin) {
   const nama=document.getElementById(`pi-nama-${i}`).value.trim();
   const nip=document.getElementById(`pi-nip-${i}`).value.trim();
   const telp=document.getElementById(`pi-telp-${i}`).value.trim();
+  const dept=document.getElementById(`pi-dept-${i}`).value;
   const status=document.getElementById(`pi-status-${i}`).value;
   if(!nama){alert('Nama tidak boleh kosong');return;}
   try{
-    const res=await fetch(`/api/pegawai/${encodeURIComponent(pin)}`,{method:'PUT',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({data:{pegawai_nama:nama,pegawai_nip:nip,pegawai_telp:telp,pegawai_status:parseInt(status)}})});
+    const res=await fetch(`/api/pegawai/${encodeURIComponent(pin)}`,{method:'PUT',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({data:{pegawai_nama:nama,pegawai_nip:nip,pegawai_telp:telp,pegawai_departemen:dept||null,pegawai_status:parseInt(status)}})});
     const json=await res.json();
     if(!json.success){alert(json.message);return;}
     showToast('✅ Berhasil',`${nama} diperbarui`);
@@ -179,16 +192,17 @@ export async function adminAddPegawai() {
   const nama=document.getElementById('np-nama').value.trim();
   const nip=document.getElementById('np-nip').value.trim();
   const telp=document.getElementById('np-telp').value.trim();
+  const dept=document.getElementById('np-dept').value;
   const errEl=document.getElementById('adm-peg-err');
   const okEl=document.getElementById('adm-peg-ok');
   errEl.classList.remove('show'); okEl.classList.remove('show');
   if(!pin||!nama){errEl.textContent='PIN dan Nama wajib diisi';errEl.classList.add('show');return;}
   try{
-    const res=await fetch('/api/pegawai',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({data:{pegawai_pin:pin,pegawai_nama:nama,pegawai_nip:nip,pegawai_telp:telp}})});
+    const res=await fetch('/api/pegawai',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({data:{pegawai_pin:pin,pegawai_nama:nama,pegawai_nip:nip,pegawai_telp:telp,pegawai_departemen:dept||null}})});
     const json=await res.json();
     if(!json.success){errEl.textContent=json.message;errEl.classList.add('show');return;}
     okEl.textContent=`Karyawan "${nama}" berhasil ditambahkan`; okEl.classList.add('show');
-    document.getElementById('np-pin').value=document.getElementById('np-nama').value=document.getElementById('np-nip').value=document.getElementById('np-telp').value='';
+    document.getElementById('np-pin').value=document.getElementById('np-nama').value=document.getElementById('np-nip').value=document.getElementById('np-telp').value=document.getElementById('np-dept').value='';
     await adminLoadPegawai(); populatePickerSelect();
     showToast('✅ Berhasil',`${nama} ditambahkan`);
   }catch(e){errEl.textContent=e.message;errEl.classList.add('show');}
@@ -199,10 +213,12 @@ export async function loadSyncDevices() {
     const res=await fetch('/api/sync/devices',{headers:authHeaders()});
     const json=await res.json();
     if(!json.success) return;
+    const opts=json.data.map(id=>`<option value="${escHtml(id)}">${escHtml(id)}</option>`).join('');
     const sel=document.getElementById('sync-device');
-    sel.innerHTML='<option value="">— Semua Mesin —</option>'+json.data.map(id=>`<option value="${escHtml(id)}">${escHtml(id)}</option>`).join('');
+    sel.innerHTML='<option value="">— Semua Mesin —</option>'+opts;
   }catch(_){}
 }
+
 
 export async function runBackfill() {
   const dari=document.getElementById('sync-dari').value;
@@ -231,7 +247,7 @@ export async function runBackfill() {
 export function openUserSettingsModal() {
   if(!state.authUser) return;
   document.getElementById('us-nama').textContent    =state.authUser.name||'—';
-  document.getElementById('us-username').textContent=state.authUser.username||'—';
+  document.getElementById('us-username').textContent=state.authUser.nip||'—';
   document.getElementById('us-role').textContent    =state.authUser.role||'—';
   document.getElementById('us-pin').textContent     =state.authUser.pegawai_pin||'(tidak terhubung ke karyawan)';
   document.getElementById('us-pw-baru').value='';

@@ -19,6 +19,7 @@ export async function loadAppSettings() {
     state.empShifts      = data.employee_shifts || {};
     state.appHolidays    = data.holidays        || [];
     state.dailyOverrides = data.daily_overrides || [];
+    state.departments    = data.departments     || [];
     updatePersonalMeta();
   } catch (e) {}
 }
@@ -33,6 +34,7 @@ export async function saveSettings() {
     employee_shifts: state.empShifts,
     holidays:        state.appHolidays,
     daily_overrides: state.dailyOverrides,
+    departments:     state.departments,
   };
   try {
     const res = await fetch('/api/settings', {
@@ -66,6 +68,7 @@ export async function openPengaturanSettings() {
     state.empShifts      = data.employee_shifts || {};
     state.appHolidays    = data.holidays        || [];
     state.dailyOverrides = data.daily_overrides || [];
+    state.departments    = data.departments     || [];
   } catch (e) {}
   renderShiftsTable();
   renderHolidaysTable();
@@ -576,6 +579,44 @@ export function renderOverridesTable() {
       <td><button class="btn-icon del" onclick="deleteOverride('${escHtml(o.id)}')" title="Hapus">🗑️</button></td>
     </tr>`;
   }).join('');
+}
+
+// ── DEPARTEMEN ──
+export function renderDepartmentsCard() {
+  const el=document.getElementById('dept-list');
+  if(el){
+    if(!state.departments.length){el.innerHTML='<span style="color:var(--text2);font-size:13px">Belum ada departemen</span>';}
+    else{el.innerHTML=state.departments.map((d,i)=>
+      `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:13px">
+        ${escHtml(d)}
+        <button onclick="removeDepartment(${i})" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:14px;line-height:1;padding:0" title="Hapus">×</button>
+      </span>`
+    ).join('');}
+  }
+  // sync dropdown tambah karyawan
+  const sel=document.getElementById('np-dept');
+  if(sel){
+    const cur=sel.value;
+    sel.innerHTML='<option value="">— Pilih —</option>'+state.departments.map(d=>`<option value="${escHtml(d)}">${escHtml(d)}</option>`).join('');
+    sel.value=cur;
+  }
+}
+
+export async function addDepartment() {
+  const inp=document.getElementById('dept-input');
+  const nama=(inp?.value||'').trim();
+  if(!nama) return;
+  if(state.departments.includes(nama)){showToast('⚠️','Departemen sudah ada');return;}
+  state.departments.push(nama);
+  inp.value='';
+  renderDepartmentsCard();
+  await saveSettings();
+}
+
+export async function removeDepartment(idx) {
+  state.departments.splice(idx,1);
+  renderDepartmentsCard();
+  await saveSettings();
 }
 
 // ── ADMIN PASSWORD ──

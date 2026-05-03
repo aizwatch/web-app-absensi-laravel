@@ -10,7 +10,7 @@ class PegawaiController extends Controller
     public function index()
     {
         $rows = DB::table('pegawai')
-            ->selectRaw('pegawai_pin AS pin, pegawai_nama AS nama, pegawai_nip AS nip, pegawai_telp AS telp, pegawai_status AS status')
+            ->selectRaw('pegawai_pin AS pin, pegawai_nama AS nama, pegawai_nip AS nip, pegawai_telp AS telp, pegawai_departemen AS departemen, pegawai_status AS status')
             ->orderBy('pegawai_nama')
             ->get();
 
@@ -30,16 +30,17 @@ class PegawaiController extends Controller
 
         try {
             DB::table('pegawai')->insert([
-                'pegawai_id'        => $maxId,
-                'pegawai_pin'       => (string)$pin,
-                'pegawai_nama'      => $nama,
-                'pegawai_nip'       => $data['pegawai_nip'] ?? '',
-                'pegawai_telp'      => $data['pegawai_telp'] ?? '',
-                'pegawai_pwd'       => '0',
-                'pegawai_rfid'      => '0',
-                'pegawai_privilege' => '0',
-                'pegawai_status'    => 1,
-                'gender'            => 1,
+                'pegawai_id'          => $maxId,
+                'pegawai_pin'         => (string)$pin,
+                'pegawai_nama'        => $nama,
+                'pegawai_nip'         => $data['pegawai_nip'] ?? '',
+                'pegawai_telp'        => $data['pegawai_telp'] ?? '',
+                'pegawai_departemen'  => $data['pegawai_departemen'] ?? null,
+                'pegawai_pwd'         => '0',
+                'pegawai_rfid'        => '0',
+                'pegawai_privilege'   => '0',
+                'pegawai_status'      => 1,
+                'gender'              => 1,
             ]);
         } catch (\Illuminate\Database\QueryException $e) {
             if (str_contains($e->getMessage(), 'Duplicate')) {
@@ -56,10 +57,11 @@ class PegawaiController extends Controller
         $data = $request->input('data', []);
 
         $affected = DB::table('pegawai')->where('pegawai_pin', $pin)->update([
-            'pegawai_nama'   => $data['pegawai_nama'] ?? '',
-            'pegawai_nip'    => $data['pegawai_nip'] ?? '',
-            'pegawai_telp'   => $data['pegawai_telp'] ?? '',
-            'pegawai_status' => $data['pegawai_status'] ?? 1,
+            'pegawai_nama'        => $data['pegawai_nama'] ?? '',
+            'pegawai_nip'         => $data['pegawai_nip'] ?? '',
+            'pegawai_telp'        => $data['pegawai_telp'] ?? '',
+            'pegawai_departemen'  => $data['pegawai_departemen'] ?? null,
+            'pegawai_status'      => $data['pegawai_status'] ?? 1,
         ]);
 
         if (!$affected)
