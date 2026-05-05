@@ -150,19 +150,13 @@ class AuthController extends Controller
     public function adminResetPassword(Request $request)
     {
         $pin = trim($request->input('pin', ''));
-        $pw  = $request->input('password', '');
 
         if (! $pin) {
             return response()->json(['success' => false, 'message' => 'PIN wajib diisi'], 422);
         }
-        if (strlen($pw) < 6) {
-            return response()->json(['success' => false, 'message' => 'Password minimal 6 karakter'], 422);
-        }
-
-        $hashed = Hash::make($pw);
 
         $affected = DB::table('pegawai')->where('pegawai_pin', $pin)->update([
-            'password'             => $hashed,
+            'password'             => null,
             'must_change_password' => true,
             'auth_token'           => null,
         ]);

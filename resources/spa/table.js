@@ -60,10 +60,9 @@ export function renderTable(tbodyId, data, isLive) {
     const istIncomplete=ist1Only||ist2Only;
     const ist1Cell=istIncomplete?`<span class="cell-ist-incomplete">${row.scan_istirahat1||row.scan_istirahat2}</span>`:timeCell(row.scan_istirahat1,'ist',shift);
     const ist2Cell=istIncomplete?`<span class="td-time empty">—</span>`:timeCell(row.scan_istirahat2,'ist',shift);
-    const shiftLabel=shift?`<span class="td-pin">${escHtml(shift.nama)}</span>`:'';
     return `<tr class="${rowClass}">
       <td class="td-tanggal">${formatTanggal(row.tanggal)}</td>
-      <td><div class="td-name">${escHtml(row.nama||'—')}</div><span class="td-pin">${escHtml(String(row.pin))}</span>${shiftLabel}</td>
+      <td><div class="td-name">${escHtml(row.nama||'—')}</div></td>
       <td>${timeCell(row.scan_masuk,'masuk',shift)}</td>
       <td>${ist1Cell}</td><td>${ist2Cell}</td>
       <td>${timeCell(row.scan_pulang,'pulang',shift)}</td>

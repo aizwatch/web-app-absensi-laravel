@@ -13,7 +13,7 @@
 <body>
 
 <!-- EMPLOYEE PICKER OVERLAY -->
-<div class="picker-overlay" id="picker-overlay">
+<div class="picker-overlay hidden" id="picker-overlay">
   <div style="margin-bottom:32px;display:flex;align-items:center;gap:12px">
     <div class="logo-icon"><img src="/favicon.png" style="width:22px;height:22px;object-fit:contain"></div>
     <div>
@@ -140,7 +140,7 @@
             <span class="month-label" id="p-month-label">—</span>
             <button onclick="changeMonth(1)" title="Bulan berikutnya">›</button>
           </div>
-          <button class="btn btn-ghost" style="font-size:13px" onclick="showPicker()">🔄 Ganti Karyawan</button>
+          <button class="btn btn-ghost" id="btn-ganti-karyawan" style="font-size:13px;display:none" onclick="showPicker()">🔄 Ganti Karyawan</button>
         </div>
       </div>
 
@@ -726,24 +726,12 @@
         <!-- pstab: Reset Password User -->
         <div class="pstab-pane" id="pstab-resetpw">
           <div style="max-width:420px">
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Reset password karyawan. User wajib ganti password saat login berikutnya. Sesi aktif user akan diakhiri.</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Reset password karyawan ke kosong. User bisa login tanpa password dan wajib atur password sendiri saat login pertama. Sesi aktif user akan diakhiri.</p>
             <div class="form-group">
               <label>Karyawan</label>
               <select id="resetpw-pin" style="width:100%">
                 <option value="">— Pilih Karyawan —</option>
               </select>
-            </div>
-            <div class="form-group">
-              <label>Password Baru</label>
-              <div class="pin-input-wrap">
-                <input type="password" id="resetpw-baru" placeholder="Min. 6 karakter" maxlength="100" autocomplete="new-password" style="font-size:13px" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Konfirmasi Password Baru</label>
-              <div class="pin-input-wrap">
-                <input type="password" id="resetpw-konfirm" placeholder="Ulangi password baru" maxlength="100" autocomplete="new-password" style="font-size:13px" />
-              </div>
             </div>
             <div class="alert-err" id="resetpw-err" style="margin-bottom:12px"></div>
             <div class="alert-ok"  id="resetpw-ok"  style="margin-bottom:12px"></div>

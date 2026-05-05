@@ -863,17 +863,17 @@
     #tab-personal .th-status,
     #tab-personal td:nth-child(8) { display: none; }
 
-    /* tab-personal: 6 visible cols → equal width */
-    #tab-personal th:nth-child(1), #tab-personal td:nth-child(1) { width: 20%; }
+    /* tab-personal: 6 visible cols (hari+status hidden) */
+    #tab-personal th:nth-child(1), #tab-personal td:nth-child(1) { width: 14%; }
     #tab-personal th:nth-child(3), #tab-personal td:nth-child(3),
     #tab-personal th:nth-child(4), #tab-personal td:nth-child(4),
     #tab-personal th:nth-child(5), #tab-personal td:nth-child(5),
-    #tab-personal th:nth-child(6), #tab-personal td:nth-child(6) { width: 16%; }
-    #tab-personal th:nth-child(7), #tab-personal td:nth-child(7) { width: 16%; }
+    #tab-personal th:nth-child(6), #tab-personal td:nth-child(6) { width: 18%; }
+    #tab-personal th:nth-child(7), #tab-personal td:nth-child(7) { width: 14%; }
 
     /* tab-live: col2 nama diberi sedikit lebih lebar, sisanya rata */
-    #tab-live th:nth-child(1), #tab-live td:nth-child(1) { width: 14%; }
-    #tab-live th:nth-child(2), #tab-live td:nth-child(2) { width: 22%; word-break: break-word; white-space: normal; }
+    #tab-live th:nth-child(1), #tab-live td:nth-child(1) { width: 12%; }
+    #tab-live th:nth-child(2), #tab-live td:nth-child(2) { width: 24%; word-break: break-word; white-space: normal; }
     #tab-live th:nth-child(3), #tab-live td:nth-child(3),
     #tab-live th:nth-child(4), #tab-live td:nth-child(4),
     #tab-live th:nth-child(5), #tab-live td:nth-child(5),

@@ -660,21 +660,15 @@ export async function adminChangePassword() {
 
 export async function adminResetUserPassword() {
   const pin=document.getElementById('resetpw-pin').value;
-  const pw=document.getElementById('resetpw-baru').value;
-  const confirm=document.getElementById('resetpw-konfirm').value;
   const errEl=document.getElementById('resetpw-err');
   const okEl=document.getElementById('resetpw-ok');
   errEl.classList.remove('show'); okEl.classList.remove('show');
   if(!pin){errEl.textContent='Pilih karyawan.';errEl.classList.add('show');return;}
-  if(pw.length<6){errEl.textContent='Password minimal 6 karakter.';errEl.classList.add('show');return;}
-  if(pw!==confirm){errEl.textContent='Konfirmasi tidak cocok.';errEl.classList.add('show');return;}
   try{
-    const res=await fetch('/api/auth/admin-reset-password',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({pin,password:pw})});
+    const res=await fetch('/api/auth/admin-reset-password',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({pin})});
     const json=await res.json();
     if(!json.success){errEl.textContent=json.message;errEl.classList.add('show');return;}
     okEl.textContent=json.message;okEl.classList.add('show');
-    document.getElementById('resetpw-baru').value='';
-    document.getElementById('resetpw-konfirm').value='';
     document.getElementById('resetpw-pin').value='';
   }catch(e){errEl.textContent='Gagal terhubung ke server.';errEl.classList.add('show');}
 }
