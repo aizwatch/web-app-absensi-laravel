@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { escHtml, fmtTime, formatTanggal, showToast, setStatus, HARI } from './utils.js';
+import { escHtml, fmtTime, formatTanggal, showToast, setStatus, HARI, HARI_LABELS } from './utils.js';
 import { getShiftForPin } from './settings.js';
 
 export const POLL_INTERVAL = 5000;
@@ -46,7 +46,7 @@ export function timeCell(val, type, shift) {
 export function renderTable(tbodyId, data, isLive) {
   const tbody = document.getElementById(tbodyId);
   if (!data||!data.length) {
-    tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Belum ada data absensi</div></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Belum ada data absensi</div></div></td></tr>`;
     return;
   }
   tbody.innerHTML=data.map((row,i)=>{
@@ -60,8 +60,10 @@ export function renderTable(tbodyId, data, isLive) {
     const istIncomplete=ist1Only||ist2Only;
     const ist1Cell=istIncomplete?`<span class="cell-ist-incomplete">${row.scan_istirahat1||row.scan_istirahat2}</span>`:timeCell(row.scan_istirahat1,'ist',shift);
     const ist2Cell=istIncomplete?`<span class="td-time empty">—</span>`:timeCell(row.scan_istirahat2,'ist',shift);
+    const liveHari=row.tanggal?HARI_LABELS[new Date(row.tanggal+'T00:00:00').getDay()]:'—';
     return `<tr class="${rowClass}">
       <td class="td-tanggal">${formatTanggal(row.tanggal)}</td>
+      <td class="td-hari-live">${liveHari}</td>
       <td><div class="td-name">${escHtml(row.nama||'—')}</div></td>
       <td>${timeCell(row.scan_masuk,'masuk',shift)}</td>
       <td>${ist1Cell}</td><td>${ist2Cell}</td>
@@ -183,7 +185,7 @@ export function renderPersonalTable(data) {
          </span>`:'';
     rows.push(`<tr class="${(isWeekend||isHoliday||isFuture)?'td-weekend':''}">
       <td class="td-tanggal">${formatTanggal(dateStr)}</td>
-      <td style="font-size:12px;color:var(--text-muted)">${HARI[dayOfWeek]}</td>
+      <td class="td-hari" style="font-size:12px;color:var(--text-muted)"><span class="hari-full">${HARI[dayOfWeek]}</span><span class="hari-short">${HARI_LABELS[dayOfWeek]}</span></td>
       <td>${timeCell(row?row.scan_masuk:null,'masuk',shift)}</td>
       <td>${ist1Cell}</td><td>${ist2Cell}</td>
       <td>${timeCell(row?row.scan_pulang:null,'pulang',shift)}</td>
