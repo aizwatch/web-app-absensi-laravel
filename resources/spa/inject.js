@@ -124,14 +124,13 @@ export async function openRowHistory(pin, tanggal, nama) {
   const alasanIcons={lembur:'🌙',sakit:'🏥',customer_visit:'🚗',setengah_hari_pagi:'🌅',setengah_hari_siang:'🌤️',ganti_shift:'🔄',lainnya:'📝'};
   const rows=[];
 
-  // scan_note entry (orphan — tidak ada di daily_overrides)
-  const ovHasScanNote=ovEntries.some(o=>o.tipe==='absen_inject'&&o.alasan==='sakit');
-  if(scanNoteEntry&&!ovHasScanNote){
+  // scan_note entry — selalu tampil jika ada (siapapun yang buat)
+  if(scanNoteEntry){
     rows.push(`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
       <span style="font-size:18px">📝</span>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">Catatan: ${escHtml(scanNoteEntry.catatan)}</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">scan_notes (tanpa audit trail)</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">scan_notes aktif</div>
       </div>
       <button class="btn-icon del" title="Hapus catatan" onclick="deleteScanNote('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}')">🗑️</button>
     </div>`);
