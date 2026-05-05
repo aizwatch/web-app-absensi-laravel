@@ -243,22 +243,51 @@ class AbsensiMandiriController extends Controller
             SettingsManager::save();
 
         } elseif ($row->tipe === 'ganti_shift') {
-            // catatan berisi shift_id yang dipilih karyawan
             $shiftId   = trim($row->catatan ?? '');
-            $shifts    = SettingsManager::get('shifts', []);
-            $shift     = collect($shifts)->firstWhere('id', $shiftId);
+
+            // Static presets — embed shift_data directly (tidak bergantung settings shifts)
+            $presets = [
+                'setengah_pagi_preset' => [
+                    'id'                  => 'setengah_pagi_preset',
+                    'nama'                => 'Setengah Hari (masuk pagi)',
+                    'jam_masuk'           => '08:00',
+                    'batas_terlambat'     => '08:06',
+                    'batas_setengah_hari' => '',
+                    'jam_pulang'          => '11:00',
+                    'hari_kerja'          => [1,2,3,4,5,6],
+                ],
+                'setengah_siang_preset' => [
+                    'id'                  => 'setengah_siang_preset',
+                    'nama'                => 'Setengah Hari (masuk siang)',
+                    'jam_masuk'           => '10:50',
+                    'batas_terlambat'     => '',
+                    'batas_setengah_hari' => '',
+                    'jam_pulang'          => '17:00',
+                    'hari_kerja'          => [1,2,3,4,5,6],
+                ],
+            ];
+
+            $shiftData = $presets[$shiftId] ?? null;
+            if (!$shiftData) {
+                // fallback: cari di settings
+                $shifts    = SettingsManager::get('shifts', []);
+                $shiftData = collect($shifts)->firstWhere('id', $shiftId);
+            }
+
             $overrides = SettingsManager::get('daily_overrides', []);
-            $overrides[] = [
+            $entry = [
                 'id'           => uniqid('am_'),
                 'tanggal'      => $tanggal,
-                'nama'         => 'Ganti Shift' . ($shift ? ' — ' . $shift['nama'] : ''),
+                'nama'         => 'Ganti Shift' . ($shiftData ? ' — ' . $shiftData['nama'] : ''),
                 'tipe'         => 'ganti_shift',
                 'shift_id'     => $shiftId,
-                'jam_pulang'   => $shift['jam_pulang'] ?? '17:00',
+                'jam_pulang'   => $shiftData['jam_pulang'] ?? '17:00',
                 'berlaku_untuk'=> [$pin],
                 'created_by'   => $approvedBy,
                 'created_at'   => now()->toISOString(),
             ];
+            if ($shiftData) $entry['shift_data'] = $shiftData;
+            $overrides[] = $entry;
             SettingsManager::set('daily_overrides', $overrides);
             SettingsManager::save();
 

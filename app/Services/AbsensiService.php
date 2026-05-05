@@ -39,7 +39,11 @@ class AbsensiService
             // Tentukan shift
             if ($override && ($override['tipe'] ?? '') === 'ganti_shift' && !empty($override['shift_id'])) {
                 $shiftId  = $override['shift_id'];
-                $shift    = collect($settings['shifts'])->firstWhere('id', $shiftId) ?? $settings['shifts'][0] ?? null;
+                // Cek shift_data embedded (preset statis) sebelum lookup ke settings
+                $shift    = $override['shift_data']
+                            ?? collect($settings['shifts'])->firstWhere('id', $shiftId)
+                            ?? $settings['shifts'][0]
+                            ?? null;
                 $jamPulang = $shift['jam_pulang'] ?? '17:00';
             } else {
                 $shiftId  = $settings['employee_shifts'][(string)$pin] ?? 'normal';

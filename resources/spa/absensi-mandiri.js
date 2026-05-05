@@ -19,10 +19,7 @@ export function toggleAmFields() {
   jamWrap.style.display  = noJam ? 'none' : '';
   shiftWrap.style.display = tipe==='ganti_shift' ? '' : 'none';
   if (noJam) document.getElementById('am-jam').value = '';
-  if (tipe==='ganti_shift') {
-    const sel = document.getElementById('am-shift-id');
-    sel.innerHTML = state.appShifts.map(s=>`<option value="${escHtml(s.id)}">${escHtml(s.nama)}</option>`).join('')||'<option value="">— Belum ada shift —</option>';
-  }
+  // shift options are static presets — no dynamic population needed
 }
 
 export function previewAttachment() {
