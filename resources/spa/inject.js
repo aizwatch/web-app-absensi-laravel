@@ -10,7 +10,8 @@ export function openInjectModal(pin, tanggal, nama) {
   document.getElementById('inj-alasan').value='lembur';
   document.getElementById('inj-jam-masuk').value='';
   document.getElementById('inj-jam-pulang').value='';
-  document.getElementById('inj-jam-lainnya').value='';
+  document.getElementById('inj-jam-lainnya-1').value='';
+  document.getElementById('inj-jam-lainnya-2').value='';
   document.getElementById('inj-keterangan').value='';
   const sel=document.getElementById('inj-shift-id');
   sel.innerHTML=state.appShifts.map(s=>`<option value="${escHtml(s.id)}">${escHtml(s.nama)}</option>`).join('')||'<option value="">— Belum ada shift —</option>';
@@ -29,8 +30,8 @@ export function toggleInjAlasan() {
   const isLainnya=alasan==='lainnya';
   document.getElementById('inj-jam-wrap').style.display=(isShift||isSakit||isLainnya)?'none':'grid';
   document.getElementById('inj-wrap-shift').style.display=isShift?'':'none';
-  document.getElementById('inj-wrap-lainnya').style.display=isLainnya?'':'none';
-  const hints={lembur:'Inject scan pulang (masuk opsional). Catatan: Lembur.',customer_visit:'Inject scan pulang (masuk opsional). Catatan: Customer Visit.',sakit:'Hanya tambah keterangan Sakit (MC) ke scan_notes. Tidak inject scan.',ganti_shift:'Tambah override ganti shift. Jam pulang mengikuti shift dipilih.',lainnya:'Inject 1 scan pada jam yang ditentukan. Keterangan wajib diisi.'};
+  document.getElementById('inj-wrap-lainnya').style.display=isLainnya?'grid':'none';
+  const hints={lembur:'Inject scan pulang (masuk opsional). Catatan: Lembur.',customer_visit:'Inject scan pulang (masuk opsional). Catatan: Customer Visit.',sakit:'Hanya tambah keterangan Sakit (MC) ke scan_notes. Tidak inject scan.',ganti_shift:'Tambah override ganti shift. Jam pulang mengikuti shift dipilih.',lainnya:'Inject 1 atau 2 scan. Jam 1 wajib, Jam 2 opsional. Keterangan wajib.'};
   document.getElementById('inj-hint').textContent=hints[alasan]||'';
 }
 
@@ -40,7 +41,8 @@ export async function confirmInjectModal() {
   const jamMasuk=document.getElementById('inj-jam-masuk').value;
   const jamPulang=document.getElementById('inj-jam-pulang').value;
   const keterangan=document.getElementById('inj-keterangan').value.trim();
-  const jamLainnya=document.getElementById('inj-jam-lainnya').value;
+  const jamLainnya=document.getElementById('inj-jam-lainnya-1').value;
+  const jamLainnya2=document.getElementById('inj-jam-lainnya-2').value;
   const alasanLabel={lembur:'Lembur',customer_visit:'Customer Visit',sakit:'Sakit (MC)',ganti_shift:'Ganti Shift',lainnya:'Lainnya'}[alasan]||alasan;
   const catatan=keterangan||alasanLabel;
   if(['lembur','customer_visit'].includes(alasan)&&!jamPulang){alert('Jam pulang wajib diisi');return;}
@@ -77,7 +79,8 @@ export async function confirmInjectModal() {
       await saveSettingsInject({...sData,daily_overrides:state.dailyOverrides});
     } else if(alasan==='lainnya'){
       await postScan(state.injTanggal+' '+jamLainnya+':00',catatan);
-      state.dailyOverrides.push({...logEntry,jam_masuk:jamLainnya,jam_pulang:null});
+      if(jamLainnya2) await postScan(state.injTanggal+' '+jamLainnya2+':00',null);
+      state.dailyOverrides.push({...logEntry,jam_masuk:jamLainnya,jam_pulang:jamLainnya2||null});
       const sData=await fetchSettings();
       await saveSettingsInject({...sData,daily_overrides:state.dailyOverrides});
     } else {

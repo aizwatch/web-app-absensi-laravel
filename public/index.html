@@ -861,9 +861,15 @@
         <option value="lainnya">📝 Lainnya</option>
       </select>
     </div>
-    <div class="form-group" style="display:none" id="inj-wrap-lainnya">
-      <label>Jam <span style="color:#e53e3e">*</span></label>
-      <input type="time" id="inj-jam-lainnya" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+    <div style="display:none;grid-template-columns:1fr 1fr;gap:10px" id="inj-wrap-lainnya">
+      <div class="form-group" style="margin:0">
+        <label>Jam 1 <span style="color:#e53e3e">*</span></label>
+        <input type="time" id="inj-jam-lainnya-1" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>Jam 2 <span style="color:var(--text-muted);font-weight:400">(opsional)</span></label>
+        <input type="time" id="inj-jam-lainnya-2" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+      </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="inj-jam-wrap">
       <div class="form-group" style="margin:0" id="inj-wrap-masuk">
