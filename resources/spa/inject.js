@@ -96,38 +96,78 @@ export async function confirmInjectModal() {
   btn.disabled=false; btn.textContent='✓ Simpan';
 }
 
-export function openRowHistory(pin, tanggal, nama) {
+export async function openRowHistory(pin, tanggal, nama) {
   document.getElementById('hist-title').textContent=nama?`— ${nama} (${tanggal})`:`— ${tanggal}`;
-  const entries=state.dailyOverrides.filter(o=>{
+  const body=document.getElementById('hist-body');
+  body.innerHTML=`<p style="color:var(--text-muted);text-align:center;padding:16px">Memuat…</p>`;
+  document.getElementById('modal-row-history').classList.add('open');
+
+  // fetch scan_notes fresh dari server
+  let scanNoteEntry=null;
+  try{
+    const sRes=await fetch('/api/settings',{headers:{'Authorization':'Bearer '+state.authToken}});
+    const sData=(await sRes.json()).data||{};
+    const notes=sData.scan_notes||[];
+    scanNoteEntry=notes.find(n=>String(n.pin)===String(pin)&&n.tanggal===tanggal)||null;
+  }catch(_){}
+
+  const ovEntries=state.dailyOverrides.filter(o=>{
     if((o.tanggal||'')!==tanggal) return false;
     if(o.berlaku_untuk==='semua') return true;
     if(Array.isArray(o.berlaku_untuk)) return o.berlaku_untuk.includes(String(pin));
     return false;
   });
+
   const alasanIcons={lembur:'🌙',sakit:'🏥',customer_visit:'🚗',setengah_hari_pagi:'🌅',setengah_hari_siang:'🌤️',ganti_shift:'🔄',lainnya:'📝'};
-  const body=document.getElementById('hist-body');
-  if(!entries.length){
-    body.innerHTML=`<p style="color:var(--text-muted);text-align:center;padding:16px">Tidak ada riwayat untuk hari ini.</p>`;
-  } else {
-    body.innerHTML=entries.map(o=>{
-      const icon=o.tipe==='absen_inject'?(alasanIcons[o.alasan]||'📝'):o.tipe==='ganti_shift'?'🔄':'⏰';
-      const detail=o.tipe==='absen_inject'
-        ?`${o.nama}${o.jam_masuk?' ('+o.jam_masuk+'→'+o.jam_pulang+')':o.jam_pulang?' (→'+o.jam_pulang+')':''}`
-        :o.tipe==='ganti_shift'
-          ?`${o.nama} — shift: ${state.appShifts.find(s=>s.id===o.shift_id)?.nama||o.shift_id}`
-          :`${o.nama} — pulang ${o.jam_pulang}`;
-      const byAt=[o.created_by,o.created_at?new Date(o.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):null].filter(Boolean).join(' · ');
-      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
-        <span style="font-size:18px">${icon}</span>
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:600">${escHtml(detail)}</div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${escHtml(byAt||'—')}</div>
-        </div>
-        <button class="btn-icon del" title="Hapus" onclick="deleteOverride('${escHtml(o.id)}');openRowHistory('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}')">🗑️</button>
-      </div>`;
-    }).join('');
+  const rows=[];
+
+  // scan_note entry (orphan — tidak ada di daily_overrides)
+  const ovHasScanNote=ovEntries.some(o=>o.tipe==='absen_inject'&&o.alasan==='sakit');
+  if(scanNoteEntry&&!ovHasScanNote){
+    rows.push(`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+      <span style="font-size:18px">📝</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">Catatan: ${escHtml(scanNoteEntry.catatan)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">scan_notes (tanpa audit trail)</div>
+      </div>
+      <button class="btn-icon del" title="Hapus catatan" onclick="deleteScanNote('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}')">🗑️</button>
+    </div>`);
   }
-  document.getElementById('modal-row-history').classList.add('open');
+
+  ovEntries.forEach(o=>{
+    const icon=o.tipe==='absen_inject'?(alasanIcons[o.alasan]||'📝'):o.tipe==='ganti_shift'?'🔄':'⏰';
+    const detail=o.tipe==='absen_inject'
+      ?`${o.nama}${o.jam_masuk?' ('+o.jam_masuk+'→'+(o.jam_pulang||'')+')':(o.jam_pulang?' (→'+o.jam_pulang+')':'')}`
+      :o.tipe==='ganti_shift'
+        ?`${o.nama} — shift: ${state.appShifts.find(s=>s.id===o.shift_id)?.nama||o.shift_id}`
+        :`${o.nama} — pulang ${o.jam_pulang}`;
+    const byAt=[o.created_by,o.created_at?new Date(o.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):null].filter(Boolean).join(' · ');
+    rows.push(`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+      <span style="font-size:18px">${icon}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${escHtml(detail)}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${escHtml(byAt||'—')}</div>
+      </div>
+      <button class="btn-icon del" title="Hapus" onclick="deleteOverride('${escHtml(o.id)}');openRowHistory('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}')">🗑️</button>
+    </div>`);
+  });
+
+  body.innerHTML=rows.length
+    ?rows.join('')
+    :`<p style="color:var(--text-muted);text-align:center;padding:16px">Tidak ada riwayat untuk hari ini.</p>`;
+}
+
+export async function deleteScanNote(pin, tanggal, nama) {
+  if(!confirm(`Hapus catatan untuk ${nama||pin} pada ${tanggal}?`)) return;
+  try{
+    const sRes=await fetch('/api/settings',{headers:{'Authorization':'Bearer '+state.authToken}});
+    const sData=(await sRes.json()).data||{};
+    sData.scan_notes=(sData.scan_notes||[]).filter(n=>!(String(n.pin)===String(pin)&&n.tanggal===tanggal));
+    await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.authToken},body:JSON.stringify({data:sData})});
+    await openRowHistory(pin,tanggal,nama);
+    if(document.getElementById('tab-personal')?.classList.contains('active')&&state.selectedEmployee) loadPersonalAbsensi();
+    else if(state.lastFilterData.length) applyFilter();
+  }catch(e){alert('Gagal hapus: '+(e.message||'cek koneksi'));}
 }
 
 export async function deleteOverride(id) {

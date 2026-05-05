@@ -31,7 +31,7 @@ import { pollAbsensi, changeMonth, loadPersonalAbsensi } from './table.js';
 import { applyFilter, resetFilter, exportFilter } from './filter.js';
 import {
   openInjectModal, closeInjectModal, toggleInjAlasan,
-  confirmInjectModal, openRowHistory, deleteOverride,
+  confirmInjectModal, openRowHistory, deleteOverride, deleteScanNote,
 } from './inject.js';
 import {
   openAdminModal, closeAdminModal, adminInit,
@@ -88,7 +88,7 @@ Object.assign(window, {
 
   // inject
   openInjectModal, closeInjectModal, toggleInjAlasan,
-  confirmInjectModal, openRowHistory,
+  confirmInjectModal, openRowHistory, deleteScanNote,
 
   // admin modal
   openAdminModal, closeAdminModal, switchAdminStab,
