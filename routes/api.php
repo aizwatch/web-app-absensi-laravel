@@ -70,6 +70,7 @@ Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
     Route::get('absensi-mandiri',               [AbsensiMandiriController::class, 'adminList']);
     Route::post('absensi-mandiri/{id}/approve', [AbsensiMandiriController::class, 'approve']);
     Route::post('absensi-mandiri/{id}/reject',  [AbsensiMandiriController::class, 'reject']);
+    Route::post('absensi-mandiri/{id}/revoke',  [AbsensiMandiriController::class, 'revoke']);
 });
 
 // ── Departemen placeholder ──

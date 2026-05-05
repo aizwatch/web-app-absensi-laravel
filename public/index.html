@@ -282,15 +282,22 @@
               <label>Tanggal</label>
               <input type="date" id="am-tanggal" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
             </div>
-            <div class="form-group" id="am-jam-wrap">
-              <label>Jam</label>
-              <input type="time" id="am-jam" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+            <div id="am-jam-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="form-group" style="margin:0">
+                <label id="am-jam-label">Jam <span style="color:#e53e3e">*</span></label>
+                <input type="time" id="am-jam" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+              </div>
+              <div class="form-group" style="margin:0;display:none" id="am-jam2-wrap">
+                <label>Scan 2 <span style="color:var(--text-muted);font-weight:400">(opsional)</span></label>
+                <input type="time" id="am-jam2" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+              </div>
             </div>
             <div class="form-group">
               <label>Tipe</label>
               <select id="am-tipe" onchange="toggleAmFields()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
                 <option value="lembur">🌙 Lembur</option>
                 <option value="customer_visit">🚗 Customer Visit</option>
+                <option value="lupa">⏰ Lupa (Maks. 3x)</option>
                 <option value="sakit">🏥 Sakit (MC)</option>
                 <option value="ganti_shift">🔄 Ganti Shift</option>
               </select>

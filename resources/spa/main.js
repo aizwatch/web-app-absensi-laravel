@@ -47,7 +47,7 @@ import {
 import {
   toggleAmFields, previewAttachment, initAbsensiMandiri,
   submitAbsensiMandiri, closeAmConfirm, submitAmConfirmed,
-  loadMyRequests, loadAdminRequests, adminActionMandiri,
+  loadMyRequests, loadAdminRequests, adminActionMandiri, revokeAndEditMandiri,
 } from './absensi-mandiri.js';
 
 // ── EXPOSE TO window (required by inline onclick= in HTML) ──
@@ -104,7 +104,7 @@ Object.assign(window, {
   // absensi mandiri
   toggleAmFields, previewAttachment, initAbsensiMandiri,
   submitAbsensiMandiri, closeAmConfirm, submitAmConfirmed,
-  loadMyRequests, loadAdminRequests, adminActionMandiri,
+  loadMyRequests, loadAdminRequests, adminActionMandiri, revokeAndEditMandiri,
 });
 
 // ── afterLogin — defined here to avoid circular dep ──
