@@ -41,7 +41,7 @@ export function applyAuthUI() {
   document.getElementById('btn-admin').style.display          = isAdmin  ? '' : 'none';
   document.getElementById('btn-logout').style.display         = loggedIn ? '' : 'none';
   const gantiBtn = document.getElementById('btn-ganti-karyawan');
-  if (gantiBtn) gantiBtn.style.display = isAdmin ? '' : 'none';
+  if (gantiBtn) gantiBtn.style.display = isAdmin ? 'inline-block' : 'none';
 }
 
 export async function loadLoginUsers() {

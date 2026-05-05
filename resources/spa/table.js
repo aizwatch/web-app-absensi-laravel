@@ -72,7 +72,7 @@ export function renderTable(tbodyId, data, isLive) {
 }
 
 export function updateStats(data) {
-  const total=data.length;
+  const total=state.pegawaiList.length||data.length;
   const sudahMasuk=data.filter(r=>r.scan_masuk).length;
   const sudahPulang=data.filter(r=>r.scan_pulang).length;
   const terlambat=data.filter(r=>{
