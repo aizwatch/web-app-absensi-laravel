@@ -63,7 +63,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
 /* ── ABSENT LIST ── */
 .d-absent-wrap{overflow:hidden}
-.d-absent-list{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px;min-height:0}
+.d-absent-list{overflow:hidden;flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+.d-absent-track{display:flex;flex-direction:column;gap:6px;animation:none}
+.d-absent-track.scrolling{animation:autoScroll linear infinite}
+@keyframes autoScroll{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 .d-absent-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#0f172a;border-radius:8px;border:1px solid #1e293b}
 .d-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
 .d-absent-info{flex:1;min-width:0}
@@ -172,7 +175,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     </div>
     <div class="d-card d-absent-wrap">
       <div class="d-card-title">Tidak Hadir Hari Ini</div>
-      <div class="d-absent-list" id="absent-list"></div>
+      <div class="d-absent-list" id="absent-list"><div class="d-absent-track" id="absent-track"></div></div>
     </div>
   </div>
 </div>
@@ -363,9 +366,15 @@ function renderHarian(records){
   document.getElementById('leg-terlambat').textContent=`Terlambat  ${terlambatCount} — ${pctT}%`;
   document.getElementById('leg-alpha').textContent=`Alfa / Izin  ${alphaCount} — ${pctA}%`;
   renderDonut(hadirCount,terlambatCount,alphaCount,total);
+  const trackEl=document.getElementById('absent-track');
   const listEl=document.getElementById('absent-list');
-  if(!absentList.length){listEl.innerHTML='<div class="d-all-present">✓ Semua karyawan sudah hadir</div>';return;}
-  listEl.innerHTML=absentList.map(({emp,badge,sh})=>{
+  if(!absentList.length){
+    trackEl.className='d-absent-track';
+    trackEl.style.animationDuration='';
+    trackEl.innerHTML='<div class="d-all-present">✓ Semua karyawan sudah hadir</div>';
+    return;
+  }
+  const rowHtml=absentList.map(({emp,badge,sh})=>{
     const init=emp.nama.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
     const bg=avatarColor(emp.nama);
     const cls=badge==='Alfa'?'d-badge-alfa':badge==='Sakit'?'d-badge-sakit':'d-badge-izin';
@@ -375,6 +384,18 @@ function renderHarian(records){
       <span class="d-badge ${cls}">${badge}</span>
     </div>`;
   }).join('');
+  // kalau lebih dari 5 item: duplikat untuk seamless loop, aktifkan scroll
+  const VISIBLE=5;
+  if(absentList.length>VISIBLE){
+    trackEl.innerHTML=rowHtml+rowHtml; // duplikat untuk seamless
+    const secPerItem=3; // kecepatan: 3 detik per item
+    trackEl.style.animationDuration=(absentList.length*secPerItem)+'s';
+    trackEl.className='d-absent-track scrolling';
+  } else {
+    trackEl.innerHTML=rowHtml;
+    trackEl.className='d-absent-track';
+    trackEl.style.animationDuration='';
+  }
 }
 
 // ── KALKULASI PER KARYAWAN PER BULAN ──
@@ -501,7 +522,7 @@ document.getElementById('bul-bulan').value=String(now.getMonth()+1).padStart(2,'
 document.getElementById('bul-tahun').value=String(now.getFullYear());
 document.getElementById('thn-tahun').value=String(now.getFullYear());
 
-const isSBC = window.location.hostname==='127.0.0.1' && window.location.port==='8000';
+const isSBC = ['127.0.0.1','localhost','absen.longtime.co.id'].includes(window.location.hostname);
 if(isSBC){
   document.querySelectorAll('.d-tab-btn[data-tab="bulanan"],.d-tab-btn[data-tab="tahunan"]').forEach(b=>b.style.display='none');
 }
