@@ -43,10 +43,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 /* ── STAT CARDS ── */
 .d-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;flex-shrink:0}
 .d-stat-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:18px 22px}
-.d-stat-label{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-.d-stat-val{font-size:36px;font-weight:700;line-height:1;color:#f1f5f9}
+.d-stat-label{font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.d-stat-val{font-size:64px;font-weight:700;line-height:1;color:#f1f5f9}
 .d-stat-val.green{color:#10b981}.d-stat-val.orange{color:#f59e0b}.d-stat-val.red{color:#ef4444}
-.d-stat-sub{font-size:12px;color:#64748b;margin-top:5px}
+.d-stat-sub{font-size:15px;color:#64748b;margin-top:6px}
 
 /* ── BODY GRID ── */
 .d-body{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;min-height:0}
@@ -55,9 +55,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .d-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;min-height:0}
 .d-card-title{font-size:11px;font-weight:700;letter-spacing:.8px;color:#475569;text-transform:uppercase}
 .d-chart-inner{display:flex;align-items:center;gap:24px}
-.d-legend{display:flex;flex-direction:column;gap:10px}
-.d-legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8}
-.d-legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.d-legend{display:flex;flex-direction:column;gap:14px}
+.d-legend-item{display:flex;align-items:center;gap:10px;font-size:16px;color:#94a3b8}
+.d-legend-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0}
 .d-legend-dot.g{background:#10b981}.d-legend-dot.o{background:#f59e0b}.d-legend-dot.r{background:#ef4444}
 .d-update{font-size:11px;color:#475569;margin-top:auto}
 
@@ -67,12 +67,12 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .d-absent-track{display:flex;flex-direction:column;gap:6px;animation:none}
 .d-absent-track.scrolling{animation:autoScroll linear infinite}
 @keyframes autoScroll{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
-.d-absent-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#0f172a;border-radius:8px;border:1px solid #1e293b}
-.d-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.d-absent-row{display:flex;align-items:center;gap:16px;padding:14px 16px;background:#0f172a;border-radius:8px;border:1px solid #1e293b}
+.d-avatar{width:48px;height:48px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff}
 .d-absent-info{flex:1;min-width:0}
-.d-absent-name{font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.d-absent-shift{font-size:11px;color:#64748b}
-.d-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;flex-shrink:0}
+.d-absent-name{font-size:18px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-absent-shift{font-size:13px;color:#64748b}
+.d-badge{font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px;flex-shrink:0}
 .d-badge-alfa {background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
 .d-badge-sakit{background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3)}
 .d-badge-izin {background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)}
@@ -164,7 +164,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="d-card">
       <div class="d-card-title">Kehadiran Hari Ini</div>
       <div class="d-chart-inner">
-        <svg id="donut-svg" width="150" height="150" viewBox="0 0 150 150"></svg>
+        <svg id="donut-svg" width="320" height="320" viewBox="0 0 150 150"></svg>
         <div class="d-legend">
           <div class="d-legend-item"><span class="d-legend-dot g"></span><span id="leg-hadir">Hadir — —</span></div>
           <div class="d-legend-item"><span class="d-legend-dot o"></span><span id="leg-terlambat">Terlambat — —</span></div>
