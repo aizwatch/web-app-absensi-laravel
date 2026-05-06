@@ -45,6 +45,10 @@ import {
   openLaporanModal, closeLaporanModal, generateLaporan,
 } from './laporan.js';
 import {
+  openDashboardModal, closeDashboardModal, switchDashTab,
+  loadDashBulanan, loadDashTahunan,
+} from './dashboard.js';
+import {
   toggleAmFields, previewAttachment, initAbsensiMandiri,
   submitAbsensiMandiri, closeAmConfirm, submitAmConfirmed,
   loadMyRequests, loadAdminRequests, adminActionMandiri, revokeAndEditMandiri,
@@ -101,6 +105,10 @@ Object.assign(window, {
   // laporan
   openLaporanModal, closeLaporanModal, generateLaporan,
 
+  // dashboard
+  openDashboardModal, closeDashboardModal, switchDashTab,
+  loadDashBulanan, loadDashTahunan,
+
   // absensi mandiri
   toggleAmFields, previewAttachment, initAbsensiMandiri,
   submitAbsensiMandiri, closeAmConfirm, submitAmConfirmed,
@@ -110,6 +118,8 @@ Object.assign(window, {
 // ── afterLogin — defined here to avoid circular dep ──
 async function afterLogin() {
   applyAuthUI();
+  const dashBtn = document.getElementById('btn-dashboard');
+  if (dashBtn) dashBtn.style.display = state.authUser?.role === 'admin' ? '' : 'none';
   await loadAppSettings();
   await initPicker();
   if (state.authUser?.pegawai_pin) {
@@ -132,6 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('modal-laporan').addEventListener('click', function(e) {
     if (e.target === this) closeLaporanModal();
+  });
+  document.getElementById('modal-dashboard').addEventListener('click', function(e) {
+    if (e.target === this) closeDashboardModal();
   });
 });
 

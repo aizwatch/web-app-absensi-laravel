@@ -77,9 +77,9 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const terlambat=!veryLate&&r.scan_masuk&&batas&&r.scan_masuk>batas;
     const pulangCepat=r.scan_pulang&&r.scan_pulang<jamPulang;
 
-    // Istirahat: hanya hitung jika shift pakai ist_window DAN row hadir (scan_masuk, !catatan, !veryLate)
+    // Istirahat: hitung jika shift pakai ist_window DAN ada scan_masuk DAN bukan veryLate (catatan=lembur/meeting tetap dihitung)
     const shiftHasIst=!!(shift&&shift.ist_window_dari&&shift.ist_window_sampai);
-    const isHadirRow=!!(r.scan_masuk&&!r.catatan&&!veryLate);
+    const isHadirRow=!!(r.scan_masuk&&!veryLate);
     const onlySingleIst=shiftHasIst&&isHadirRow&&((r.scan_istirahat1&&!r.scan_istirahat2)||(!r.scan_istirahat1&&r.scan_istirahat2));
     let istSelisih=null,istPenalty=null;
     if(shiftHasIst&&isHadirRow){
@@ -141,7 +141,8 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const istPink=workDays.filter(r=>getIstPenalty(r)==='pink').length;
     const istKuning=workDays.filter(r=>getIstPenalty(r)==='kuning').length;
     const hadirDecimal=workDays.reduce((sum,r)=>{
-      if(!r.scan_masuk||r.catatan)return sum;
+      if(r.catatan)return sum+1;
+      if(!r.scan_masuk)return sum;
       if(r.scan_masuk>=shiftBatasSetengah)return sum+0.5;
       const ip=getIstPenalty(r);
       if(ip==='merah')return sum;
@@ -182,6 +183,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
         <span style="color:#ad1457">1/2 Hari: <b>${istPink}</b></span>
         <span style="color:#c53030">Tidak Hadir: <b>${istMerah}</b></span>
       </div>`:''}
+      <div style="text-align:center;font-weight:700;font-size:10px;padding:4px 0 2px;border-top:1px solid #cbd5e0;margin-top:4px">${escHtml(p.nama)}</div>
     </div>`;
   }
 

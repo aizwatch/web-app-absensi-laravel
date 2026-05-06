@@ -102,6 +102,7 @@
         <div class="header-btns">
           <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
           <button class="theme-toggle" id="btn-user-settings" onclick="openUserSettingsModal()" title="Pengaturan Akun" style="display:none">⚙️</button>
+          <button class="theme-toggle" id="btn-dashboard" onclick="openDashboardModal()" title="Dashboard Kehadiran" style="display:none">📊</button>
           <button class="theme-toggle" id="btn-admin" onclick="openAdminModal()" title="Menu Admin" style="display:none">🛠️</button>
           <button class="theme-toggle" id="btn-logout" onclick="doLogout()" title="Logout" style="display:none">🚪</button>
         </div>
@@ -933,6 +934,138 @@
       <button type="button" class="btn btn-ghost" onclick="closeOvKaryawanPicker()">Batal</button>
       <button type="button" class="btn btn-primary" onclick="confirmOvKaryawanPicker()">Pilih</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: DASHBOARD KEHADIRAN -->
+<div class="dash-modal-overlay" id="modal-dashboard">
+  <div class="dash-modal">
+    <!-- header -->
+    <div class="dash-header">
+      <div class="dash-header-left">
+        <div class="dash-live-dot-h"></div>
+        <span class="dash-header-title">Dashboard Kehadiran</span>
+        <span class="dash-live-badge-h">Live</span>
+      </div>
+      <div class="dash-header-right">
+        <div class="dash-clock-wrap">
+          <span id="dash-clock-time">--:--:--</span>
+          <span id="dash-clock-date">—</span>
+        </div>
+        <button class="dash-close-btn" onclick="closeDashboardModal()" title="Tutup">✕</button>
+      </div>
+    </div>
+    <!-- tabs -->
+    <div class="dash-tabs-bar">
+      <button class="dash-tab-btn active" data-tab="harian"  onclick="switchDashTab('harian')">Harian</button>
+      <button class="dash-tab-btn"        data-tab="bulanan" onclick="switchDashTab('bulanan')">Bulanan</button>
+      <button class="dash-tab-btn"        data-tab="tahunan" onclick="switchDashTab('tahunan')">Tahunan</button>
+    </div>
+
+    <!-- PANE: HARIAN -->
+    <div class="dash-pane active" id="dash-pane-harian">
+      <div class="dash-stats">
+        <div class="dash-stat-card">
+          <div class="dash-stat-label">Total Karyawan</div>
+          <div class="dash-stat-val" id="dash-stat-total">—</div>
+          <div class="dash-stat-sub">hari kerja hari ini</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-label">Hadir</div>
+          <div class="dash-stat-val green" id="dash-stat-hadir">—</div>
+          <div class="dash-stat-sub" id="dash-stat-hadir-pct">—</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-label">Terlambat</div>
+          <div class="dash-stat-val orange" id="dash-stat-terlambat">—</div>
+          <div class="dash-stat-sub" id="dash-stat-terlambat-pct">—</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-label">Tidak Hadir</div>
+          <div class="dash-stat-val red" id="dash-stat-alpha">—</div>
+          <div class="dash-stat-sub" id="dash-stat-alpha-pct">—</div>
+        </div>
+      </div>
+      <div class="dash-body">
+        <div class="dash-chart-wrap">
+          <div class="dash-chart-title">KEHADIRAN HARI INI</div>
+          <div class="dash-chart-inner">
+            <svg id="dash-donut-svg" width="150" height="150" viewBox="0 0 150 150"></svg>
+            <div class="dash-legend">
+              <div class="dash-legend-item"><span class="dash-legend-dot green"></span><span id="dash-leg-hadir">Hadir — —</span></div>
+              <div class="dash-legend-item"><span class="dash-legend-dot orange"></span><span id="dash-leg-terlambat">Terlambat — —</span></div>
+              <div class="dash-legend-item"><span class="dash-legend-dot red"></span><span id="dash-leg-alpha">Alfa / Izin — —</span></div>
+            </div>
+          </div>
+          <div class="dash-update">Update terakhir: <span id="dash-update-time">—</span></div>
+        </div>
+        <div class="dash-absent-wrap">
+          <div class="dash-chart-title">TIDAK HADIR HARI INI</div>
+          <div id="dash-absent-list" class="dash-absent-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANE: BULANAN -->
+    <div class="dash-pane" id="dash-pane-bulanan">
+      <div class="dash-filter-bar">
+        <select id="dash-bul-bulan" class="dash-select">
+          <option value="01">Januari</option><option value="02">Februari</option>
+          <option value="03">Maret</option><option value="04">April</option>
+          <option value="05">Mei</option><option value="06">Juni</option>
+          <option value="07">Juli</option><option value="08">Agustus</option>
+          <option value="09">September</option><option value="10">Oktober</option>
+          <option value="11">November</option><option value="12">Desember</option>
+        </select>
+        <input type="number" id="dash-bul-tahun" class="dash-input" min="2020" max="2099" style="width:90px" />
+        <select id="dash-bul-emp" class="dash-select" style="min-width:200px"></select>
+        <button class="dash-btn-primary" onclick="loadDashBulanan()">Tampilkan</button>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead><tr>
+            <th>Karyawan</th>
+            <th class="dash-tc">Hari Kerja</th>
+            <th class="dash-tc">Hadir</th>
+            <th class="dash-tc">Terlambat</th>
+            <th class="dash-tc">½ Hari</th>
+            <th class="dash-tc">Tidak Hadir</th>
+            <th class="dash-tc">Keterangan</th>
+            <th class="dash-tc">Istirahat</th>
+          </tr></thead>
+          <tbody id="dash-bul-body">
+            <tr><td colspan="8" class="dash-td-loading">Pilih bulan lalu klik Tampilkan</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PANE: TAHUNAN -->
+    <div class="dash-pane" id="dash-pane-tahunan">
+      <div class="dash-filter-bar">
+        <input type="number" id="dash-thn-tahun" class="dash-input" min="2020" max="2099" style="width:100px" />
+        <select id="dash-thn-emp" class="dash-select" style="min-width:200px"></select>
+        <button class="dash-btn-primary" onclick="loadDashTahunan()">Tampilkan</button>
+      </div>
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead><tr>
+            <th>Karyawan</th>
+            <th class="dash-tc">Jan</th><th class="dash-tc">Feb</th><th class="dash-tc">Mar</th>
+            <th class="dash-tc">Apr</th><th class="dash-tc">Mei</th><th class="dash-tc">Jun</th>
+            <th class="dash-tc">Jul</th><th class="dash-tc">Ags</th><th class="dash-tc">Sep</th>
+            <th class="dash-tc">Okt</th><th class="dash-tc">Nov</th><th class="dash-tc">Des</th>
+            <th class="dash-tc">Total Hadir</th>
+            <th class="dash-tc">Alpha</th>
+            <th class="dash-tc">Terlambat</th>
+          </tr></thead>
+          <tbody id="dash-thn-body">
+            <tr><td colspan="15" class="dash-td-loading">Pilih tahun lalu klik Tampilkan</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
