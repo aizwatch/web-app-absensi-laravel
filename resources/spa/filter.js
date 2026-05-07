@@ -69,10 +69,11 @@ export function renderFilterTable(data) {
 
 export function exportFilter() {
   if(!state.lastFilterData||!state.lastFilterData.length){alert('Tampilkan data dulu sebelum export.');return;}
-  const rows=state.lastFilterData.filter(r=>r.scan_masuk).map(r=>{
+  const header=['Name','Employee','Work Entry Type','From','Afternoon Out','Afternoon In','To'];
+  const rows=[header,...state.lastFilterData.filter(r=>r.scan_masuk).map(r=>{
     const dt=(jam)=>jam?`${r.tanggal} ${jam}`:'';
     return [`Attendance: ${r.nama||r.pin}`,r.nama||String(r.pin),'Attendance',dt(r.scan_masuk),dt(r.scan_istirahat1),dt(r.scan_istirahat2),dt(r.scan_pulang)];
-  });
+  })];
   const ws=XLSX.utils.aoa_to_sheet(rows);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Attendance');
