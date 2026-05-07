@@ -169,6 +169,7 @@ setInterval(pollAbsensi, 5000);
     return;
   }
   if (state.authUser?.must_change_password) {
+    await loadLoginUsers();
     document.getElementById('overlay-force-pw').classList.add('show');
     setTimeout(() => document.getElementById('fcp-password').focus(), 100);
     return;
