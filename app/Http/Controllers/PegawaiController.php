@@ -56,16 +56,17 @@ class PegawaiController extends Controller
     {
         $data = $request->input('data', []);
 
-        $affected = DB::table('pegawai')->where('pegawai_pin', $pin)->update([
+        $exists = DB::table('pegawai')->where('pegawai_pin', $pin)->exists();
+        if (!$exists)
+            return response()->json(['success' => false, 'message' => 'Karyawan tidak ditemukan'], 404);
+
+        DB::table('pegawai')->where('pegawai_pin', $pin)->update([
             'pegawai_nama'        => $data['pegawai_nama'] ?? '',
             'pegawai_nip'         => $data['pegawai_nip'] ?? '',
             'pegawai_telp'        => $data['pegawai_telp'] ?? '',
             'pegawai_departemen'  => $data['pegawai_departemen'] ?? null,
             'pegawai_status'      => $data['pegawai_status'] ?? 1,
         ]);
-
-        if (!$affected)
-            return response()->json(['success' => false, 'message' => 'Karyawan tidak ditemukan'], 404);
 
         return response()->json(['success' => true, 'message' => 'Karyawan berhasil diperbarui']);
     }
