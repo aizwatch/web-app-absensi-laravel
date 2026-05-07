@@ -65,21 +65,14 @@ class AbsensiService
                 $forIst       = $lastIsPulang ? array_slice($restScans, 0, -1) : $restScans;
                 $istScans     = array_values(array_filter($forIst, fn($t) => $t >= $istDari && $t <= $istSampai));
             } else {
-                // Shift tanpa ist_window: durasi_istirahat tidak dihitung (null)
-                // 1 scan setelah masuk  → pulang
-                // 2 scan setelah masuk  → ist1 + ist2 (belum pulang)
-                // 3+ scan setelah masuk → ist1 + ist2 + pulang (terakhir)
-                $count = count($restScans);
-                if ($count >= 3) {
-                    $istScans   = [$restScans[0], $restScans[1]];
-                    $scanPulang = $restScans[$count - 1];
-                } elseif ($count === 2) {
-                    $istScans   = [$restScans[0], $restScans[1]];
-                    $scanPulang = null;
-                } else {
-                    $istScans   = [];
-                    $scanPulang = $lastScan ?: null;
-                }
+                // Shift tanpa ist_window: threshold jam_pulang
+                // scan < jam_pulang  → istirahat (ist1/ist2, maks 2)
+                // scan >= jam_pulang → pulang (ambil terakhir)
+                $jamPulangTime = $jamPulang . ':00';
+                $istScans   = array_values(array_filter($restScans, fn($t) => $t < $jamPulangTime));
+                $pulangScans = array_values(array_filter($restScans, fn($t) => $t >= $jamPulangTime));
+                $istScans   = array_slice($istScans, 0, 2);
+                $scanPulang = count($pulangScans) ? end($pulangScans) : null;
             }
             $scanIstirahat1 = $istScans[0] ?? null;
             $scanIstirahat2 = $istScans[1] ?? null;
