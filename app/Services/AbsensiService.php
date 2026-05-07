@@ -65,14 +65,27 @@ class AbsensiService
                 $forIst       = $lastIsPulang ? array_slice($restScans, 0, -1) : $restScans;
                 $istScans     = array_values(array_filter($forIst, fn($t) => $t >= $istDari && $t <= $istSampai));
             } else {
-                $scanPulang = $lastScan ?: null;
-                $istScans   = [];
+                // Shift tanpa ist_window: durasi_istirahat tidak dihitung (null)
+                // 1 scan setelah masuk  → pulang
+                // 2 scan setelah masuk  → ist1 + ist2 (belum pulang)
+                // 3+ scan setelah masuk → ist1 + ist2 + pulang (terakhir)
+                $count = count($restScans);
+                if ($count >= 3) {
+                    $istScans   = [$restScans[0], $restScans[1]];
+                    $scanPulang = $restScans[$count - 1];
+                } elseif ($count === 2) {
+                    $istScans   = [$restScans[0], $restScans[1]];
+                    $scanPulang = null;
+                } else {
+                    $istScans   = [];
+                    $scanPulang = $lastScan ?: null;
+                }
             }
             $scanIstirahat1 = $istScans[0] ?? null;
             $scanIstirahat2 = $istScans[1] ?? null;
 
             $durasiIstirahat = null;
-            if ($scanIstirahat1 && $scanIstirahat2) {
+            if ($istDari && $istSampai && $scanIstirahat1 && $scanIstirahat2) {
                 $toMin = fn($t) => (int)explode(':', $t)[0] * 60 + (int)explode(':', $t)[1] + ((int)explode(':', $t)[2] ?? 0) / 60;
                 $durasiIstirahat = (int)round($toMin($scanIstirahat2) - $toMin($scanIstirahat1));
             }
@@ -90,6 +103,7 @@ class AbsensiService
                 'scan_istirahat2'  => $scanIstirahat2,
                 'scan_pulang'      => $scanPulang,
                 'durasi_istirahat' => $durasiIstirahat,
+                'has_ist_window'   => (bool)($istDari && $istSampai),
                 'shift_id'         => $shiftId,
                 'shift_nama'       => $shift['nama'] ?? $shiftId,
                 'jam_pulang_efektif' => $jamPulang,

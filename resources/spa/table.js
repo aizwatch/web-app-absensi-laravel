@@ -57,7 +57,7 @@ export function renderTable(tbodyId, data, isLive) {
     const durasiCell=durasi!=null?`<span class="td-durasi${durasi===0?' zero':''}">${durasi}</span>`:`<span class="td-durasi zero">—</span>`;
     const ist1Only=row.scan_istirahat1&&!row.scan_istirahat2;
     const ist2Only=!row.scan_istirahat1&&row.scan_istirahat2;
-    const istIncomplete=ist1Only||ist2Only;
+    const istIncomplete=row.has_ist_window&&(ist1Only||ist2Only);
     const ist1Cell=istIncomplete?`<span class="cell-ist-incomplete">${row.scan_istirahat1||row.scan_istirahat2}</span>`:timeCell(row.scan_istirahat1,'ist',shift);
     const ist2Cell=istIncomplete?`<span class="td-time empty">—</span>`:timeCell(row.scan_istirahat2,'ist',shift);
     const liveHari=row.tanggal?HARI_LABELS[new Date(row.tanggal+'T00:00:00').getDay()]:'—';
@@ -160,7 +160,7 @@ export function renderPersonalTable(data) {
       else { alpha++; }
     }
     const ist1Only=row&&row.scan_istirahat1&&!row.scan_istirahat2;
-    const istIncomplete=ist1Only||(row&&!row.scan_istirahat1&&row.scan_istirahat2);
+    const istIncomplete=(row&&row.has_ist_window)&&(ist1Only||(row&&!row.scan_istirahat1&&row.scan_istirahat2));
     const ist1Cell=!row?`<span class="td-time empty">—</span>`
       :istIncomplete?`<span class="cell-ist-incomplete">${row.scan_istirahat1||row.scan_istirahat2}</span>`
       :timeCell(row?row.scan_istirahat1:null,'ist',shift);
