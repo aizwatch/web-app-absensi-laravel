@@ -14,10 +14,11 @@ export async function pollAbsensi() {
     updateStats(data);
     updateLastUpdate(new Date().toISOString());
     document.getElementById('badge-total').textContent = `${total} karyawan`;
-    if (total > state.prevTotal && state.prevTotal > 0) {
-      const latest = data.find(r => r.scan_masuk);
-      if (latest) showToast('✅ Update Absensi', `${latest.nama||'PIN '+latest.pin}`);
+    if (state.prevPins && state.prevTotal > 0) {
+      const newEntry = data.find(r => r.scan_masuk && !state.prevPins.has(String(r.pin)));
+      if (newEntry) showToast('✅ Update Absensi', `${newEntry.nama||'PIN '+newEntry.pin}`);
     }
+    state.prevPins  = new Set(data.filter(r=>r.scan_masuk).map(r=>String(r.pin)));
     state.prevTotal = total;
     if (!state.pollOnline) { state.pollOnline = true; setStatus(true); }
   } catch (_) {
