@@ -45,11 +45,7 @@ export function timeCell(val, type, shift) {
 
 export function renderTable(tbodyId, data, isLive) {
   const tbody = document.getElementById(tbodyId);
-  if (!data||!data.length) {
-    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Belum ada data absensi</div></div></td></tr>`;
-    return;
-  }
-  tbody.innerHTML=data.map((row,i)=>{
+  const scannedRows = (data||[]).map((row,i)=>{
     const shift    = getShiftForPin(row.pin);
     const absent   = !row.scan_masuk&&!row.scan_pulang;
     const rowClass = absent?'row-absent':(i===0&&isLive&&state.prevTotal>0?'new-entry':'');
@@ -70,7 +66,29 @@ export function renderTable(tbodyId, data, isLive) {
       <td>${timeCell(row.scan_pulang,'pulang',shift)}</td>
       <td>${durasiCell}</td>
     </tr>`;
-  }).join('');
+  });
+
+  let absentRows = [];
+  if (isLive && state.pegawaiList && state.pegawaiList.length) {
+    const scannedPins = new Set((data||[]).map(r=>String(r.pin)));
+    const todayStr = new Date().toLocaleDateString('sv-SE');
+    const todayHari = HARI_LABELS[new Date().getDay()];
+    absentRows = state.pegawaiList
+      .filter(p => !scannedPins.has(String(p.pin)))
+      .map(p => `<tr class="row-belum-absen">
+        <td class="td-tanggal">${formatTanggal(todayStr)}</td>
+        <td class="td-hari-live">${todayHari}</td>
+        <td><div class="td-name">${escHtml(p.nama||'—')}</div></td>
+        <td colspan="5" style="text-align:center;font-size:12px;opacity:0.7">Belum Absen</td>
+      </tr>`);
+  }
+
+  const allRows = [...scannedRows, ...absentRows];
+  if (!allRows.length) {
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Belum ada data absensi</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = allRows.join('');
 }
 
 export function updateStats(data) {

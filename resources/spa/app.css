@@ -289,6 +289,13 @@
     background: var(--absent-bg);
     opacity: 0.5;
   }
+  tbody tr.row-belum-absen {
+    background: rgba(220, 38, 38, 0.12);
+    border-left: 3px solid #dc2626;
+  }
+  tbody tr.row-belum-absen td {
+    color: #ef4444;
+  }
 
   tbody tr.new-entry { animation: newRow 2s ease-out; }
 
