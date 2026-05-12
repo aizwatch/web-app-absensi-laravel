@@ -141,7 +141,10 @@
             <span class="month-label" id="p-month-label">—</span>
             <button onclick="changeMonth(1)" title="Bulan berikutnya">›</button>
           </div>
-          <button class="btn btn-ghost" id="btn-ganti-karyawan" style="font-size:13px" onclick="showPicker()">🔄 Ganti Karyawan</button>
+          <div style="position:relative">
+            <button class="btn btn-ghost" id="btn-ganti-karyawan" style="font-size:13px" onclick="showPicker()">🔄 Ganti Karyawan</button>
+            <div id="picker-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.18);min-width:220px;max-height:280px;overflow-y:auto;padding:6px 0"></div>
+          </div>
         </div>
       </div>
 
@@ -273,20 +276,6 @@
             <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">📋 Ajukan Absensi Mandiri</div>
 
             <div class="form-group">
-              <label>Tanggal</label>
-              <input type="date" id="am-tanggal" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
-            </div>
-            <div id="am-jam-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <div class="form-group" style="margin:0">
-                <label id="am-jam-label">Jam <span style="color:#e53e3e">*</span></label>
-                <input type="time" id="am-jam" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
-              </div>
-              <div class="form-group" style="margin:0;display:none" id="am-jam2-wrap">
-                <label>Scan 2 <span style="color:var(--text-muted);font-weight:400">(opsional)</span></label>
-                <input type="time" id="am-jam2" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
-              </div>
-            </div>
-            <div class="form-group">
               <label>Tipe</label>
               <select id="am-tipe" onchange="toggleAmFields()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
                 <option value="lembur">🌙 Lembur</option>
@@ -303,6 +292,20 @@
                 <option value="setengah_pagi_preset">🌅 Setengah Hari (masuk pagi) — 08:00–11:00</option>
                 <option value="setengah_siang_preset">🌤️ Setengah Hari (masuk siang) — 10:50–17:00</option>
               </select>
+            </div>
+            <div class="form-group">
+              <label>Tanggal</label>
+              <input type="date" id="am-tanggal" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+            </div>
+            <div id="am-jam-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="form-group" style="margin:0">
+                <label id="am-jam-label">Jam <span style="color:#e53e3e">*</span></label>
+                <input type="time" id="am-jam" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+              </div>
+              <div class="form-group" style="margin:0;display:none" id="am-jam2-wrap">
+                <label>Scan 2 <span style="color:var(--text-muted);font-weight:400">(opsional)</span></label>
+                <input type="time" id="am-jam2" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
+              </div>
             </div>
             <div class="form-group">
               <label>Catatan <span style="color:var(--text-muted);font-weight:400">(opsional)</span></label>

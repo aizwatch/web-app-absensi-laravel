@@ -87,9 +87,9 @@ export function toggleTheme() {
 
 export function initClock() {
   setInterval(() => {
-    document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-ID');
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
   }, 1000);
-  document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-ID');
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
   document.getElementById('tanggal-hari-ini').textContent =
     new Date().toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   applyTheme(localStorage.getItem('theme') === 'dark');

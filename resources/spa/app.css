@@ -828,8 +828,9 @@
   .th-short { display: none; }
   .tgl-short { display: none; }
   .tgl-m-date { display: none; }
-  .t-short { display: none; }
-  .th-full, .tgl-full, .t-full { display: inline; }
+  .t-short { display: inline; }
+  .t-full { display: none; }
+  .th-full, .tgl-full { display: inline; }
   .hari-short { display: none; }
   .hari-full { display: inline; }
 

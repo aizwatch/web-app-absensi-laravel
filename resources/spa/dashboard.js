@@ -45,7 +45,7 @@ function _updateClock() {
   const now = new Date();
   const t = document.getElementById('dash-clock-time');
   const d = document.getElementById('dash-clock-date');
-  if (t) t.textContent = now.toLocaleTimeString('id-ID');
+  if (t) t.textContent = now.toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
   if (d) d.textContent = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 

@@ -64,6 +64,7 @@ Object.assign(window, {
 
   // picker
   confirmPickerSelect, showPicker, changeMonth,
+  _pickerSelect: (pin, nama) => selectEmployee(pin, nama),
 
   // settings — shifts
   editShiftRow, cancelShiftRow, saveShiftRow, deleteShift,
