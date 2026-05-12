@@ -158,8 +158,43 @@ document.getElementById('f-sampai').value = todayStr;
 initClock();
 
 // ── START POLLING ──
-pollAbsensi();
-setInterval(pollAbsensi, 5000);
+let _pollLiveInterval    = null;
+let _pollPersonalInterval = null;
+
+function _startPolling() {
+  if (!_pollLiveInterval) {
+    pollAbsensi();
+    _pollLiveInterval = setInterval(pollAbsensi, 5000);
+  }
+  if (!_pollPersonalInterval) {
+    _pollPersonalInterval = setInterval(() => {
+      const isCurrentMonth = state.currentMonth === new Date().toLocaleDateString('sv-SE').slice(0,7);
+      if (document.getElementById('tab-personal')?.classList.contains('active') && state.selectedEmployee && isCurrentMonth) {
+        loadPersonalAbsensi();
+      }
+    }, 30000);
+  }
+}
+
+function _stopPolling() {
+  clearInterval(_pollLiveInterval);
+  clearInterval(_pollPersonalInterval);
+  _pollLiveInterval    = null;
+  _pollPersonalInterval = null;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    _stopPolling();
+  } else {
+    _startPolling();
+    if (document.getElementById('tab-personal')?.classList.contains('active') && state.selectedEmployee) {
+      loadPersonalAbsensi();
+    }
+  }
+});
+
+_startPolling();
 
 // ── BOOT AUTH ──
 (async () => {
