@@ -22,6 +22,54 @@ class SyncController extends Controller
         return response()->json(['success' => true, 'data' => array_values($this->cloudIds())]);
     }
 
+    public function syncToday(Request $request)
+    {
+        $secret = env('SYNC_SECRET_KEY');
+        if ($secret && $request->header('X-Sync-Key') !== $secret) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $today         = now()->format('Y-m-d');
+        $targets       = $this->cloudIds();
+        $totalInserted  = 0;
+        $totalDuplicate = 0;
+
+        if (empty($targets))
+            return response()->json(['success' => false, 'message' => 'Tidak ada Cloud ID terkonfigurasi'], 500);
+
+        foreach ($targets as $cid) {
+            $rows = FingerspotApiService::fetchAttlog($today, $today, $cid);
+
+            foreach ($rows as $row) {
+                try {
+                    DB::table('att_log')->insert([
+                        'sn'         => $cid,
+                        'scan_date'  => $row['scan_date'] ?? null,
+                        'pin'        => (string)($row['pin'] ?? ''),
+                        'verifymode' => $row['verify']      ?? 1,
+                        'inoutmode'  => $row['status_scan'] ?? 0,
+                        'reserved'   => 0,
+                        'work_code'  => 0,
+                        'att_id'     => '0',
+                    ]);
+                    $totalInserted++;
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if (str_contains($e->getMessage(), 'Duplicate')) { $totalDuplicate++; continue; }
+                    throw $e;
+                }
+            }
+
+            Log::channel('webhook')->info("SYNC-TODAY-OK | cloud_id={$cid} date={$today} inserted={$totalInserted} dup={$totalDuplicate}");
+        }
+
+        return response()->json([
+            'success'   => true,
+            'date'      => $today,
+            'inserted'  => $totalInserted,
+            'duplicate' => $totalDuplicate,
+        ]);
+    }
+
     public function backfill(Request $request)
     {
         $data      = $request->input('data', []);

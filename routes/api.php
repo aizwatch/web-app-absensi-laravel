@@ -59,6 +59,7 @@ Route::post('webhook/fingerspot', [WebhookController::class, 'fingerspot'])
 // ── Sync / Backfill ──
 Route::get('sync/devices', [SyncController::class, 'devices']);
 Route::middleware([AuthMiddleware::class . ':admin'])->post('sync/backfill', [SyncController::class, 'backfill']);
+Route::post('sync/today', [SyncController::class, 'syncToday'])->middleware('throttle:10,1');
 
 // ── Absensi Mandiri ──
 Route::get('absensi-mandiri/{id}/attachment', [AbsensiMandiriController::class, 'attachment']);
