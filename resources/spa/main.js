@@ -52,6 +52,7 @@ import {
   toggleAmFields, previewAttachment, initAbsensiMandiri,
   submitAbsensiMandiri, closeAmConfirm, submitAmConfirmed,
   loadMyRequests, loadAdminRequests, adminActionMandiri, revokeAndEditMandiri,
+  updatePendingBadge,
 } from './absensi-mandiri.js';
 
 // ── EXPOSE TO window (required by inline onclick= in HTML) ──
@@ -127,6 +128,7 @@ async function afterLogin() {
     const emp = state.pegawaiList.find(p => String(p.pin) === String(state.authUser.pegawai_pin));
     if (emp) selectEmployee(emp.pin, emp.nama);
   }
+  updatePendingBadge();
 }
 setAfterLogin(afterLogin);
 
@@ -160,6 +162,7 @@ initClock();
 // ── START POLLING ──
 let _pollLiveInterval    = null;
 let _pollPersonalInterval = null;
+let _pollBadgeInterval    = null;
 
 function _startPolling() {
   if (!_pollLiveInterval) {
@@ -174,13 +177,18 @@ function _startPolling() {
       }
     }, 30000);
   }
+  if (!_pollBadgeInterval) {
+    _pollBadgeInterval = setInterval(updatePendingBadge, 30000);
+  }
 }
 
 function _stopPolling() {
   clearInterval(_pollLiveInterval);
   clearInterval(_pollPersonalInterval);
+  clearInterval(_pollBadgeInterval);
   _pollLiveInterval    = null;
   _pollPersonalInterval = null;
+  _pollBadgeInterval    = null;
 }
 
 document.addEventListener('visibilitychange', () => {

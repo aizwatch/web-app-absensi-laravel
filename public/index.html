@@ -122,7 +122,7 @@
         <button class="tab-btn active" id="tab-btn-personal" onclick="switchTab('tab-personal', this)">👤 Absensi Saya</button>
         <button class="tab-btn" onclick="switchTab('tab-live', this)">⚡ Live Hari Ini</button>
       </div>
-      <button class="tab-btn" id="tab-btn-mandiri" onclick="switchTab('tab-mandiri', this);initAbsensiMandiri()" style="margin-left:auto">📋 Absensi Mandiri</button>
+      <button class="tab-btn" id="tab-btn-mandiri" onclick="switchTab('tab-mandiri', this);initAbsensiMandiri()" style="margin-left:auto;position:relative">📋 Absensi Mandiri<span id="am-pending-badge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;padding:0 5px;border-radius:9px;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--bg, #fff);box-sizing:border-box">0</span></button>
     </div>
 
         <div id="tab-personal" class="tab-content active">

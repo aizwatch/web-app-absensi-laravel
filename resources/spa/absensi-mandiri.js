@@ -68,6 +68,27 @@ export function initAbsensiMandiri() {
   document.getElementById('am-admin-panel').style.display = isAdmin ? '' : 'none';
   loadMyRequests();
   if (isAdmin) loadAdminRequests();
+  updatePendingBadge();
+}
+
+export async function updatePendingBadge() {
+  const badge = document.getElementById('am-pending-badge');
+  if (!badge) return;
+  if (state.authUser?.role !== 'admin' || !state.authToken) {
+    badge.style.display = 'none';
+    return;
+  }
+  try {
+    const res  = await fetch('/api/absensi-mandiri?status=pending', { headers:authHeaders() });
+    const json = await res.json();
+    const count = (json.data || []).length;
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : String(count);
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (_) { /* silent */ }
 }
 
 export function submitAbsensiMandiri() {
@@ -131,6 +152,7 @@ export async function submitAmConfirmed() {
     showToast('📤 Terkirim','Permintaan dikirim ke admin');
     await loadMyRequests();
     if (state.authUser?.role==='admin') await loadAdminRequests();
+    updatePendingBadge();
   } catch(e) { ceEl.textContent='Gagal terhubung ke server.'; ceEl.classList.add('show'); }
   finally { kirimBtn.textContent='Kirim'; kirimBtn.disabled=false; }
 }
@@ -213,6 +235,7 @@ export async function adminActionMandiri(id, action) {
     showToast(action==='approve'?'✅ Disetujui':'❌ Ditolak', json.message);
     await loadAdminRequests();
     await loadMyRequests();
+    updatePendingBadge();
   } catch(e) { alert(e.message); }
 }
 
@@ -227,5 +250,6 @@ export async function revokeAndEditMandiri(id) {
     showToast('✏️ Dibatalkan', json.message);
     await loadAdminRequests();
     await loadMyRequests();
+    updatePendingBadge();
   } catch(e) { alert(e.message); }
 }
