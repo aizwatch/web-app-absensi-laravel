@@ -114,7 +114,7 @@ class SyncController extends Controller
 
         $pegawai = DB::table('pegawai')
             ->where('pegawai_status', 1)
-            ->select('pegawai_pin', 'pegawai_nama')
+            ->select('pegawai_pin', 'pegawai_nama', 'role')
             ->get();
 
         if ($pegawai->isEmpty())
@@ -133,7 +133,7 @@ class SyncController extends Controller
                             'data'     => [
                                 'pin'       => (string) $p->pegawai_pin,
                                 'name'      => $p->pegawai_nama,
-                                'privilege' => '0',
+                                'privilege' => $p->role === 'admin' ? '2' : '1',
                                 'password'  => '',
                                 'rfid'      => '',
                                 'template'  => '',
