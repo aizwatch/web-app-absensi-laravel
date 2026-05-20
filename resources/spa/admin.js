@@ -244,6 +244,63 @@ export async function runBackfill() {
   finally{btn.textContent='🔄 Sinkronisasi';btn.disabled=false;}
 }
 
+export async function runSetTime() {
+  const tz    = 'Asia/Jakarta';
+  const errEl = document.getElementById('settime-err');
+  const okEl  = document.getElementById('settime-ok');
+  const btn   = document.getElementById('settime-btn');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (!confirm(`Kirim perintah sync jam (${tz}) ke semua mesin?\n\nMesin selain REVO/VIDA/VEGA/VIVO series akan RESTART otomatis.`)) return;
+  btn.textContent = '⏳ Mengirim...'; btn.disabled = true;
+  try {
+    const res  = await fetch('/api/sync/set-time', {method:'POST', headers:{'Content-Type':'application/json',...authHeaders()}, body:JSON.stringify({timezone:tz})});
+    const json = await res.json();
+    if (!json.success && !json.results) throw new Error(json.message || 'Gagal');
+    const results = json.results || [];
+    const lines   = results.map(r => `${r.cloud_id}: ${r.success ? '✅ OK' : '❌ ' + (r.message||'Gagal')}`).join(' | ');
+    if (json.success) {
+      okEl.textContent  = `✅ Perintah terkirim — ${lines}`;
+      okEl.classList.add('show');
+    } else {
+      errEl.textContent = `⚠️ Sebagian gagal — ${lines}`;
+      errEl.classList.add('show');
+    }
+  } catch(e) {
+    errEl.textContent = '❌ ' + e.message;
+    errEl.classList.add('show');
+  } finally {
+    btn.textContent = '🕐 Sync Jam'; btn.disabled = false;
+  }
+}
+
+export async function runSyncUserInfo() {
+  const errEl = document.getElementById('syncuser-err');
+  const okEl  = document.getElementById('syncuser-ok');
+  const btn   = document.getElementById('syncuser-btn');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (!confirm('Kirim data PIN & nama semua karyawan aktif ke semua mesin?\n\nProses ini mungkin membutuhkan beberapa detik.')) return;
+  btn.textContent = '⏳ Mengirim...'; btn.disabled = true;
+  try {
+    const res  = await fetch('/api/sync/user-info', {method:'POST', headers:{'Content-Type':'application/json',...authHeaders()}});
+    const json = await res.json();
+    if (!json.success && !json.results) throw new Error(json.message || 'Gagal');
+    const results = json.results || [];
+    const lines   = results.map(r => `${r.cloud_id}: ${r.sent} terkirim${r.failed ? `, ${r.failed} gagal` : ''}`).join(' | ');
+    if (json.success) {
+      okEl.textContent = `✅ Selesai — ${json.total_karyawan} karyawan — ${lines}`;
+      okEl.classList.add('show');
+    } else {
+      errEl.textContent = `⚠️ Sebagian gagal — ${lines}`;
+      errEl.classList.add('show');
+    }
+  } catch(e) {
+    errEl.textContent = '❌ ' + e.message;
+    errEl.classList.add('show');
+  } finally {
+    btn.textContent = '👤 Sync Karyawan'; btn.disabled = false;
+  }
+}
+
 export function openUserSettingsModal() {
   if(!state.authUser) return;
   document.getElementById('us-nama').textContent    =state.authUser.name||'—';

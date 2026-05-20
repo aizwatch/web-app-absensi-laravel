@@ -581,6 +581,27 @@
           <div class="alert-ok"  id="sync-ok"  style="margin-top:12px;margin-bottom:0"></div>
         </div>
 
+        <div class="admin-form-card" style="margin-top:16px">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px">🕐 Sync Jam Mesin</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:4px">Kirim perintah set timezone ke semua mesin via Fingerspot Cloud API. Mesin akan menyesuaikan jam ke timezone yang dipilih.</p>
+          <p style="font-size:12px;color:#f59e0b;margin-bottom:14px">⚠️ Mesin absensi selain REVO/VIDA/VEGA/VIVO series akan <strong>restart otomatis</strong> saat perintah dieksekusi.</p>
+          <div>
+            <button class="btn btn-primary" id="settime-btn" onclick="runSetTime()">🕐 Sync Jam ke Mesin</button>
+          </div>
+          <div class="alert-err" id="settime-err" style="margin-top:12px;margin-bottom:0"></div>
+          <div class="alert-ok"  id="settime-ok"  style="margin-top:12px;margin-bottom:0"></div>
+        </div>
+
+        <div class="admin-form-card" style="margin-top:16px">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px">👤 Sync Karyawan ke Mesin</div>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Kirim data PIN &amp; nama semua karyawan aktif ke semua mesin absensi. Berguna saat ada karyawan baru atau perubahan nama.</p>
+          <div>
+            <button class="btn btn-primary" id="syncuser-btn" onclick="runSyncUserInfo()">👤 Sync Karyawan</button>
+          </div>
+          <div class="alert-err" id="syncuser-err" style="margin-top:12px;margin-bottom:0"></div>
+          <div class="alert-ok"  id="syncuser-ok"  style="margin-top:12px;margin-bottom:0"></div>
+        </div>
+
       </div>
 
             <div class="admin-stab-pane" id="astab-pengaturan">

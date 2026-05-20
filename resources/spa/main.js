@@ -38,7 +38,7 @@ import {
   adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan,
   adminLoadPegawai, adminEditPegawaiRow, adminCancelPegawaiRow,
   adminSavePegawai, adminDeletePegawai, adminAddPegawai,
-  loadSyncDevices, runBackfill,
+  loadSyncDevices, runBackfill, runSetTime, runSyncUserInfo,
   openUserSettingsModal, closeSettingsModal, userChangePassword,
 } from './admin.js';
 import {
@@ -102,7 +102,7 @@ Object.assign(window, {
   adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan,
   adminEditPegawaiRow, adminCancelPegawaiRow, adminSavePegawai,
   adminDeletePegawai, adminAddPegawai,
-  loadSyncDevices, runBackfill,
+  loadSyncDevices, runBackfill, runSetTime, runSyncUserInfo,
   openUserSettingsModal, closeSettingsModal, userChangePassword,
 
   // laporan

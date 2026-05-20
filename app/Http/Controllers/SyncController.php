@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\FingerspotApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SyncController extends Controller
@@ -68,6 +69,88 @@ class SyncController extends Controller
             'inserted'  => $totalInserted,
             'duplicate' => $totalDuplicate,
         ]);
+    }
+
+    public function syncSetTime(Request $request)
+    {
+        $targets  = $this->cloudIds();
+        $timezone = $request->input('timezone', 'Asia/Jakarta');
+        $token    = env('FINGERSPOT_API_TOKEN');
+
+        if (empty($targets))
+            return response()->json(['success' => false, 'message' => 'Tidak ada Cloud ID terkonfigurasi'], 500);
+
+        $results = [];
+        foreach ($targets as $cid) {
+            try {
+                $res = Http::withoutVerifying()
+                    ->withToken($token)
+                    ->post('https://developer.fingerspot.io/api/set_time', [
+                        'trans_id' => (string) now()->timestamp,
+                        'cloud_id' => $cid,
+                        'timezone' => $timezone,
+                    ]);
+                $json = $res->json();
+                $ok   = $json['success'] ?? false;
+                Log::channel('webhook')->info("SET-TIME | cloud_id={$cid} timezone={$timezone} success=" . ($ok ? 'true' : 'false'));
+                $results[] = ['cloud_id' => $cid, 'success' => $ok, 'message' => $json['message'] ?? null];
+            } catch (\Throwable $e) {
+                Log::channel('webhook')->error("SET-TIME-FAIL | cloud_id={$cid} err={$e->getMessage()}");
+                $results[] = ['cloud_id' => $cid, 'success' => false, 'message' => $e->getMessage()];
+            }
+        }
+
+        $allOk = collect($results)->every(fn($r) => $r['success']);
+        return response()->json(['success' => $allOk, 'results' => $results]);
+    }
+
+    public function syncUserInfo(Request $request)
+    {
+        $targets  = $this->cloudIds();
+        $token    = env('FINGERSPOT_API_TOKEN');
+
+        if (empty($targets))
+            return response()->json(['success' => false, 'message' => 'Tidak ada Cloud ID terkonfigurasi'], 500);
+
+        $pegawai = DB::table('pegawai')
+            ->where('pegawai_status', 1)
+            ->select('pegawai_pin', 'pegawai_nama')
+            ->get();
+
+        if ($pegawai->isEmpty())
+            return response()->json(['success' => false, 'message' => 'Tidak ada karyawan aktif'], 400);
+
+        $results = [];
+        foreach ($targets as $cid) {
+            $sent = 0; $failed = 0;
+            foreach ($pegawai as $p) {
+                try {
+                    $res = Http::withoutVerifying()
+                        ->withToken($token)
+                        ->post('https://developer.fingerspot.io/api/set_userinfo', [
+                            'trans_id' => (string) now()->timestamp,
+                            'cloud_id' => $cid,
+                            'data'     => [
+                                'pin'       => (string) $p->pegawai_pin,
+                                'name'      => $p->pegawai_nama,
+                                'privilege' => '0',
+                                'password'  => '',
+                                'rfid'      => '',
+                                'template'  => '',
+                            ],
+                        ]);
+                    $json = $res->json();
+                    ($json['success'] ?? false) ? $sent++ : $failed++;
+                } catch (\Throwable $e) {
+                    $failed++;
+                }
+            }
+            Log::channel('webhook')->info("SYNC-USERINFO | cloud_id={$cid} sent={$sent} failed={$failed}");
+            $results[] = ['cloud_id' => $cid, 'sent' => $sent, 'failed' => $failed];
+        }
+
+        $allOk = collect($results)->every(fn($r) => $r['failed'] === 0);
+        return response()->json(['success' => $allOk, 'results' => $results, 'total_karyawan' => $pegawai->count()]);
     }
 
     public function backfill(Request $request)

@@ -61,7 +61,11 @@ Route::post('webhook/fingerspot', [WebhookController::class, 'fingerspot'])
 
 // ── Sync / Backfill ──
 Route::get('sync/devices', [SyncController::class, 'devices']);
-Route::middleware([AuthMiddleware::class . ':admin'])->post('sync/backfill', [SyncController::class, 'backfill']);
+Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
+    Route::post('sync/backfill',   [SyncController::class, 'backfill']);
+    Route::post('sync/set-time',   [SyncController::class, 'syncSetTime']);
+    Route::post('sync/user-info',  [SyncController::class, 'syncUserInfo']);
+});
 Route::post('sync/today', [SyncController::class, 'syncToday'])->middleware('throttle:10,1');
 
 // ── Absensi Mandiri ──
