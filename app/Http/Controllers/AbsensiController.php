@@ -42,6 +42,12 @@ class AbsensiController extends Controller
         $dari           = "{$bulan}-01";
         $sampai         = date('Y-m-t', mktime(0, 0, 0, (int)$month, 1, (int)$year));
 
+        $today      = now()->toDateString();
+        $sampai     = min($sampai, date('Y-m-d', strtotime($today . ' -1 day')));
+        if ($dari > $sampai) {
+            return response()->json(['success' => true, 'data' => [], 'bulan' => $bulan]);
+        }
+
         $allRows    = AbsensiService::getAttLogGrouped($dari, $sampai);
         $settings   = SettingsManager::all();
         $holidays   = collect($settings['holidays'] ?? [])->pluck('tanggal')->flip()->all();
