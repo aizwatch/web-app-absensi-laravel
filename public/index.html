@@ -369,7 +369,7 @@
       <button class="admin-stab-btn active" id="astab-btn-attlog" onclick="switchAdminStab('astab-attlog',this)">📋 Koreksi Absensi</button>
       <button class="admin-stab-btn" id="astab-btn-pegawai" onclick="switchAdminStab('astab-pegawai',this)">👥 Data Karyawan</button>
       <button class="admin-stab-btn" id="astab-btn-filter" onclick="switchAdminStab('astab-filter',this)">🔍 Filter & Cari</button>
-      <button class="admin-stab-btn" id="astab-btn-sync" onclick="switchAdminStab('astab-sync',this);loadSyncDevices()">🔄 Sinkronisasi</button>
+      <button class="admin-stab-btn" id="astab-btn-sync" onclick="switchAdminStab('astab-sync',this);loadSyncDevices();populateSyncUserSelect()">🔄 Sinkronisasi</button>
       <button class="admin-stab-btn" id="astab-btn-pengaturan" onclick="switchAdminStab('astab-pengaturan',this);openPengaturanSettings()">⚙️ Pengaturan</button>
     </div>
 
@@ -594,12 +594,18 @@
 
         <div class="admin-form-card" style="margin-top:16px">
           <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px">👤 Sync Karyawan ke Mesin</div>
-          <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Kirim data PIN &amp; nama semua karyawan aktif ke semua mesin absensi. Berguna saat ada karyawan baru atau perubahan nama.</p>
-          <div>
-            <button class="btn btn-primary" id="syncuser-btn" onclick="runSyncUserInfo()">👤 Sync Karyawan</button>
+          <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Kirim data PIN &amp; nama karyawan ke semua mesin absensi. Berguna saat ada karyawan baru atau perubahan nama.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+            <div class="filter-group">
+              <label>Karyawan</label>
+              <select id="syncuser-pin" style="min-width:220px">
+                <option value="">— Semua Karyawan —</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="syncuser-btn" onclick="runSyncUserInfo()">👤 Sync</button>
           </div>
-          <div class="alert-err" id="syncuser-err" style="margin-top:12px;margin-bottom:0"></div>
-          <div class="alert-ok"  id="syncuser-ok"  style="margin-top:12px;margin-bottom:0"></div>
+          <div class="alert-err" id="syncuser-err" style="margin-top:4px;margin-bottom:0"></div>
+          <div class="alert-ok"  id="syncuser-ok"  style="margin-top:4px;margin-bottom:0"></div>
         </div>
 
       </div>

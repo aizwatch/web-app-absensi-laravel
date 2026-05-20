@@ -273,15 +273,27 @@ export async function runSetTime() {
   }
 }
 
+export function populateSyncUserSelect() {
+  const sel = document.getElementById('syncuser-pin');
+  if (!sel) return;
+  const opts = (state.pegawaiList || []).map(p => `<option value="${escHtml(String(p.pin))}">${escHtml(p.nama)} (${escHtml(String(p.pin))})</option>`).join('');
+  sel.innerHTML = '<option value="">— Semua Karyawan —</option>' + opts;
+}
+
 export async function runSyncUserInfo() {
+  const pin   = document.getElementById('syncuser-pin')?.value || '';
   const errEl = document.getElementById('syncuser-err');
   const okEl  = document.getElementById('syncuser-ok');
   const btn   = document.getElementById('syncuser-btn');
   errEl.classList.remove('show'); okEl.classList.remove('show');
-  if (!confirm('Kirim data PIN & nama semua karyawan aktif ke semua mesin?\n\nProses ini mungkin membutuhkan beberapa detik.')) return;
+  const label = pin
+    ? (state.pegawaiList||[]).find(p=>String(p.pin)===pin)?.nama || pin
+    : 'semua karyawan';
+  if (!confirm(`Kirim data ke mesin untuk ${label}?\n\nProses ini mungkin membutuhkan beberapa detik.`)) return;
   btn.textContent = '⏳ Mengirim...'; btn.disabled = true;
   try {
-    const res  = await fetch('/api/sync/user-info', {method:'POST', headers:{'Content-Type':'application/json',...authHeaders()}});
+    const body = pin ? {pin} : {};
+    const res  = await fetch('/api/sync/user-info', {method:'POST', headers:{'Content-Type':'application/json',...authHeaders()}, body:JSON.stringify(body)});
     const json = await res.json();
     if (!json.success && !json.results) throw new Error(json.message || 'Gagal');
     const results = json.results || [];
@@ -297,7 +309,7 @@ export async function runSyncUserInfo() {
     errEl.textContent = '❌ ' + e.message;
     errEl.classList.add('show');
   } finally {
-    btn.textContent = '👤 Sync Karyawan'; btn.disabled = false;
+    btn.textContent = '👤 Sync'; btn.disabled = false;
   }
 }
 

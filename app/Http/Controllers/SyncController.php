@@ -112,10 +112,10 @@ class SyncController extends Controller
         if (empty($targets))
             return response()->json(['success' => false, 'message' => 'Tidak ada Cloud ID terkonfigurasi'], 500);
 
-        $pegawai = DB::table('pegawai')
-            ->where('pegawai_status', 1)
-            ->select('pegawai_pin', 'pegawai_nama', 'role')
-            ->get();
+        $pin     = $request->input('pin');
+        $query   = DB::table('pegawai')->where('pegawai_status', 1)->select('pegawai_pin', 'pegawai_nama', 'role');
+        if ($pin) $query->where('pegawai_pin', $pin);
+        $pegawai = $query->get();
 
         if ($pegawai->isEmpty())
             return response()->json(['success' => false, 'message' => 'Tidak ada karyawan aktif'], 400);
