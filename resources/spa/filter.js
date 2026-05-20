@@ -3,6 +3,87 @@ import { escHtml, formatTanggal } from './utils.js';
 import { getShiftForPin } from './settings.js';
 import { timeCell } from './table.js';
 
+export function switchFilterStab(tab) {
+  ['rekap', 'bermasalah'].forEach(t => {
+    document.getElementById(`fstab-${t}`).style.display = t === tab ? '' : 'none';
+    const btn = document.getElementById(`fstab-btn-${t}`);
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+}
+
+export async function applyBermasalah() {
+  const bulan = document.getElementById('fb-bulan').value;
+  if (!bulan) { alert('Pilih bulan terlebih dahulu'); return; }
+  const wrap = document.getElementById('bermasalah-wrap');
+  const loading = document.createElement('div');
+  loading.className = 'loading-overlay';
+  loading.innerHTML = '<div class="spinner"></div>';
+  wrap.appendChild(loading);
+  try {
+    const res = await fetch(`/api/absensi/bermasalah?bulan=${bulan}`, {
+      headers: { Authorization: `Bearer ${state.authToken}` },
+    });
+    const { data } = await res.json();
+    renderBermasalah(data || []);
+    document.getElementById('bermasalah-badge').textContent = `${(data || []).length} karyawan`;
+  } catch (e) {
+    alert('Gagal mengambil data: ' + e.message);
+  } finally {
+    if (wrap.contains(loading)) wrap.removeChild(loading);
+  }
+}
+
+export function renderBermasalah(data) {
+  const tbody = document.getElementById('bermasalah-tbody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Tidak ada karyawan bermasalah di bulan ini</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map((row, i) => {
+    const total = row.scan_tunggal.length + row.ist_tunggal.length;
+    return `
+      <tr class="bm-row" onclick="toggleBermasalahDetail(${i})" style="cursor:pointer">
+        <td>${escHtml(row.nama || '—')}</td>
+        <td style="font-size:12px;color:var(--text-muted)">${escHtml(row.shift_nama || '—')}</td>
+        <td style="text-align:center">${row.scan_tunggal.length ? `<span class="badge-warn">${row.scan_tunggal.length}</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td style="text-align:center">${row.ist_tunggal.length ? `<span class="badge-warn">${row.ist_tunggal.length}</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td style="text-align:center"><strong>${total}</strong></td>
+        <td style="text-align:center;font-size:11px;color:var(--accent)" id="bm-arrow-${i}">▼</td>
+      </tr>
+      <tr id="bm-detail-${i}" style="display:none">
+        <td colspan="6" style="padding:0;background:var(--surface2)">
+          <div style="padding:10px 16px">
+            ${row.scan_tunggal.length ? `
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">1x Scan</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+                ${row.scan_tunggal.map(d => {
+                  const label = d.jenis === 'pulang_only' ? 'pulang' : d.jenis === 'ist_only' ? 'istirahat' : 'masuk';
+                  return `<span class="chip-warn">${formatTanggal(d.tanggal)} <span style="color:var(--text-muted);font-size:11px">${d.jam} (${label})</span></span>`;
+                }).join('')}
+              </div>` : ''}
+            ${row.ist_tunggal.length ? `
+              <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">1x Scan Istirahat</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                ${row.ist_tunggal.map(d => {
+                  const label = d.ist_keluar ? `keluar ${d.ist_keluar}` : `masuk ${d.ist_masuk}`;
+                  return `<span class="chip-warn">${formatTanggal(d.tanggal)} <span style="color:var(--text-muted);font-size:11px">${label}</span></span>`;
+                }).join('')}
+              </div>` : ''}
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+export function toggleBermasalahDetail(i) {
+  const row = document.getElementById(`bm-detail-${i}`);
+  const arrow = document.getElementById(`bm-arrow-${i}`);
+  if (!row) return;
+  const open = row.style.display === 'none';
+  row.style.display = open ? '' : 'none';
+  if (arrow) arrow.textContent = open ? '▲' : '▼';
+}
+
 export async function applyFilter() {
   const dari   = document.getElementById('f-dari').value;
   const sampai = document.getElementById('f-sampai').value;

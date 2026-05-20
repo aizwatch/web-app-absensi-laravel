@@ -28,7 +28,7 @@ import {
   openDeptModal, closeDeptModal,
 } from './settings.js';
 import { pollAbsensi, changeMonth, loadPersonalAbsensi } from './table.js';
-import { applyFilter, resetFilter, exportFilter } from './filter.js';
+import { applyFilter, resetFilter, exportFilter, switchFilterStab, applyBermasalah, toggleBermasalahDetail } from './filter.js';
 import {
   openInjectModal, closeInjectModal, toggleInjAlasan,
   confirmInjectModal, openRowHistory, deleteOverride, deleteScanNote,
@@ -91,6 +91,7 @@ Object.assign(window, {
 
   // filter
   applyFilter, resetFilter, exportFilter,
+  switchFilterStab, applyBermasalah, toggleBermasalahDetail,
 
   // inject
   openInjectModal, closeInjectModal, toggleInjAlasan,

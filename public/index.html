@@ -470,50 +470,90 @@
 
             <div class="admin-stab-pane" id="astab-filter">
 
-        <div class="filter-bar" style="margin-bottom:16px">
-          <div class="filter-group">
-            <label>Tanggal Dari</label>
-            <input type="date" id="f-dari" />
-          </div>
-          <div class="filter-group">
-            <label>Tanggal Sampai</label>
-            <input type="date" id="f-sampai" />
-          </div>
-          <div class="filter-group">
-            <label>Nama Karyawan</label>
-            <input type="text" id="f-nama" placeholder="Ketik nama..." style="min-width:160px" />
-          </div>
-          <button class="btn btn-primary" onclick="applyFilter()">Tampilkan</button>
-          <button class="btn btn-ghost" onclick="resetFilter()">Reset</button>
-          <button class="btn btn-ghost" onclick="exportFilter()" style="color:#217346;border-color:#217346" title="Export ke Excel">⬇ Excel</button>
-          <button class="btn btn-ghost" onclick="openLaporanModal()" style="color:#c0392b;border-color:#c0392b" title="Cetak Laporan PDF">🖨 Laporan</button>
+        <div class="fstab-bar">
+          <button class="fstab-btn active" id="fstab-btn-rekap" onclick="switchFilterStab('rekap')">📋 Rekap Absensi</button>
+          <button class="fstab-btn" id="fstab-btn-bermasalah" onclick="switchFilterStab('bermasalah')">⚠️ Absensi Bermasalah</button>
         </div>
 
-        <div class="table-wrap" style="position:relative" id="filter-wrap">
-          <div class="table-header">
-            <span class="table-title">HASIL FILTER</span>
-            <span class="total-badge" id="filter-badge">0 record</span>
+        <div id="fstab-rekap">
+          <div class="filter-bar" style="margin-bottom:16px">
+            <div class="filter-group">
+              <label>Tanggal Dari</label>
+              <input type="date" id="f-dari" />
+            </div>
+            <div class="filter-group">
+              <label>Tanggal Sampai</label>
+              <input type="date" id="f-sampai" />
+            </div>
+            <div class="filter-group">
+              <label>Nama Karyawan</label>
+              <input type="text" id="f-nama" placeholder="Ketik nama..." style="min-width:160px" />
+            </div>
+            <button class="btn btn-primary" onclick="applyFilter()">Tampilkan</button>
+            <button class="btn btn-ghost" onclick="resetFilter()">Reset</button>
+            <button class="btn btn-ghost" onclick="exportFilter()" style="color:#217346;border-color:#217346" title="Export ke Excel">⬇ Excel</button>
+            <button class="btn btn-ghost" onclick="openLaporanModal()" style="color:#c0392b;border-color:#c0392b" title="Cetak Laporan PDF">🖨 Laporan</button>
           </div>
-          <div class="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:70px">PIN</th>
-                  <th style="width:110px">Tanggal</th>
-                  <th style="min-width:150px">Nama</th>
-                  <th>Scan Masuk</th>
-                  <th>Scan Istirahat 1</th>
-                  <th>Scan Istirahat 2</th>
-                  <th>Scan Pulang</th>
-                  <th>Ist (mnt)</th>
-                </tr>
-              </thead>
-              <tbody id="filter-tbody">
-                <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>
-              </tbody>
-            </table>
+          <div class="table-wrap" style="position:relative" id="filter-wrap">
+            <div class="table-header">
+              <span class="table-title">HASIL FILTER</span>
+              <span class="total-badge" id="filter-badge">0 record</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:70px">PIN</th>
+                    <th style="width:110px">Tanggal</th>
+                    <th style="min-width:150px">Nama</th>
+                    <th>Scan Masuk</th>
+                    <th>Scan Istirahat 1</th>
+                    <th>Scan Istirahat 2</th>
+                    <th>Scan Pulang</th>
+                    <th>Ist (mnt)</th>
+                  </tr>
+                </thead>
+                <tbody id="filter-tbody">
+                  <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
+
+        <div id="fstab-bermasalah" style="display:none">
+          <div class="filter-bar" style="margin-bottom:16px">
+            <div class="filter-group">
+              <label>Bulan</label>
+              <input type="month" id="fb-bulan" />
+            </div>
+            <button class="btn btn-primary" onclick="applyBermasalah()">Tampilkan</button>
+          </div>
+          <div class="table-wrap" style="position:relative" id="bermasalah-wrap">
+            <div class="table-header">
+              <span class="table-title">KARYAWAN ABSENSI BERMASALAH</span>
+              <span class="total-badge" id="bermasalah-badge">0 karyawan</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="min-width:160px">Nama</th>
+                    <th style="width:120px">Shift</th>
+                    <th style="width:100px;text-align:center">1x Scan</th>
+                    <th style="width:120px;text-align:center">1x Ist. Scan</th>
+                    <th style="width:80px;text-align:center">Total</th>
+                    <th style="width:60px"></th>
+                  </tr>
+                </thead>
+                <tbody id="bermasalah-tbody">
+                  <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Pilih bulan lalu klik Tampilkan</div></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
 
             <div class="admin-stab-pane" id="astab-sync">

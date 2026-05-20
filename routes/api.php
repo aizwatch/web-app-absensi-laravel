@@ -31,6 +31,9 @@ Route::prefix('absensi')->group(function () {
     Route::get('filter',         [AbsensiController::class, 'filter']);
     Route::get('karyawan/{pin}', [AbsensiController::class, 'karyawan']);
 });
+Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
+    Route::get('absensi/bermasalah', [AbsensiController::class, 'bermasalah']);
+});
 
 // ── Settings ──
 Route::get('settings', [SettingsController::class, 'index']);
