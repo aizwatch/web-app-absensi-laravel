@@ -183,15 +183,33 @@ export async function loadMyRequests() {
   } catch(e) { el.innerHTML='<div style="color:var(--danger)">Gagal memuat.</div>'; }
 }
 
+let _amFilterTimer = null;
+export function debounceAmFilter() {
+  clearTimeout(_amFilterTimer);
+  _amFilterTimer = setTimeout(() => loadAdminRequests(), 800);
+}
+
+export function populateAmAdminPinSelect() {
+  const dl = document.getElementById('am-admin-nama-list');
+  if (!dl) return;
+  dl.innerHTML = (state.pegawaiList||[]).map(p=>`<option value="${escHtml(p.nama)}">`).join('');
+}
+
 export async function loadAdminRequests() {
   const el     = document.getElementById('am-admin-list');
   const status = document.getElementById('am-admin-filter').value;
+  const nama     = (document.getElementById('am-admin-filter-nama')?.value || '').trim().toLowerCase();
+  const tglDari  = document.getElementById('am-admin-filter-tgl-dari')?.value || '';
+  const tglSampai= document.getElementById('am-admin-filter-tgl-sampai')?.value || '';
   if (!el) return;
   el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Memuat...</div>';
   try {
     const res  = await fetch(`/api/absensi-mandiri?status=${status}`, { headers:authHeaders() });
     const json = await res.json();
-    const data = json.data||[];
+    let data = json.data||[];
+    if (nama)     data = data.filter(r => (r.nama||r.pegawai_pin).toLowerCase().includes(nama));
+    if (tglDari)  data = data.filter(r => r.tanggal >= tglDari);
+    if (tglSampai)data = data.filter(r => r.tanggal <= tglSampai);
     if (!data.length) { el.innerHTML='<div style="color:var(--text-muted);font-size:13px;padding:12px 0">Tidak ada data.</div>'; return; }
     el.innerHTML = `<div style="overflow-x:auto"><table class="settings-table" style="table-layout:fixed;width:100%"><thead><tr>
       <th style="width:13%">Karyawan</th><th style="width:10%">Tanggal</th><th style="width:6%;text-align:center">Jam</th><th style="width:9%">Tipe</th><th style="width:18%">Catatan</th><th style="width:7%;text-align:center">Lampiran</th><th style="width:9%;text-align:center">Status</th><th style="width:28%;text-align:center">Aksi Admin</th>

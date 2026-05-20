@@ -52,7 +52,7 @@ import {
   toggleAmFields, previewAttachment, initAbsensiMandiri,
   submitAbsensiMandiri, closeAmConfirm, submitAmConfirmed,
   loadMyRequests, loadAdminRequests, adminActionMandiri, revokeAndEditMandiri,
-  updatePendingBadge,
+  updatePendingBadge, populateAmAdminPinSelect, debounceAmFilter,
 } from './absensi-mandiri.js';
 
 // ── EXPOSE TO window (required by inline onclick= in HTML) ──
@@ -116,6 +116,7 @@ Object.assign(window, {
   toggleAmFields, previewAttachment, initAbsensiMandiri,
   submitAbsensiMandiri, closeAmConfirm, submitAmConfirmed,
   loadMyRequests, loadAdminRequests, adminActionMandiri, revokeAndEditMandiri,
+  populateAmAdminPinSelect, debounceAmFilter,
 });
 
 // ── afterLogin — defined here to avoid circular dep ──
@@ -130,6 +131,7 @@ async function afterLogin() {
     if (emp) selectEmployee(emp.pin, emp.nama);
   }
   updatePendingBadge();
+  populateAmAdminPinSelect();
 }
 setAfterLogin(afterLogin);
 

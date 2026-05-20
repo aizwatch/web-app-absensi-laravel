@@ -341,17 +341,31 @@
       </div>
             <div id="am-admin-panel" style="display:none;margin-top:20px">
         <div class="admin-form-card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--warn)">🛡️ Panel Admin — Persetujuan Absensi Mandiri</div>
-            <div style="display:flex;gap:8px;align-items:center">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--warn);margin-bottom:12px">🛡️ Panel Admin — Persetujuan Absensi Mandiri</div>
+          <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">
+            <div class="filter-group" style="margin:0">
+              <label style="font-size:11px">Status</label>
               <select id="am-admin-filter" onchange="loadAdminRequests()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);outline:none">
                 <option value="pending">⏳ Menunggu</option>
                 <option value="approved">✅ Disetujui</option>
                 <option value="rejected">❌ Ditolak</option>
                 <option value="all">Semua</option>
               </select>
-              <button class="btn btn-ghost" style="font-size:12px" onclick="loadAdminRequests()">↻ Refresh</button>
             </div>
+            <div class="filter-group" style="margin:0">
+              <label style="font-size:11px">Karyawan</label>
+              <input type="text" id="am-admin-filter-nama" list="am-admin-nama-list" oninput="debounceAmFilter()" placeholder="Ketik nama..." style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);outline:none;min-width:160px" />
+              <datalist id="am-admin-nama-list"></datalist>
+            </div>
+            <div class="filter-group" style="margin:0">
+              <label style="font-size:11px">Dari Tanggal</label>
+              <input type="date" id="am-admin-filter-tgl-dari" onchange="loadAdminRequests()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);outline:none" />
+            </div>
+            <div class="filter-group" style="margin:0">
+              <label style="font-size:11px">Sampai Tanggal</label>
+              <input type="date" id="am-admin-filter-tgl-sampai" onchange="loadAdminRequests()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);outline:none" />
+            </div>
+            <button class="btn btn-ghost" style="font-size:12px" onclick="loadAdminRequests()">↻ Refresh</button>
           </div>
           <div id="am-admin-list">Memuat...</div>
         </div>
