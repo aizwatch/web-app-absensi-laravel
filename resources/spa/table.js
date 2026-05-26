@@ -59,13 +59,13 @@ export function renderTable(tbodyId, data, isLive) {
     const ist2Cell=istIncomplete?`<span class="td-time empty">—</span>`:timeCell(row.scan_istirahat2,'ist',shift);
     const liveHari=row.tanggal?HARI_LABELS[new Date(row.tanggal+'T00:00:00').getDay()]:'—';
     return `<tr class="${rowClass}">
-      <td class="td-tanggal">${formatTanggal(row.tanggal)}</td>
-      <td class="td-hari-live">${liveHari}</td>
-      <td><div class="td-name">${escHtml(row.nama||'—')}</div></td>
-      <td>${timeCell(row.scan_masuk,'masuk',shift)}</td>
-      <td>${ist1Cell}</td><td>${ist2Cell}</td>
-      <td>${timeCell(row.scan_pulang,'pulang',shift)}</td>
-      <td>${durasiCell}</td>
+      <td class="td-tanggal" data-label="">${formatTanggal(row.tanggal)}</td>
+      <td class="td-hari-live" data-label="Hari">${liveHari}</td>
+      <td data-label="Nama"><div class="td-name">${escHtml(row.nama||'—')}</div></td>
+      <td data-label="Masuk">${timeCell(row.scan_masuk,'masuk',shift)}</td>
+      <td data-label="Mulai Istirahat">${ist1Cell}</td><td data-label="Selesai Istirahat">${ist2Cell}</td>
+      <td data-label="Pulang">${timeCell(row.scan_pulang,'pulang',shift)}</td>
+      <td data-label="Durasi Istirahat">${durasiCell}</td>
     </tr>`;
   });
 
@@ -77,10 +77,10 @@ export function renderTable(tbodyId, data, isLive) {
     absentRows = state.pegawaiList
       .filter(p => !scannedPins.has(String(p.pin)))
       .map(p => `<tr class="row-belum-absen">
-        <td class="td-tanggal">${formatTanggal(todayStr)}</td>
-        <td class="td-hari-live">${todayHari}</td>
-        <td><div class="td-name">${escHtml(p.nama||'—')}</div></td>
-        <td colspan="5" style="text-align:center;font-size:12px;opacity:0.7">Belum Absen</td>
+        <td class="td-tanggal" data-label="">${formatTanggal(todayStr)}</td>
+        <td class="td-hari-live" data-label="Hari">${todayHari}</td>
+        <td data-label="Nama"><div class="td-name">${escHtml(p.nama||'—')}</div></td>
+        <td colspan="5" data-label="" style="text-align:center;font-size:12px;opacity:0.7">Belum Absen</td>
       </tr>`);
   }
 
@@ -154,7 +154,7 @@ export function renderPersonalTable(data) {
   for(const r of data) map[r.tanggal]=r;
   const shift=state.selectedEmployee?getShiftForPin(state.selectedEmployee.pin):null;
   const todayStr=new Date().toLocaleDateString('sv-SE');
-  let totalKerja=0,hadir=0,telat=0,pulangAwal=0,alpha=0;
+  let totalKerja=0,hadir=0,telat=0,alpha=0;
   const rows=[];
   for(let d=1;d<=daysInMonth;d++){
     const dateStr=`${state.currentMonth}-${String(d).padStart(2,'0')}`;
@@ -171,10 +171,6 @@ export function renderPersonalTable(data) {
         hadir++;
         const batas=shift&&shift.batas_terlambat?shift.batas_terlambat+':00':null;
         if(batas&&row.scan_masuk>batas) telat++;
-        if(row.scan_pulang){
-          const jamPulang=((shift&&shift.jam_pulang)||'17:00')+':00';
-          if(row.scan_pulang<jamPulang) pulangAwal++;
-        }
       } else if(row&&row.catatan) { /* keterangan — skip alpha */ }
       else { alpha++; }
     }
@@ -203,13 +199,13 @@ export function renderPersonalTable(data) {
            <button class="btn-icon" style="font-size:11px;padding:1px 4px" onclick="openRowHistory('${escHtml(_injRowPin)}','${dateStr}','${escHtml(_injRowNama)}')">📋</button>
          </span>`:'';
     rows.push(`<tr class="${(isWeekend||isHoliday||isFuture)?'td-weekend':''}">
-      <td class="td-tanggal">${formatTanggal(dateStr)}</td>
-      <td class="td-hari" style="font-size:12px;color:var(--text-muted)"><span class="hari-full">${HARI[dayOfWeek]}</span><span class="hari-short">${HARI_LABELS[dayOfWeek]}</span></td>
-      <td>${timeCell(row?row.scan_masuk:null,'masuk',shift)}</td>
-      <td>${ist1Cell}</td><td>${ist2Cell}</td>
-      <td>${timeCell(row?row.scan_pulang:null,'pulang',shift)}</td>
-      <td>${durasi}</td>
-      <td>${statusHtml}${adminBtns}</td>
+      <td class="td-tanggal" data-label="">${formatTanggal(dateStr)}</td>
+      <td class="td-hari" data-label="Hari" style="font-size:12px;color:var(--text-muted)"><span class="hari-full">${HARI[dayOfWeek]}</span><span class="hari-short">${HARI_LABELS[dayOfWeek]}</span></td>
+      <td data-label="Masuk">${timeCell(row?row.scan_masuk:null,'masuk',shift)}</td>
+      <td data-label="Mulai Istirahat">${ist1Cell}</td><td data-label="Selesai Istirahat">${ist2Cell}</td>
+      <td data-label="Pulang">${timeCell(row?row.scan_pulang:null,'pulang',shift)}</td>
+      <td data-label="Durasi Istirahat">${durasi}</td>
+      <td data-label="Status">${statusHtml}${adminBtns}</td>
     </tr>`);
   }
   tbody.innerHTML=rows.join('');
@@ -217,6 +213,5 @@ export function renderPersonalTable(data) {
   document.getElementById('ps-total').textContent=totalKerja;
   document.getElementById('ps-hadir').textContent=hadir;
   document.getElementById('ps-telat').textContent=telat;
-  document.getElementById('ps-awal').textContent=pulangAwal;
   document.getElementById('ps-alpha').textContent=alpha;
 }

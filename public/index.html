@@ -120,7 +120,7 @@
         <div class="tabs" style="justify-content:space-between">
       <div style="display:flex;gap:4px">
         <button class="tab-btn active" id="tab-btn-personal" onclick="switchTab('tab-personal', this)">👤 Absensi Saya</button>
-        <button class="tab-btn" onclick="switchTab('tab-live', this)">⚡ Live Hari Ini</button>
+        <button class="tab-btn" id="tab-btn-live" onclick="switchTab('tab-live', this)">⚡ Live Hari Ini</button>
       </div>
       <button class="tab-btn" id="tab-btn-mandiri" onclick="switchTab('tab-mandiri', this);initAbsensiMandiri()" style="margin-left:auto;position:relative">📋 Absensi Mandiri<span id="am-pending-badge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;padding:0 5px;border-radius:9px;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--bg, #fff);box-sizing:border-box">0</span></button>
     </div>
@@ -160,10 +160,6 @@
         <div class="stat-card">
           <div class="stat-label">Terlambat</div>
           <div class="stat-value" id="ps-telat">—</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Pulang Awal</div>
-          <div class="stat-value" id="ps-awal">—</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Tidak Hadir</div>
@@ -870,6 +866,22 @@
     </div>
   </div>
 </div>
+
+<nav class="mobile-bottom-nav" id="mobile-nav" aria-label="Navigasi utama">
+  <button class="mobile-nav-item active" id="mnav-personal" onclick="mobileNavSwitch('tab-personal','mnav-personal')">
+    <span class="mobile-nav-icon">👤</span>
+    <span>Saya</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-live" onclick="mobileNavSwitch('tab-live','mnav-live')">
+    <span class="mobile-nav-icon">⚡</span>
+    <span>Live</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-mandiri" onclick="mobileNavSwitch('tab-mandiri','mnav-mandiri');initAbsensiMandiri()" style="position:relative">
+    <span class="mobile-nav-icon">📋</span>
+    <span>Mandiri</span>
+    <span id="mnav-pending-badge" style="display:none;position:absolute;top:4px;right:10px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;padding:0 4px;border-radius:8px;line-height:16px;text-align:center;box-sizing:border-box">0</span>
+  </button>
+</nav>
 
 <div id="toast-container"></div>
 

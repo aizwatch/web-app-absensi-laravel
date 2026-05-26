@@ -72,21 +72,26 @@ export function initAbsensiMandiri() {
 }
 
 export async function updatePendingBadge() {
-  const badge = document.getElementById('am-pending-badge');
+  const badge      = document.getElementById('am-pending-badge');
+  const mnavBadge  = document.getElementById('mnav-pending-badge');
   if (!badge) return;
   if (state.authUser?.role !== 'admin' || !state.authToken) {
     badge.style.display = 'none';
+    if (mnavBadge) mnavBadge.style.display = 'none';
     return;
   }
   try {
     const res  = await fetch('/api/absensi-mandiri?status=pending', { headers:authHeaders() });
     const json = await res.json();
     const count = (json.data || []).length;
+    const label = count > 99 ? '99+' : String(count);
     if (count > 0) {
-      badge.textContent = count > 99 ? '99+' : String(count);
+      badge.textContent = label;
       badge.style.display = '';
+      if (mnavBadge) { mnavBadge.textContent = label; mnavBadge.style.display = ''; }
     } else {
       badge.style.display = 'none';
+      if (mnavBadge) mnavBadge.style.display = 'none';
     }
   } catch (_) { /* silent */ }
 }

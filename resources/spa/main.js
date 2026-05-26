@@ -55,10 +55,26 @@ import {
   updatePendingBadge, populateAmAdminPinSelect, debounceAmFilter,
 } from './absensi-mandiri.js';
 
+// ── MOBILE NAV ──
+const _mnavTabMap = {
+  'tab-personal': 'tab-btn-personal',
+  'tab-live':     'tab-btn-live',
+  'tab-mandiri':  'tab-btn-mandiri',
+};
+
+function mobileNavSwitch(tabId, navItemId) {
+  const desktopBtn = document.getElementById(_mnavTabMap[tabId]);
+  if (desktopBtn) switchTab(tabId, desktopBtn);
+  document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
+  const item = document.getElementById(navItemId);
+  if (item) item.classList.add('active');
+}
+
 // ── EXPOSE TO window (required by inline onclick= in HTML) ──
 Object.assign(window, {
   // theme & nav
   toggleTheme, switchTab, switchStab, switchPengaturanStab, switchAdminStab,
+  mobileNavSwitch,
 
   // auth
   doLogin, doForceChangePw, doLogout,
