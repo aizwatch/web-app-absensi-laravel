@@ -646,6 +646,7 @@
                 <th>Jam Pulang</th>
                 <th>Window Istirahat</th>
                 <th>Hari Kerja</th>
+                <th style="width:60px;text-align:center" title="Hitung OT?">OT</th>
                 <th style="width:80px"></th>
               </tr>
             </thead>
@@ -678,6 +679,12 @@
                 <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="6"> Sab</label>
                 <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="0"> Min</label>
               </div>
+            </div>
+            <div style="margin-bottom:10px">
+              <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="ns-no-ot" />
+                <span>Shift ini <b>tidak</b> hitung OT (scan pulang lewat jam pulang tidak dihitung)</span>
+              </label>
             </div>
             <div style="display:flex;gap:8px">
               <button class="btn btn-primary" style="font-size:13px" onclick="addShift()">Tambah</button>

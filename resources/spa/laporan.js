@@ -56,6 +56,15 @@ export function printLaporanPdf(data, bulan, filterPin) {
   function t(val){return val?val.slice(0,5):'';}
   const holidays=(state.appHolidays||[]).map(h=>h.tanggal);
 
+  // Hitung jam OT. Threshold 25m: <25m=0, 25–84m=1jam, 85–144m=2jam, dst.
+  function hitungOtJam(scanPulang, jamPulangShift) {
+    if (!scanPulang || !jamPulangShift) return 0;
+    const toMin = hhmm => { const [h,m]=hhmm.slice(0,5).split(':').map(Number); return h*60+m; };
+    const selisih = toMin(scanPulang) - toMin(jamPulangShift);
+    if (selisih < 25) return 0;
+    return Math.ceil((selisih - 24) / 60);
+  }
+
   function rowHtml(r,shift){
     const tglDate=new Date(r.tanggal+'T00:00:00');
     const dayOfWeek=tglDate.getDay();
@@ -67,7 +76,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const dayName=tglDate.toLocaleDateString('id-ID',{weekday:'short'});
     if(isSunday||isHoliday||isNonWorkDay){
       const label=isHoliday?((state.appHolidays||[]).find(h=>h.tanggal===r.tanggal)?.nama||'Libur'):isSunday?'Minggu':(shift&&shift.nama?shift.nama:'Libur');
-      return `<tr style="background:#f0f0f0;color:#999"><td>${tglFmt} <span style="font-size:7.5px">${dayName}</span></td><td colspan="5" style="text-align:center;font-style:italic;font-size:8px">${label}</td><td></td></tr>`;
+      return `<tr style="background:#f0f0f0;color:#999"><td>${tglFmt} <span style="font-size:7.5px">${dayName}</span></td><td colspan="5" style="text-align:center;font-style:italic;font-size:8px">${label}</td><td></td><td></td></tr>`;
     }
     const absent=!r.scan_masuk;
     const batas=shift&&shift.batas_terlambat?(shift.batas_terlambat+':00'):null;
@@ -77,9 +86,9 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const terlambat=!veryLate&&r.scan_masuk&&batas&&r.scan_masuk>batas;
     const pulangCepat=r.scan_pulang&&r.scan_pulang<jamPulang;
 
-    // Istirahat: hitung jika shift pakai ist_window DAN ada scan_masuk DAN bukan veryLate (catatan=lembur/meeting tetap dihitung)
+    // Istirahat: hitung jika shift pakai ist_window DAN ada scan_masuk (termasuk veryLate)
     const shiftHasIst=!!(shift&&shift.ist_window_dari&&shift.ist_window_sampai);
-    const isHadirRow=!!(r.scan_masuk&&!veryLate);
+    const isHadirRow=!!(r.scan_masuk);
     const onlySingleIst=shiftHasIst&&isHadirRow&&((r.scan_istirahat1&&!r.scan_istirahat2)||(!r.scan_istirahat1&&r.scan_istirahat2));
     let istSelisih=null,istPenalty=null;
     if(shiftHasIst&&isHadirRow){
@@ -108,6 +117,10 @@ export function printLaporanPdf(data, bulan, filterPin) {
         durasiHtml=selisihStr!=null?`${r.durasi_istirahat} <span style="font-size:7.5px;color:${selisihColor};font-weight:700">${selisihStr}</span>`:`${r.durasi_istirahat}`;
       }
     }
+    const shiftNoOt = !!(shift && shift.no_ot);
+    const otJam = shiftNoOt ? 0 : hitungOtJam(r.scan_pulang, shift && shift.jam_pulang);
+    const otHtml = shiftNoOt ? '<span style="font-size:7.5px;color:#aaa">—</span>'
+      : otJam > 0 ? `<span style="color:#6b21a8;font-weight:700">${otJam}j</span>` : '—';
     return `<tr style="background:${rowBg}">
       <td>${tglFmt} <span style="font-size:7.5px;color:#888">${dayName}</span></td>
       <td style="text-align:center;${masukStyle}">${t(r.scan_masuk)||'—'}</td>
@@ -116,6 +129,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
       <td style="text-align:center;${pulangStyle}">${t(r.scan_pulang)||'—'}</td>
       <td style="text-align:center">${durasiHtml}</td>
       <td>${statusCell}</td>
+      <td style="text-align:center">${otHtml}</td>
     </tr>`;
   }
 
@@ -153,14 +167,19 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const nonWorkDays=p.rows.length-workDays.length;
     const hadirTotal=hadirDecimal+nonWorkDays;
     const hadir=hadirTotal%1===0?hadirTotal:+hadirTotal.toFixed(2);
-    // totalIst: hanya hadir (scan_masuk, !catatan, !veryLate) dan shift pakai ist_window
+    // totalIst: semua row yang ada scan_masuk + durasi_istirahat lengkap (termasuk catatan & veryLate)
     const hadirRows=shiftHasIst?workDays.filter(r=>{
-      if(!r.scan_masuk||r.catatan||r.scan_masuk>=shiftBatasSetengah)return false;
+      if(!r.scan_masuk)return false;
       if((r.scan_istirahat1&&!r.scan_istirahat2)||(!r.scan_istirahat1&&r.scan_istirahat2))return false;
+      if(r.durasi_istirahat==null)return false;
       return true;
     }):[];
     const totalIst=hadirRows.reduce((sum,r)=>sum+(r.durasi_istirahat!=null?r.durasi_istirahat:0),0);
     const selisihIst=totalIst-(hadirRows.length*60);
+    // Setiap 3x terlambat (batas_terlambat s/d batas_setengah_hari) = 1 hari potongan
+    const potonganTelat=Math.floor(telat/3);
+    const shiftNoOt=!!(shift&&shift.no_ot);
+    const totalOtJam=shiftNoOt?0:workDays.reduce((sum,r)=>sum+hitungOtJam(r.scan_pulang,shift&&shift.jam_pulang),0);
     return `<div class="emp-card">
       <div class="emp-title">PT. LONG TIME — Laporan Absensi ${escHtml(bulanLabel)}</div>
       <div class="emp-header"><span class="emp-name">${escHtml(p.nama)}</span><span class="emp-pin">PIN: ${escHtml(p.pin)}</span><span class="emp-shift">${shift?escHtml(shift.nama||''):''}</span></div>
@@ -168,6 +187,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
         <th style="width:44px">Tgl</th><th style="width:38px;text-align:center">Masuk</th>
         <th style="width:60px;text-align:center">Mulai Istirahat</th><th style="width:65px;text-align:center">Selesai Istirahat</th>
         <th style="width:38px;text-align:center">Pulang</th><th style="width:55px;text-align:center">Istirahat (menit)</th><th>Status</th>
+        <th style="width:30px;text-align:center">OT</th>
       </tr></thead><tbody>${rows}</tbody></table>
       <div class="summary">
         <span class="s-hadir">Hadir: <b>${hadir}</b></span>
@@ -175,13 +195,15 @@ export function printLaporanPdf(data, bulan, filterPin) {
         <span class="s-alpha">1/2 Hari: <b>${telatSekali}</b></span>
         <span class="s-alpha">Tidak Hadir: <b>${alpha}</b></span>
         <span class="s-ket">Keterangan: <b>${ket}</b></span>
+        ${!shiftNoOt?`<span style="color:#6b21a8;font-weight:700">Total OT: <b>${totalOtJam}j</b></span>`:''}
         <span style="margin-left:auto;color:#333">${shiftHasIst?`Total Istirahat: ${selisihIst===0?`<b style="color:#276749">tepat</b>`:selisihIst>0?`<b style="color:#c53030">+${selisihIst}m</b>`:`<b style="color:#2b6cb0">${selisihIst}m</b>`} &nbsp;|&nbsp; `:''}Hari Kerja: <b>${workDays.length}</b> | Total: <b>${p.rows.length}</b> hari</span>
       </div>
-      ${shiftHasIst?`<div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
-        <span style="color:#555;font-weight:600">Potongan Istirahat:</span>
-        <span style="color:#b7791f">1/4 Hari: <b>${istKuning}</b></span>
+      ${shiftHasIst||potonganTelat>0?`<div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
+        <span style="color:#555;font-weight:600">Potongan:</span>
+        ${shiftHasIst?`<span style="color:#b7791f">1/4 Hari: <b>${istKuning}</b></span>
         <span style="color:#ad1457">1/2 Hari: <b>${istPink}</b></span>
-        <span style="color:#c53030">Tidak Hadir: <b>${istMerah}</b></span>
+        <span style="color:#c53030">Tdk Hadir (ist): <b>${istMerah}</b></span>`:''}
+        ${potonganTelat>0?`<span style="color:#c53030;margin-left:4px">Terlambat (${telat}x÷3): <b>${potonganTelat} hari</b></span>`:'<span style="color:#999;font-size:7.5px">Terlambat: ${telat}x (belum 3x)</span>'}
       </div>`:''}
       <div style="text-align:center;font-weight:700;font-size:10px;padding:4px 0 2px;border-top:1px solid #cbd5e0;margin-top:4px">${escHtml(p.nama)}</div>
     </div>`;

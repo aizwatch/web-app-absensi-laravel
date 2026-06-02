@@ -85,7 +85,7 @@ export function formatHariKerja(arr) {
 export function renderShiftsTable() {
   const tbody = document.getElementById('shifts-tbody');
   if (!state.appShifts.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada shift</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada shift</td></tr>`;
     return;
   }
   tbody.innerHTML = state.appShifts.map((s, i) => {
@@ -117,6 +117,10 @@ export function renderShiftsTable() {
         <span id="sv-hari-${i}" style="font-size:11px">${formatHariKerja(hari)}</span>
         <div id="si-hari-${i}" style="display:none;gap:4px;flex-wrap:wrap">${hariCheckboxes}</div>
       </td>
+      <td style="text-align:center">
+        <span id="sv-no-ot-${i}" style="font-size:11px">${s.no_ot?'<span style="color:#c53030;font-weight:700">Tidak</span>':'Ya'}</span>
+        <input id="si-no-ot-${i}" type="checkbox" ${s.no_ot?'checked':''} style="display:none;width:16px;height:16px" title="Centang = shift ini TIDAK hitung OT" />
+      </td>
       <td style="white-space:nowrap">
         <span id="shift-view-btns-${i}">
           <button class="btn-icon" onclick="editShiftRow(${i})" title="Edit">✏️</button>
@@ -140,6 +144,8 @@ export function editShiftRow(i) {
   document.getElementById(`si-ist-${i}`).style.display = 'flex';
   document.getElementById(`sv-hari-${i}`).style.display = 'none';
   document.getElementById(`si-hari-${i}`).style.display = 'flex';
+  document.getElementById(`sv-no-ot-${i}`).style.display = 'none';
+  document.getElementById(`si-no-ot-${i}`).style.display = '';
   document.getElementById(`shift-view-btns-${i}`).style.display = 'none';
   document.getElementById(`shift-edit-btns-${i}`).style.display = '';
 }
@@ -161,6 +167,8 @@ export function cancelShiftRow(i) {
   document.getElementById(`si-ist-${i}`).style.display = 'none';
   document.getElementById(`sv-hari-${i}`).style.display = '';
   document.getElementById(`si-hari-${i}`).style.display = 'none';
+  document.getElementById(`sv-no-ot-${i}`).style.display = '';
+  document.getElementById(`si-no-ot-${i}`).style.display = 'none';
   document.getElementById(`shift-view-btns-${i}`).style.display = '';
   document.getElementById(`shift-edit-btns-${i}`).style.display = 'none';
 }
@@ -177,6 +185,7 @@ export function saveShiftRow(i) {
     ist_window_dari:     document.getElementById(`si-ist-dari-${i}`).value || null,
     ist_window_sampai:   document.getElementById(`si-ist-sampai-${i}`).value || null,
     hari_kerja:          hariChecked,
+    no_ot:               document.getElementById(`si-no-ot-${i}`).checked || false,
   };
   renderShiftsTable();
   renderAssignTable();
@@ -227,11 +236,13 @@ export function addShift() {
   const hariChecked = [...document.querySelectorAll('.ns-hari:checked')].map(c => Number(c.value));
   const istDari   = document.getElementById('ns-ist-dari').value   || null;
   const istSampai = document.getElementById('ns-ist-sampai').value || null;
+  const noOt = document.getElementById('ns-no-ot').checked || false;
   const id = nama.toLowerCase().replace(/\s+/g,'-') + '-' + Date.now();
-  state.appShifts.push({ id, nama, jam_masuk:masuk, batas_terlambat:batas, batas_setengah_hari:setengah, jam_pulang:pulang, ist_window_dari:istDari, ist_window_sampai:istSampai, hari_kerja:hariChecked });
+  state.appShifts.push({ id, nama, jam_masuk:masuk, batas_terlambat:batas, batas_setengah_hari:setengah, jam_pulang:pulang, ist_window_dari:istDari, ist_window_sampai:istSampai, hari_kerja:hariChecked, no_ot:noOt });
   document.getElementById('ns-nama').value = '';
   document.getElementById('ns-ist-dari').value = '';
   document.getElementById('ns-ist-sampai').value = '';
+  document.getElementById('ns-no-ot').checked = false;
   document.getElementById('add-shift-form').classList.remove('open');
   renderShiftsTable();
   renderAssignTable();
