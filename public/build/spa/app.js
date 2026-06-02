@@ -191,7 +191,7 @@ var e={authToken:null,authUser:null,selectedEmployee:null,pegawaiList:[],current
       <td style="text-align:center">${j}</td>
       <td>${D}</td>
       ${r?`<td style="text-align:center">${ee}</td>`:``}
-    </tr>`}function y(e){let t=m(e.pin),n=!!(t&&t.no_ot),i=n?0:e.rows.reduce((e,n)=>e+_(n.scan_pulang,t&&t.jam_pulang),0),a=!n&&i>0,o=e.rows.map(e=>v(e,t,a)).join(``),c=t&&t.hari_kerja&&t.hari_kerja.length?t.hari_kerja:[1,2,3,4,5,6],l=(t&&t.batas_setengah_hari||`08:30`)+`:00`,u=!!(t&&t.ist_window_dari&&t.ist_window_sampai),d=e.rows.filter(e=>{let t=new Date(e.tanggal+`T00:00:00`);return c.includes(t.getDay())&&!g.includes(e.tanggal)}),f=e=>{if(!u||!e.scan_masuk||e.catatan||e.scan_masuk>=l)return null;if(e.scan_istirahat1&&!e.scan_istirahat2||!e.scan_istirahat1&&e.scan_istirahat2)return`pink`;if(e.durasi_istirahat==null)return null;let t=e.durasi_istirahat-60;return t>=60?`merah`:t>=30?`pink`:t>=15?`kuning`:null},p=d.filter(e=>!e.scan_masuk&&!e.catatan).length,h=d.filter(e=>e.catatan).length,y=d.filter(e=>e.scan_masuk&&!e.catatan&&e.scan_masuk>=l).length,b=d.filter(e=>{if(!e.scan_masuk||e.catatan||e.scan_masuk>=l)return!1;let n=t&&t.batas_terlambat?t.batas_terlambat+`:00`:null;return n&&e.scan_masuk>n}).length,x=d.filter(e=>f(e)===`merah`).length,S=d.filter(e=>f(e)===`pink`).length,C=d.filter(e=>f(e)===`kuning`).length,w=d.reduce((e,t)=>{if(t.catatan)return e+1;if(!t.scan_masuk)return e;if(t.scan_masuk>=l)return e+.5;let n=f(t);return n===`merah`?e:n===`pink`?e+.5:n===`kuning`?e+.75:e+1},0)+(e.rows.length-d.length),T=w%1==0?w:+w.toFixed(2),E=u?d.filter(e=>!(!e.scan_masuk||e.scan_istirahat1&&!e.scan_istirahat2||!e.scan_istirahat1&&e.scan_istirahat2||e.durasi_istirahat==null)):[],D=E.reduce((e,t)=>e+(t.durasi_istirahat==null?0:t.durasi_istirahat),0)-E.length*60,O=Math.floor(b/3),k=!!(t&&t.no_ot),A=k?0:d.reduce((e,n)=>e+_(n.scan_pulang,t&&t.jam_pulang),0);return`<div class="emp-card">
+    </tr>`}function y(e){let t=m(e.pin),n=!!(t&&t.no_ot),i=n?0:e.rows.reduce((e,n)=>e+_(n.scan_pulang,t&&t.jam_pulang),0),a=!n&&i>0,o=e.rows.map(e=>v(e,t,a)).join(``),c=t&&t.hari_kerja&&t.hari_kerja.length?t.hari_kerja:[1,2,3,4,5,6],l=(t&&t.batas_setengah_hari||`08:30`)+`:00`,u=!!(t&&t.ist_window_dari&&t.ist_window_sampai),d=e.rows.filter(e=>{let t=new Date(e.tanggal+`T00:00:00`);return c.includes(t.getDay())&&!g.includes(e.tanggal)}),f=e=>{if(!u||!e.scan_masuk||e.catatan||e.scan_masuk>=l)return null;if(e.scan_istirahat1&&!e.scan_istirahat2||!e.scan_istirahat1&&e.scan_istirahat2)return`pink`;if(e.durasi_istirahat==null)return null;let t=e.durasi_istirahat-60;return t>=60?`merah`:t>=30?`pink`:t>=15?`kuning`:null},p=d.filter(e=>!e.scan_masuk&&!e.catatan).length,h=d.filter(e=>e.catatan).length,y=d.filter(e=>e.scan_masuk&&!e.catatan&&e.scan_masuk>=l).length,b=d.filter(e=>{if(!e.scan_masuk||e.catatan||e.scan_masuk>=l)return!1;let n=t&&t.batas_terlambat?t.batas_terlambat+`:00`:null;return n&&e.scan_masuk>n}).length,x=d.filter(e=>f(e)===`merah`).length,S=d.filter(e=>f(e)===`pink`).length,C=d.filter(e=>f(e)===`kuning`).length,w=d.reduce((e,t)=>{if(t.catatan)return e+1;if(!t.scan_masuk)return e;if(t.scan_masuk>=l)return e+.5;let n=f(t);return n===`merah`?e:n===`pink`?e+.5:n===`kuning`?e+.75:e+1},0),T=e.rows.length-d.length,E=Math.floor(b/3),D=w+T-E,O=D%1==0?D:+D.toFixed(2),k=u?d.filter(e=>!(!e.scan_masuk||e.scan_istirahat1&&!e.scan_istirahat2||!e.scan_istirahat1&&e.scan_istirahat2||e.durasi_istirahat==null)):[],A=k.reduce((e,t)=>e+(t.durasi_istirahat==null?0:t.durasi_istirahat),0)-k.length*60,j=!!(t&&t.no_ot),M=j?0:d.reduce((e,n)=>e+_(n.scan_pulang,t&&t.jam_pulang),0);return`<div class="emp-card">
       <div class="emp-title">PT. LONG TIME — Laporan Absensi ${r(s)}</div>
       <div class="emp-header"><span class="emp-name">${r(e.nama)}</span><span class="emp-pin">PIN: ${r(e.pin)}</span><span class="emp-shift">${t?r(t.nama||``):``}</span></div>
       <table class="rec-table"><thead><tr>
@@ -201,20 +201,20 @@ var e={authToken:null,authUser:null,selectedEmployee:null,pegawaiList:[],current
         ${a?`<th style="width:30px;text-align:center">OT</th>`:``}
       </tr></thead><tbody>${o}</tbody></table>
       <div class="summary">
-        <span class="s-hadir">Hadir: <b>${T}</b></span>
+        <span class="s-hadir">Hadir: <b>${O}</b></span>
         ${b>0?`<span class="s-late">Terlambat: <b>${b}</b></span>`:``}
         ${y>0?`<span class="s-alpha">1/2 Hari: <b>${y}</b></span>`:``}
         ${p>0?`<span class="s-alpha">Tidak Hadir: <b>${p}</b></span>`:``}
         ${h>0?`<span class="s-ket">Keterangan: <b>${h}</b></span>`:``}
-        ${!k&&A>0?`<span style="color:#6b21a8;font-weight:700">Total OT: <b>${A}j</b></span>`:``}
-        <span style="margin-left:auto;color:#333">${u?`Total Istirahat: ${D===0?`<b style="color:#276749">tepat</b>`:D>0?`<b style="color:#c53030">+${D}m</b>`:`<b style="color:#2b6cb0">${D}m</b>`} &nbsp;|&nbsp; `:``}Hari Kerja: <b>${d.length}</b> | Total: <b>${e.rows.length}</b> hari</span>
+        ${!j&&M>0?`<span style="color:#6b21a8;font-weight:700">Total OT: <b>${M}j</b></span>`:``}
+        <span style="margin-left:auto;color:#333">${u?`Total Istirahat: ${A===0?`<b style="color:#276749">tepat</b>`:A>0?`<b style="color:#c53030">+${A}m</b>`:`<b style="color:#2b6cb0">${A}m</b>`} &nbsp;|&nbsp; `:``}Hari Kerja: <b>${d.length}</b> | Total: <b>${e.rows.length}</b> hari</span>
       </div>
-      ${C>0||S>0||x>0||O>0?`<div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
+      ${C>0||S>0||x>0||E>0?`<div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
         <span style="color:#555;font-weight:600">Potongan:</span>
         ${C>0?`<span style="color:#b7791f">1/4 Hari (ist): <b>${C}</b></span>`:``}
         ${S>0?`<span style="color:#ad1457">1/2 Hari (ist): <b>${S}</b></span>`:``}
         ${x>0?`<span style="color:#c53030">Tdk Hadir (ist): <b>${x}</b></span>`:``}
-        ${O>0?`<span style="color:#c53030;margin-left:4px">Terlambat ${b}x: <b>${O} hari</b></span>`:``}
+        ${E>0?`<span style="color:#c53030;margin-left:4px">Terlambat ${b}x: <b>${E} hari</b></span>`:``}
       </div>`:``}
       <div style="text-align:center;font-weight:700;font-size:10px;padding:4px 0 2px;border-top:1px solid #cbd5e0;margin-top:4px">${r(e.nama)}</div>
     </div>`}let b=``;for(let e=0;e<d.length;e+=2){let t=d[e],n=d[e+1];b+=`<div class="page"><div class="two-col">${y(t)}${n?y(n):`<div class="emp-card" style="visibility:hidden"></div>`}</div></div>`}let x=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Laporan Absensi ${r(s)}</title>

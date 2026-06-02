@@ -166,7 +166,8 @@ export function printLaporanPdf(data, bulan, filterPin) {
       return sum+1;
     },0);
     const nonWorkDays=p.rows.length-workDays.length;
-    const hadirTotal=hadirDecimal+nonWorkDays;
+    const potonganTelat=Math.floor(telat/3);
+    const hadirTotal=hadirDecimal+nonWorkDays-potonganTelat;
     const hadir=hadirTotal%1===0?hadirTotal:+hadirTotal.toFixed(2);
     // totalIst: semua row yang ada scan_masuk + durasi_istirahat lengkap (termasuk catatan & veryLate)
     const hadirRows=shiftHasIst?workDays.filter(r=>{
@@ -177,8 +178,6 @@ export function printLaporanPdf(data, bulan, filterPin) {
     }):[];
     const totalIst=hadirRows.reduce((sum,r)=>sum+(r.durasi_istirahat!=null?r.durasi_istirahat:0),0);
     const selisihIst=totalIst-(hadirRows.length*60);
-    // Setiap 3x terlambat (batas_terlambat s/d batas_setengah_hari) = 1 hari potongan
-    const potonganTelat=Math.floor(telat/3);
     const shiftNoOt=!!(shift&&shift.no_ot);
     const totalOtJam=shiftNoOt?0:workDays.reduce((sum,r)=>sum+hitungOtJam(r.scan_pulang,shift&&shift.jam_pulang),0);
     return `<div class="emp-card">
