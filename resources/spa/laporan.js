@@ -76,7 +76,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const dayName=tglDate.toLocaleDateString('id-ID',{weekday:'short'});
     if(isSunday||isHoliday||isNonWorkDay){
       const label=isHoliday?((state.appHolidays||[]).find(h=>h.tanggal===r.tanggal)?.nama||'Libur'):isSunday?'Minggu':(shift&&shift.nama?shift.nama:'Libur');
-      return `<tr style="background:#f0f0f0;color:#999"><td>${tglFmt} <span style="font-size:7.5px">${dayName}</span></td><td colspan="5" style="text-align:center;font-style:italic;font-size:8px">${label}</td><td></td>${showOtCol?'<td></td>':''}</tr>`;
+      return `<tr style="background:#f0f0f0;color:#999"><td>${tglFmt} <span style="font-size:7.5px">${dayName}</span></td><td colspan="5" style="text-align:center;font-style:italic;font-size:8px;color:#c53030">${label}</td><td></td>${showOtCol?'<td></td>':''}</tr>`;
     }
     const absent=!r.scan_masuk;
     const batas=shift&&shift.batas_terlambat?(shift.batas_terlambat+':00'):null;
@@ -204,7 +204,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
         ${istKuning>0?`<span style="color:#b7791f">1/4 Hari (ist): <b>${istKuning}</b></span>`:''}
         ${istPink>0?`<span style="color:#ad1457">1/2 Hari (ist): <b>${istPink}</b></span>`:''}
         ${istMerah>0?`<span style="color:#c53030">Tdk Hadir (ist): <b>${istMerah}</b></span>`:''}
-        ${potonganTelat>0?`<span style="color:#c53030;margin-left:4px">Terlambat (${telat}x÷3): <b>${potonganTelat} hari</b></span>`:''}
+        ${potonganTelat>0?`<span style="color:#c53030;margin-left:4px">Terlambat ${telat}x: <b>${potonganTelat} hari</b></span>`:''}
       </div>`:''}
       <div style="text-align:center;font-weight:700;font-size:10px;padding:4px 0 2px;border-top:1px solid #cbd5e0;margin-top:4px">${escHtml(p.nama)}</div>
     </div>`;
