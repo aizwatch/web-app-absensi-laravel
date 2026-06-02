@@ -65,7 +65,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
     return Math.ceil((selisih - 24) / 60);
   }
 
-  function rowHtml(r,shift){
+  function rowHtml(r,shift,showOtCol){
     const tglDate=new Date(r.tanggal+'T00:00:00');
     const dayOfWeek=tglDate.getDay();
     const isSunday=dayOfWeek===0;
@@ -76,7 +76,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const dayName=tglDate.toLocaleDateString('id-ID',{weekday:'short'});
     if(isSunday||isHoliday||isNonWorkDay){
       const label=isHoliday?((state.appHolidays||[]).find(h=>h.tanggal===r.tanggal)?.nama||'Libur'):isSunday?'Minggu':(shift&&shift.nama?shift.nama:'Libur');
-      return `<tr style="background:#f0f0f0;color:#999"><td>${tglFmt} <span style="font-size:7.5px">${dayName}</span></td><td colspan="5" style="text-align:center;font-style:italic;font-size:8px">${label}</td><td></td><td></td></tr>`;
+      return `<tr style="background:#f0f0f0;color:#999"><td>${tglFmt} <span style="font-size:7.5px">${dayName}</span></td><td colspan="5" style="text-align:center;font-style:italic;font-size:8px">${label}</td><td></td>${showOtCol?'<td></td>':''}</tr>`;
     }
     const absent=!r.scan_masuk;
     const batas=shift&&shift.batas_terlambat?(shift.batas_terlambat+':00'):null;
@@ -117,10 +117,8 @@ export function printLaporanPdf(data, bulan, filterPin) {
         durasiHtml=selisihStr!=null?`${r.durasi_istirahat} <span style="font-size:7.5px;color:${selisihColor};font-weight:700">${selisihStr}</span>`:`${r.durasi_istirahat}`;
       }
     }
-    const shiftNoOt = !!(shift && shift.no_ot);
-    const otJam = shiftNoOt ? 0 : hitungOtJam(r.scan_pulang, shift && shift.jam_pulang);
-    const otHtml = shiftNoOt ? '<span style="font-size:7.5px;color:#aaa">—</span>'
-      : otJam > 0 ? `<span style="color:#6b21a8;font-weight:700">${otJam}j</span>` : '—';
+    const otJam = showOtCol ? hitungOtJam(r.scan_pulang, shift && shift.jam_pulang) : 0;
+    const otHtml = otJam > 0 ? `<span style="color:#6b21a8;font-weight:700">${otJam}j</span>` : '—';
     return `<tr style="background:${rowBg}">
       <td>${tglFmt} <span style="font-size:7.5px;color:#888">${dayName}</span></td>
       <td style="text-align:center;${masukStyle}">${t(r.scan_masuk)||'—'}</td>
@@ -129,13 +127,16 @@ export function printLaporanPdf(data, bulan, filterPin) {
       <td style="text-align:center;${pulangStyle}">${t(r.scan_pulang)||'—'}</td>
       <td style="text-align:center">${durasiHtml}</td>
       <td>${statusCell}</td>
-      <td style="text-align:center">${otHtml}</td>
+      ${showOtCol?`<td style="text-align:center">${otHtml}</td>`:''}
     </tr>`;
   }
 
   function cardHtml(p){
     const shift=getShift(p.pin);
-    const rows=p.rows.map(r=>rowHtml(r,shift)).join('');
+    const shiftNoOtCard=!!(shift&&shift.no_ot);
+    const totalOtJamCard=shiftNoOtCard?0:p.rows.reduce((sum,r)=>sum+hitungOtJam(r.scan_pulang,shift&&shift.jam_pulang),0);
+    const showOtCol=!shiftNoOtCard&&totalOtJamCard>0;
+    const rows=p.rows.map(r=>rowHtml(r,shift,showOtCol)).join('');
     const shiftWorkDays=shift&&shift.hari_kerja&&shift.hari_kerja.length?shift.hari_kerja:[1,2,3,4,5,6];
     const shiftBatasSetengah=((shift&&shift.batas_setengah_hari)||'08:30')+':00';
     const shiftHasIst=!!(shift&&shift.ist_window_dari&&shift.ist_window_sampai);
@@ -187,7 +188,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
         <th style="width:44px">Tgl</th><th style="width:38px;text-align:center">Masuk</th>
         <th style="width:60px;text-align:center">Mulai Istirahat</th><th style="width:65px;text-align:center">Selesai Istirahat</th>
         <th style="width:38px;text-align:center">Pulang</th><th style="width:55px;text-align:center">Istirahat (menit)</th><th>Status</th>
-        <th style="width:30px;text-align:center">OT</th>
+        ${showOtCol?'<th style="width:30px;text-align:center">OT</th>':''}
       </tr></thead><tbody>${rows}</tbody></table>
       <div class="summary">
         <span class="s-hadir">Hadir: <b>${hadir}</b></span>
