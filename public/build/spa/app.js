@@ -202,19 +202,19 @@ var e={authToken:null,authUser:null,selectedEmployee:null,pegawaiList:[],current
       </tr></thead><tbody>${n}</tbody></table>
       <div class="summary">
         <span class="s-hadir">Hadir: <b>${S}</b></span>
-        <span class="s-late">Terlambat: <b>${p}</b></span>
-        <span class="s-alpha">1/2 Hari: <b>${f}</b></span>
-        <span class="s-alpha">Tidak Hadir: <b>${u}</b></span>
-        <span class="s-ket">Keterangan: <b>${d}</b></span>
-        ${E?``:`<span style="color:#6b21a8;font-weight:700">Total OT: <b>${D}j</b></span>`}
+        ${p>0?`<span class="s-late">Terlambat: <b>${p}</b></span>`:``}
+        ${f>0?`<span class="s-alpha">1/2 Hari: <b>${f}</b></span>`:``}
+        ${u>0?`<span class="s-alpha">Tidak Hadir: <b>${u}</b></span>`:``}
+        ${d>0?`<span class="s-ket">Keterangan: <b>${d}</b></span>`:``}
+        ${!E&&D>0?`<span style="color:#6b21a8;font-weight:700">Total OT: <b>${D}j</b></span>`:``}
         <span style="margin-left:auto;color:#333">${o?`Total Istirahat: ${w===0?`<b style="color:#276749">tepat</b>`:w>0?`<b style="color:#c53030">+${w}m</b>`:`<b style="color:#2b6cb0">${w}m</b>`} &nbsp;|&nbsp; `:``}Hari Kerja: <b>${c.length}</b> | Total: <b>${e.rows.length}</b> hari</span>
       </div>
-      ${o||T>0?`<div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
+      ${b>0||y>0||h>0||T>0?`<div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
         <span style="color:#555;font-weight:600">Potongan:</span>
-        ${o?`<span style="color:#b7791f">1/4 Hari: <b>${b}</b></span>
-        <span style="color:#ad1457">1/2 Hari: <b>${y}</b></span>
-        <span style="color:#c53030">Tdk Hadir (ist): <b>${h}</b></span>`:``}
-        ${T>0?`<span style="color:#c53030;margin-left:4px">Terlambat (${p}x÷3): <b>${T} hari</b></span>`:'<span style="color:#999;font-size:7.5px">Terlambat: ${telat}x (belum 3x)</span>'}
+        ${b>0?`<span style="color:#b7791f">1/4 Hari (ist): <b>${b}</b></span>`:``}
+        ${y>0?`<span style="color:#ad1457">1/2 Hari (ist): <b>${y}</b></span>`:``}
+        ${h>0?`<span style="color:#c53030">Tdk Hadir (ist): <b>${h}</b></span>`:``}
+        ${T>0?`<span style="color:#c53030;margin-left:4px">Terlambat (${p}x÷3): <b>${T} hari</b></span>`:``}
       </div>`:``}
       <div style="text-align:center;font-weight:700;font-size:10px;padding:4px 0 2px;border-top:1px solid #cbd5e0;margin-top:4px">${r(e.nama)}</div>
     </div>`}let b=``;for(let e=0;e<d.length;e+=2){let t=d[e],n=d[e+1];b+=`<div class="page"><div class="two-col">${y(t)}${n?y(n):`<div class="emp-card" style="visibility:hidden"></div>`}</div></div>`}let x=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Laporan Absensi ${r(s)}</title>

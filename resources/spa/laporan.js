@@ -191,19 +191,19 @@ export function printLaporanPdf(data, bulan, filterPin) {
       </tr></thead><tbody>${rows}</tbody></table>
       <div class="summary">
         <span class="s-hadir">Hadir: <b>${hadir}</b></span>
-        <span class="s-late">Terlambat: <b>${telat}</b></span>
-        <span class="s-alpha">1/2 Hari: <b>${telatSekali}</b></span>
-        <span class="s-alpha">Tidak Hadir: <b>${alpha}</b></span>
-        <span class="s-ket">Keterangan: <b>${ket}</b></span>
-        ${!shiftNoOt?`<span style="color:#6b21a8;font-weight:700">Total OT: <b>${totalOtJam}j</b></span>`:''}
+        ${telat>0?`<span class="s-late">Terlambat: <b>${telat}</b></span>`:''}
+        ${telatSekali>0?`<span class="s-alpha">1/2 Hari: <b>${telatSekali}</b></span>`:''}
+        ${alpha>0?`<span class="s-alpha">Tidak Hadir: <b>${alpha}</b></span>`:''}
+        ${ket>0?`<span class="s-ket">Keterangan: <b>${ket}</b></span>`:''}
+        ${!shiftNoOt&&totalOtJam>0?`<span style="color:#6b21a8;font-weight:700">Total OT: <b>${totalOtJam}j</b></span>`:''}
         <span style="margin-left:auto;color:#333">${shiftHasIst?`Total Istirahat: ${selisihIst===0?`<b style="color:#276749">tepat</b>`:selisihIst>0?`<b style="color:#c53030">+${selisihIst}m</b>`:`<b style="color:#2b6cb0">${selisihIst}m</b>`} &nbsp;|&nbsp; `:''}Hari Kerja: <b>${workDays.length}</b> | Total: <b>${p.rows.length}</b> hari</span>
       </div>
-      ${shiftHasIst||potonganTelat>0?`<div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
+      ${istKuning>0||istPink>0||istMerah>0||potonganTelat>0?`<div class="summary" style="margin-top:3px;border-top:1px dashed #ccc;padding-top:3px">
         <span style="color:#555;font-weight:600">Potongan:</span>
-        ${shiftHasIst?`<span style="color:#b7791f">1/4 Hari: <b>${istKuning}</b></span>
-        <span style="color:#ad1457">1/2 Hari: <b>${istPink}</b></span>
-        <span style="color:#c53030">Tdk Hadir (ist): <b>${istMerah}</b></span>`:''}
-        ${potonganTelat>0?`<span style="color:#c53030;margin-left:4px">Terlambat (${telat}x÷3): <b>${potonganTelat} hari</b></span>`:'<span style="color:#999;font-size:7.5px">Terlambat: ${telat}x (belum 3x)</span>'}
+        ${istKuning>0?`<span style="color:#b7791f">1/4 Hari (ist): <b>${istKuning}</b></span>`:''}
+        ${istPink>0?`<span style="color:#ad1457">1/2 Hari (ist): <b>${istPink}</b></span>`:''}
+        ${istMerah>0?`<span style="color:#c53030">Tdk Hadir (ist): <b>${istMerah}</b></span>`:''}
+        ${potonganTelat>0?`<span style="color:#c53030;margin-left:4px">Terlambat (${telat}x÷3): <b>${potonganTelat} hari</b></span>`:''}
       </div>`:''}
       <div style="text-align:center;font-weight:700;font-size:10px;padding:4px 0 2px;border-top:1px solid #cbd5e0;margin-top:4px">${escHtml(p.nama)}</div>
     </div>`;
