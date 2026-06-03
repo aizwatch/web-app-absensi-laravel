@@ -79,8 +79,8 @@ class AbsensiService
 
             $durasiIstirahat = null;
             if ($istDari && $istSampai && $scanIstirahat1 && $scanIstirahat2) {
-                $toMin = fn($t) => (int)explode(':', $t)[0] * 60 + (int)explode(':', $t)[1] + ((int)explode(':', $t)[2] ?? 0) / 60;
-                $durasiIstirahat = (int)round($toMin($scanIstirahat2) - $toMin($scanIstirahat1));
+                $toMin = fn($t) => (int)explode(':', $t)[0] * 60 + (int)explode(':', $t)[1];
+                $durasiIstirahat = $toMin($scanIstirahat2) - $toMin($scanIstirahat1);
             }
 
             $noteEntry = collect($settings['scan_notes'] ?? [])->first(
