@@ -721,13 +721,17 @@
   .admin-stab-bar {
     display: flex; gap: 2px; margin-bottom: 24px;
     border-bottom: 1px solid var(--border);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .admin-stab-bar::-webkit-scrollbar { display: none; }
   .admin-stab-btn {
     padding: 8px 20px; background: none; border: none;
     font-family: var(--font-sans); font-size: 13px;
     color: var(--text-muted); cursor: pointer;
     border-bottom: 2px solid transparent; margin-bottom: -1px;
     transition: all 0.15s;
+    white-space: nowrap; flex-shrink: 0;
   }
   .admin-stab-btn:hover { color: var(--text); }
   .admin-stab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -1077,16 +1081,20 @@
 
   /* PENGATURAN SUB-TABS */
   .pstab-bar {
-    display: flex; gap: 4px; flex-wrap: wrap;
+    display: flex; gap: 4px;
     padding: 14px 20px 0; border-bottom: 1px solid var(--border);
     margin-bottom: 0;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .pstab-bar::-webkit-scrollbar { display: none; }
   .pstab-btn {
     padding: 8px 14px; border-radius: 8px 8px 0 0;
     font-size: 13px; font-weight: 500; cursor: pointer;
     border: none; background: none; color: var(--text-muted);
     border: 1px solid transparent; border-bottom: none;
     transition: color 0.15s, background 0.15s;
+    white-space: nowrap; flex-shrink: 0;
   }
   .pstab-btn.active {
     color: var(--accent); background: var(--surface);
@@ -1259,4 +1267,63 @@
   .dash-stats { grid-template-columns: repeat(2, 1fr); }
   .dash-body  { grid-template-columns: 1fr; }
   .dash-modal { height: 100dvh; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE: modal bottom-sheet (max-width 640px)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-end;
+    backdrop-filter: blur(2px);
+  }
+
+  .modal-box,
+  .modal-box.wide {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh;
+    margin: 0;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    transform: translateY(100%);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-overlay.open .modal-box,
+  .modal-overlay.open .modal-box.wide { transform: translateY(0); }
+
+  .modal-box::before {
+    content: '';
+    flex-shrink: 0;
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    margin: -6px auto 14px;
+  }
+
+  .modal-box .modal-body-scroll,
+  .modal-box.wide .modal-body-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: none;
+  }
+  .modal-box .modal-footer {
+    flex-shrink: 0;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .modal-footer .btn { flex: 1; padding: 12px; font-size: 14px; }
+
+  .form-row { grid-template-columns: 1fr; }
+
+  .modal-box input,
+  .modal-box select,
+  .modal-box textarea { font-size: 16px; }
+
+  .modal-box .settings-table,
+  .modal-box .raw-scan-table { min-width: 560px; }
 }

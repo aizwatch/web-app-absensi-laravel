@@ -1,0 +1,32 @@
+{
+  "name": "Sistem Absensi Karyawan — PT. Long Time",
+  "short_name": "LT Absensi",
+  "description": "Sistem manajemen absensi karyawan PT. Long Time — rekap realtime, integrasi fingerprint, pengajuan absensi mandiri.",
+  "lang": "id",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f0f4f8",
+  "theme_color": "#0077cc",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
