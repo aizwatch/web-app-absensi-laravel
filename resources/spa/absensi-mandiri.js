@@ -3,6 +3,7 @@ import { escHtml, showToast } from './utils.js';
 import { authHeaders } from './auth.js';
 
 const PRESET_LABEL = {'setengah_pagi_preset':'Setengah Hari (masuk pagi)','setengah_siang_preset':'Setengah Hari (masuk siang)'};
+let _pendingFile = null;
 
 function parseCatatan(tipe, catatan) {
   if (!catatan) return {note:'', jam2:''};
@@ -109,6 +110,7 @@ export function submitAbsensiMandiri() {
   if (!noJam&&!jam) { errEl.textContent='Jam wajib diisi.'; errEl.classList.add('show'); return; }
   if (tipe==='ganti_shift'&&!document.getElementById('am-shift-id').value) { errEl.textContent='Pilih shift pengganti.'; errEl.classList.add('show'); return; }
   if (fileEl.files[0]&&fileEl.files[0].size>5*1024*1024) { errEl.textContent='File maksimal 5MB.'; errEl.classList.add('show'); return; }
+  _pendingFile = fileEl.files[0] || null;
   document.getElementById('am-confirm-pw').value = '';
   document.getElementById('am-confirm-err').classList.remove('show');
   document.getElementById('modal-am-confirm').classList.add('open');
@@ -143,7 +145,7 @@ export async function submitAmConfirmed() {
   if (tipe==='ganti_shift') formData.append('catatan', catatan ? shiftId+'||'+catatan : shiftId);
   else if (tipe==='customer_visit'||tipe==='lupa') { const cv=catatan+(jam2?'||jam2='+jam2:''); if(cv) formData.append('catatan',cv); }
   else if (catatan) formData.append('catatan', catatan);
-  if (fileEl.files[0]) formData.append('attachment', fileEl.files[0]);
+  if (_pendingFile) formData.append('attachment', _pendingFile);
   try {
     const res  = await fetch('/api/absensi-mandiri', { method:'POST', headers:{...authHeaders()}, body:formData });
     const json = await res.json();
@@ -152,7 +154,7 @@ export async function submitAmConfirmed() {
     const okEl = document.getElementById('am-ok');
     okEl.textContent='✅ '+json.message; okEl.classList.add('show');
     document.getElementById('am-catatan').value='';
-    fileEl.value='';
+    fileEl.value=''; _pendingFile = null;
     document.getElementById('am-attachment-preview').style.display='none';
     showToast('📤 Terkirim','Permintaan dikirim ke admin');
     await loadMyRequests();
