@@ -460,6 +460,9 @@ class AbsensiMandiriController extends Controller
             $arr['attachment_url'] = $r->attachment
                 ? '/api/absensi-mandiri/' . $r->id . '/attachment'
                 : null;
+            $arr['attachment_ext'] = $r->attachment
+                ? strtolower(pathinfo($r->attachment, PATHINFO_EXTENSION))
+                : null;
             return $arr;
         })->values()->all();
     }
