@@ -53,6 +53,7 @@ import {
   submitAbsensiMandiri, closeAmConfirm, submitAmConfirmed,
   loadMyRequests, loadAdminRequests, adminActionMandiri, revokeAndEditMandiri,
   updatePendingBadge, populateAmAdminPinSelect, debounceAmFilter,
+  openAttachmentModal, closeAttachmentModal,
 } from './absensi-mandiri.js';
 
 // ── MOBILE NAV ──
@@ -133,6 +134,7 @@ Object.assign(window, {
   submitAbsensiMandiri, closeAmConfirm, submitAmConfirmed,
   loadMyRequests, loadAdminRequests, adminActionMandiri, revokeAndEditMandiri,
   populateAmAdminPinSelect, debounceAmFilter,
+  openAttachmentModal, closeAttachmentModal,
 });
 
 // ── afterLogin — defined here to avoid circular dep ──

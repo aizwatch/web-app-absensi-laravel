@@ -938,6 +938,22 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-attachment" onclick="if(event.target===this)closeAttachmentModal()">
+  <div class="modal-box" style="max-width:90vw;max-height:90vh;padding:16px;text-align:center">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span class="modal-title" style="margin:0">Lampiran</span>
+      <button class="modal-close" onclick="closeAttachmentModal()">×</button>
+    </div>
+    <div id="attachment-modal-body">
+      <img id="attachment-modal-img" src="" style="max-width:100%;max-height:70vh;border-radius:8px;display:none" />
+      <div id="attachment-modal-nopreview" style="display:none;padding:32px">
+        <p style="color:var(--text-muted)">Preview tidak tersedia untuk file ini.</p>
+        <a id="attachment-modal-download" href="#" target="_blank" style="color:var(--accent);font-size:14px">⬇ Download File</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-inject-row">
   <div class="modal-box" style="max-width:440px">
     <div class="modal-title">⚙️ Inject Absensi <span id="inj-title" style="font-size:13px;font-weight:400;color:var(--text-muted)"></span><button class="modal-close" onclick="closeInjectModal()">×</button></div>
