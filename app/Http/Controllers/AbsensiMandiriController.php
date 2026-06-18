@@ -86,9 +86,9 @@ class AbsensiMandiriController extends Controller
             if ($file->getSize() > 5 * 1024 * 1024) {
                 return response()->json(['success' => false, 'message' => 'File maksimal 5MB'], 422);
             }
-            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'pdf'];
             if (! in_array(strtolower($file->getClientOriginalExtension()), $allowed)) {
-                return response()->json(['success' => false, 'message' => 'Format file tidak didukung (jpg/png/gif/webp/pdf)'], 422);
+                return response()->json(['success' => false, 'message' => 'Format file tidak didukung (jpg/png/gif/webp/heic/pdf)'], 422);
             }
             $attachmentPath = $file->store('attachments', 'public');
         }
