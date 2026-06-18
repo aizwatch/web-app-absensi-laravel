@@ -4,6 +4,8 @@ import { authHeaders } from './auth.js';
 
 const PRESET_LABEL = {'setengah_pagi_preset':'Setengah Hari (masuk pagi)','setengah_siang_preset':'Setengah Hari (masuk siang)'};
 let _pendingFile = null;
+let _pendingBlob = null;
+let _pendingFileName = null;
 
 function parseCatatan(tipe, catatan) {
   if (!catatan) return {note:'', jam2:''};
@@ -54,11 +56,19 @@ export function previewAttachment() {
   const wrap  = document.getElementById('am-attachment-preview');
   const img   = document.getElementById('am-preview-img');
   const lbl   = document.getElementById('am-preview-label');
-  if (!file) { wrap.style.display='none'; return; }
+  if (!file) { wrap.style.display='none'; _pendingBlob=null; _pendingFileName=null; return; }
   lbl.textContent = file.name+' ('+(file.size/1024).toFixed(0)+' KB)';
   if (file.type.startsWith('image/')) { img.src=URL.createObjectURL(file); img.style.display=''; }
   else { img.style.display='none'; }
   wrap.style.display = '';
+  // iOS Safari can invalidate File references after DOM changes (modal/keyboard).
+  // Read the file into a Blob immediately so the data is safely in memory.
+  const reader = new FileReader();
+  reader.onload = () => {
+    _pendingBlob = new Blob([reader.result], { type: file.type });
+    _pendingFileName = file.name;
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 export function initAbsensiMandiri() {
@@ -145,7 +155,8 @@ export async function submitAmConfirmed() {
   if (tipe==='ganti_shift') formData.append('catatan', catatan ? shiftId+'||'+catatan : shiftId);
   else if (tipe==='customer_visit'||tipe==='lupa') { const cv=catatan+(jam2?'||jam2='+jam2:''); if(cv) formData.append('catatan',cv); }
   else if (catatan) formData.append('catatan', catatan);
-  if (_pendingFile) formData.append('attachment', _pendingFile);
+  if (_pendingBlob) formData.append('attachment', _pendingBlob, _pendingFileName);
+  else if (_pendingFile) formData.append('attachment', _pendingFile);
   try {
     const res  = await fetch('/api/absensi-mandiri', { method:'POST', headers:{...authHeaders()}, body:formData });
     const json = await res.json();
@@ -154,7 +165,7 @@ export async function submitAmConfirmed() {
     const okEl = document.getElementById('am-ok');
     okEl.textContent='✅ '+json.message; okEl.classList.add('show');
     document.getElementById('am-catatan').value='';
-    fileEl.value=''; _pendingFile = null;
+    fileEl.value=''; _pendingFile = null; _pendingBlob = null; _pendingFileName = null;
     document.getElementById('am-attachment-preview').style.display='none';
     showToast('📤 Terkirim','Permintaan dikirim ke admin');
     await loadMyRequests();
