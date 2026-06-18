@@ -131,6 +131,24 @@ export function closeAmConfirm() {
   document.getElementById('modal-am-confirm').classList.remove('open');
 }
 
+export function openAttachmentModal(url) {
+  const imgExts = /\.(jpe?g|png|gif|webp|heic|heif)(\?|$)/i;
+  const img = document.getElementById('attachment-modal-img');
+  const nopreview = document.getElementById('attachment-modal-nopreview');
+  const dl = document.getElementById('attachment-modal-download');
+  if (imgExts.test(url)) {
+    img.src = url; img.style.display = ''; nopreview.style.display = 'none';
+  } else {
+    img.style.display = 'none'; nopreview.style.display = ''; dl.href = url;
+  }
+  document.getElementById('modal-attachment').classList.add('open');
+}
+
+export function closeAttachmentModal() {
+  document.getElementById('modal-attachment').classList.remove('open');
+  document.getElementById('attachment-modal-img').src = '';
+}
+
 export async function submitAmConfirmed() {
   const pw       = document.getElementById('am-confirm-pw').value;
   const ceEl     = document.getElementById('am-confirm-err');
@@ -196,7 +214,7 @@ export async function loadMyRequests() {
         </div>
         ${(()=>{const {note,jam2}=parseCatatan(r.tipe,r.catatan);const parts=[note,jam2?'Scan 2: '+jam2:''].filter(Boolean);return parts.length?`<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${escHtml(parts.join(' · '))}</div>`:'';})()}
         ${r.review_catatan?`<div style="font-size:12px;color:var(--accent);margin-top:4px">Admin: ${escHtml(r.review_catatan)}</div>`:''}
-        ${r.attachment_url?`<a href="${r.attachment_url+(r.attachment_url.includes('?')?'&':'?')+'token='+encodeURIComponent(state.authToken||'')}" target="_blank" style="font-size:12px;color:var(--accent);display:inline-block;margin-top:4px">📎 Lihat Lampiran</a>`:''}
+        ${r.attachment_url?`<a href="#" onclick="openAttachmentModal('${r.attachment_url+(r.attachment_url.includes('?')?'&':'?')+'token='+encodeURIComponent(state.authToken||'')}');return false" style="font-size:12px;color:var(--accent);display:inline-block;margin-top:4px">📎 Lihat Lampiran</a>`:''}
       </div>`).join('');
   } catch(e) { el.innerHTML='<div style="color:var(--danger)">Gagal memuat.</div>'; }
 }
@@ -238,7 +256,7 @@ export async function loadAdminRequests() {
         <td style="text-align:center">${r.jam?escHtml(r.jam.slice(0,5)):'—'}</td>
         <td><span style="white-space:nowrap">${escHtml(r.tipe_label)}</span></td>
         <td style="font-size:12px;word-break:break-word">${(()=>{const {note,jam2}=parseCatatan(r.tipe,r.catatan);const parts=[note,jam2?'Scan 2: '+jam2:''].filter(Boolean);return parts.length?escHtml(parts.join(' · ')):'—';})()}${r.review_catatan?`<div style="color:var(--accent);margin-top:2px">💬 ${escHtml(r.review_catatan)}</div>`:''}</td>
-        <td style="text-align:center">${r.attachment_url?`<a href="${r.attachment_url+(r.attachment_url.includes('?')?'&':'?')+'token='+encodeURIComponent(state.authToken||'')}" target="_blank" style="font-size:12px;color:var(--accent)">📎 Lihat</a>`:'—'}</td>
+        <td style="text-align:center">${r.attachment_url?`<a href="#" onclick="openAttachmentModal('${r.attachment_url+(r.attachment_url.includes('?')?'&':'?')+'token='+encodeURIComponent(state.authToken||'')}');return false" style="font-size:12px;color:var(--accent)">📎 Lihat</a>`:'—'}</td>
         <td style="text-align:center"><span class="td-status ${r.status==='approved'?'status-hadir':r.status==='rejected'?'status-alpha':'status-terlambat'}" style="font-size:11px">
           ${r.status==='approved'?'✅ Disetujui':r.status==='rejected'?'❌ Ditolak':'⏳ Menunggu'}
         </span></td>
