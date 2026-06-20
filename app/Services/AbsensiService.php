@@ -71,11 +71,10 @@ class AbsensiService
                 $jamPulangTime = $jamPulang . ':00';
                 $istScans   = array_values(array_filter($restScans, fn($t) => $t < $jamPulangTime));
                 $pulangScans = array_values(array_filter($restScans, fn($t) => $t >= $jamPulangTime));
-                $istScans   = array_slice($istScans, 0, 2);
                 $scanPulang = count($pulangScans) ? end($pulangScans) : null;
             }
             $scanIstirahat1 = $istScans[0] ?? null;
-            $scanIstirahat2 = $istScans[1] ?? null;
+            $scanIstirahat2 = count($istScans) > 1 ? end($istScans) : null;
 
             $durasiIstirahat = null;
             if ($istDari && $istSampai && $scanIstirahat1 && $scanIstirahat2) {
