@@ -60,7 +60,7 @@ export function renderRawScans(data) {
         <input id="raw-edit-dt-${i}" type="datetime-local" value="${r.scan_date.replace(' ','T').slice(0,16)}" style="display:none" />
       </td>
       <td style="white-space:nowrap">
-        <span id="raw-view-btns-${i}"><button class="btn-icon" onclick="adminEditScanRow(${i})" title="Edit">✏️</button></span>
+        <span id="raw-view-btns-${i}"><button class="btn-icon" onclick="adminEditScanRow(${i})" title="Edit">✏️</button><button class="btn-icon" onclick="adminDeleteScan('${escHtml(r.sn)}','${escHtml(r.scan_date)}','${escHtml(String(r.pin))}')" title="Hapus">🗑️</button></span>
         <span id="raw-edit-btns-${i}" style="display:none">
           <button class="btn-icon" onclick="adminSaveScan(${i},'${escHtml(r.sn)}','${escHtml(r.scan_date)}','${escHtml(String(r.pin))}')" title="Simpan">✅</button>
           <button class="btn-icon" onclick="adminCancelScanRow(${i})" title="Batal">❌</button>
@@ -95,6 +95,17 @@ export async function adminSaveScan(i, sn, scan_date_lama, pin) {
     showToast('✅ Berhasil','Waktu scan diperbarui');
     adminLoadScans();
   }catch(e){alert(e.message);}
+}
+
+export async function adminDeleteScan(sn, scan_date, pin) {
+  if (!confirm('Hapus scan ini?')) return;
+  try {
+    const res = await fetch('/api/att_log/scan', {method:'DELETE', headers:{'Content-Type':'application/json',...authHeaders()}, body:JSON.stringify({data:{sn, scan_date, pin}})});
+    const json = await res.json();
+    if (!json.success) { alert(json.message); return; }
+    showToast('🗑️ Dihapus', 'Scan berhasil dihapus');
+    adminLoadScans();
+  } catch(e) { alert(e.message); }
 }
 
 export async function adminLoadPegawai() {

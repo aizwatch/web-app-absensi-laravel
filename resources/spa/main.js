@@ -35,7 +35,7 @@ import {
 } from './inject.js';
 import {
   openAdminModal, closeAdminModal, adminInit,
-  adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan,
+  adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan, adminDeleteScan,
   adminLoadPegawai, adminEditPegawaiRow, adminCancelPegawaiRow,
   adminSavePegawai, adminDeletePegawai, adminAddPegawai,
   loadSyncDevices, runBackfill, runSetTime, runSyncUserInfo, populateSyncUserSelect,
