@@ -65,7 +65,13 @@ export function previewAttachment() {
   // Read the file into a Blob immediately so the data is safely in memory.
   const reader = new FileReader();
   reader.onload = () => {
-    _pendingBlob = new Blob([reader.result], { type: file.type });
+    let mimeType = file.type;
+    if (!mimeType) {
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      const mimeMap = {heic:'image/heic',heif:'image/heif',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif',webp:'image/webp',pdf:'application/pdf'};
+      mimeType = mimeMap[ext] || 'application/octet-stream';
+    }
+    _pendingBlob = new Blob([reader.result], { type: mimeType });
     _pendingFileName = file.name;
   };
   reader.readAsArrayBuffer(file);
