@@ -146,7 +146,7 @@ var e={authToken:null,authUser:null,selectedEmployee:null,pegawaiList:[],current
         <input id="raw-edit-dt-${t}" type="datetime-local" value="${e.scan_date.replace(` `,`T`).slice(0,16)}" style="display:none" />
       </td>
       <td style="white-space:nowrap">
-        <span id="raw-view-btns-${t}"><button class="btn-icon" onclick="adminEditScanRow(${t})" title="Edit">✏️</button></span>
+        <span id="raw-view-btns-${t}"><button class="btn-icon" onclick="adminEditScanRow(${t})" title="Edit">✏️</button><button class="btn-icon" onclick="adminDeleteScan('${r(e.sn)}','${r(e.scan_date)}','${r(String(e.pin))}')" title="Hapus">🗑️</button></span>
         <span id="raw-edit-btns-${t}" style="display:none">
           <button class="btn-icon" onclick="adminSaveScan(${t},'${r(e.sn)}','${r(e.scan_date)}','${r(String(e.pin))}')" title="Simpan">✅</button>
           <button class="btn-icon" onclick="adminCancelScanRow(${t})" title="Batal">❌</button>
