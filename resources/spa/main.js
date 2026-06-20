@@ -116,7 +116,7 @@ Object.assign(window, {
 
   // admin modal
   openAdminModal, closeAdminModal, switchAdminStab,
-  adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan,
+  adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan, adminDeleteScan,
   adminEditPegawaiRow, adminCancelPegawaiRow, adminSavePegawai,
   adminDeletePegawai, adminAddPegawai,
   loadSyncDevices, runBackfill, runSetTime, runSyncUserInfo, populateSyncUserSelect,
