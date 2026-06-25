@@ -52,8 +52,6 @@ class AuthController extends Controller
             ->first();
 
         if ($pegawai) {
-            // Kalau password belum diset → allow login (first-time, wajib ganti)
-            // Kalau sudah diset → cek hash
             if ($pegawai->password && ! Hash::check($password, $pegawai->password)) {
                 return response()->json(['success' => false, 'message' => 'Password salah'], 401);
             }
@@ -155,8 +153,10 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'message' => 'PIN wajib diisi'], 422);
         }
 
+        $tempPassword = Str::random(6);
+
         $affected = DB::table('pegawai')->where('pegawai_pin', $pin)->update([
-            'password'             => null,
+            'password'             => Hash::make($tempPassword),
             'must_change_password' => true,
             'auth_token'           => null,
         ]);
@@ -165,7 +165,11 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'message' => 'Karyawan tidak ditemukan'], 404);
         }
 
-        return response()->json(['success' => true, 'message' => 'Password berhasil direset. User wajib ganti saat login berikutnya.']);
+        return response()->json([
+            'success'       => true,
+            'message'       => 'Password berhasil direset.',
+            'temp_password' => $tempPassword,
+        ]);
     }
 
     // ── helpers ──
