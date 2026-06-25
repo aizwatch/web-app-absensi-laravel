@@ -28,3 +28,7 @@ Thumbs.db
 .env.example
 SYSTEM_MAP.md   
 .claude/
+compose.yaml
+docker-compose.yml
+/docker
+dump.sql
