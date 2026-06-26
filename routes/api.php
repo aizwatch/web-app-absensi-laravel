@@ -25,22 +25,24 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-// ── Absensi (public) ──
-Route::prefix('absensi')->group(function () {
-    Route::get('hari-ini',       [AbsensiController::class, 'hariIni']);
-    Route::get('filter',         [AbsensiController::class, 'filter']);
-    Route::get('karyawan/{pin}', [AbsensiController::class, 'karyawan']);
+// ── Absensi ──
+Route::middleware(AuthMiddleware::class)->group(function () {
+    Route::prefix('absensi')->group(function () {
+        Route::get('hari-ini',       [AbsensiController::class, 'hariIni']);
+        Route::get('filter',         [AbsensiController::class, 'filter']);
+        Route::get('karyawan/{pin}', [AbsensiController::class, 'karyawan']);
+    });
 });
 Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
     Route::get('absensi/bermasalah', [AbsensiController::class, 'bermasalah']);
 });
 
 // ── Settings ──
-Route::get('settings', [SettingsController::class, 'index']);
+Route::middleware(AuthMiddleware::class)->get('settings', [SettingsController::class, 'index']);
 Route::middleware([AuthMiddleware::class . ':admin'])->post('settings', [SettingsController::class, 'store']);
 
 // ── Pegawai ──
-Route::get('pegawai', [PegawaiController::class, 'index']);
+Route::middleware(AuthMiddleware::class)->get('pegawai', [PegawaiController::class, 'index']);
 Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
     Route::post('pegawai',         [PegawaiController::class, 'store']);
     Route::put('pegawai/{pin}',    [PegawaiController::class, 'update']);
@@ -48,8 +50,8 @@ Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
 });
 
 // ── Att Log ──
-Route::get('att_log/raw', [AttLogController::class, 'raw']);
 Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
+    Route::get('att_log/raw',     [AttLogController::class, 'raw']);
     Route::post('att_log/scan',   [AttLogController::class, 'store']);
     Route::put('att_log/scan',    [AttLogController::class, 'update']);
     Route::delete('att_log/scan', [AttLogController::class, 'destroy']);
@@ -60,17 +62,17 @@ Route::post('webhook/fingerspot', [WebhookController::class, 'fingerspot'])
     ->middleware('throttle:60,1');
 
 // ── Sync / Backfill ──
-Route::get('sync/devices', [SyncController::class, 'devices']);
 Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
+    Route::get('sync/devices',     [SyncController::class, 'devices']);
     Route::post('sync/backfill',   [SyncController::class, 'backfill']);
     Route::post('sync/set-time',   [SyncController::class, 'syncSetTime']);
     Route::post('sync/user-info',  [SyncController::class, 'syncUserInfo']);
+    Route::post('sync/today',      [SyncController::class, 'syncToday']);
 });
-Route::post('sync/today', [SyncController::class, 'syncToday'])->middleware('throttle:10,1');
 
 // ── Absensi Mandiri ──
-Route::get('absensi-mandiri/{id}/attachment', [AbsensiMandiriController::class, 'attachment']);
 Route::middleware(AuthMiddleware::class)->group(function () {
+    Route::get('absensi-mandiri/{id}/attachment', [AbsensiMandiriController::class, 'attachment']);
     Route::post('absensi-mandiri',     [AbsensiMandiriController::class, 'store']);
     Route::get('absensi-mandiri/mine', [AbsensiMandiriController::class, 'myRequests']);
 });

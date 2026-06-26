@@ -2,6 +2,7 @@ import { state } from './state.js';
 import { escHtml, HARI_LABELS, showToast, switchPengaturanStab } from './utils.js';
 import { authHeaders } from './auth.js';
 import { updatePersonalMeta, populatePickerSelect } from './picker.js';
+import { icon } from './icons.js';
 
 export function getShiftForPin(pin) {
   const id = state.empShifts[String(pin)];
@@ -13,7 +14,7 @@ export function getShiftForPin(pin) {
 
 export async function loadAppSettings() {
   try {
-    const res  = await fetch('/api/settings');
+    const res  = await fetch('/api/settings',{headers:authHeaders()});
     const { data } = await res.json();
     state.appShifts      = data.shifts          || [];
     state.empShifts      = data.employee_shifts || {};
@@ -49,7 +50,7 @@ export async function saveSettings() {
     }
     await loadAppSettings();
     if (okEl) okEl.classList.add('show');
-    showToast('✅ Tersimpan', 'Pengaturan berhasil disimpan');
+    showToast('Tersimpan', 'Pengaturan berhasil disimpan');
   } catch (e) {
     if (errEl) { errEl.textContent = 'Gagal terhubung ke server.'; errEl.classList.add('show'); }
   }
@@ -62,7 +63,7 @@ export async function openPengaturanSettings() {
   if (okEl)  okEl.classList.remove('show');
   switchPengaturanStab('pstab-shifts', document.querySelector('.pstab-btn'));
   try {
-    const res  = await fetch('/api/settings');
+    const res  = await fetch('/api/settings',{headers:authHeaders()});
     const { data } = await res.json();
     state.appShifts      = data.shifts          || [];
     state.empShifts      = data.employee_shifts || {};
@@ -123,12 +124,12 @@ export function renderShiftsTable() {
       </td>
       <td style="white-space:nowrap">
         <span id="shift-view-btns-${i}">
-          <button class="btn-icon" onclick="editShiftRow(${i})" title="Edit">✏️</button>
-          <button class="btn-icon del" onclick="deleteShift(${i})" title="Hapus">🗑️</button>
+          <button class="btn-icon" onclick="editShiftRow(${i})" title="Edit">${icon('pencil')}</button>
+          <button class="btn-icon del" onclick="deleteShift(${i})" title="Hapus">${icon('trash-2')}</button>
         </span>
         <span id="shift-edit-btns-${i}" style="display:none">
-          <button class="btn-icon" onclick="saveShiftRow(${i})" title="Simpan">✅</button>
-          <button class="btn-icon" onclick="cancelShiftRow(${i})" title="Batal">❌</button>
+          <button class="btn-icon" onclick="saveShiftRow(${i})" title="Simpan">${icon('check-circle')}</button>
+          <button class="btn-icon" onclick="cancelShiftRow(${i})" title="Batal">${icon('x-circle')}</button>
         </span>
       </td>
     </tr>`;
@@ -252,7 +253,7 @@ export function addShift() {
 export async function loadEmployeesForAssign() {
   if (!state.pegawaiList.length) {
     try {
-      const res = await fetch('/api/pegawai');
+      const res = await fetch('/api/pegawai',{headers:authHeaders()});
       const { data } = await res.json();
       state.pegawaiList = data || [];
     } catch (e) {}
@@ -307,7 +308,7 @@ export function renderHolidaysTable() {
     return `<tr>
       <td style="font-family:var(--font-mono);font-size:12px">${h.tanggal}</td>
       <td><div style="font-size:13px">${escHtml(h.nama||'—')}</div><div style="font-size:11px;color:var(--text-muted)">${label}</div></td>
-      <td><button class="btn-icon del" onclick="deleteHoliday('${escHtml(h.tanggal)}')" title="Hapus">🗑️</button></td>
+      <td><button class="btn-icon del" onclick="deleteHoliday('${escHtml(h.tanggal)}')" title="Hapus">${icon('trash-2')}</button></td>
     </tr>`;
   }).join('');
 }
@@ -569,12 +570,12 @@ export function renderOverridesTable() {
   tbody.innerHTML=sorted.map(o=>{
     const d=new Date(o.tanggal+'T00:00:00');
     const label=d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
-    const alasanIcons={lembur:'🌙',sakit:'🏥',customer_visit:'🚗',setengah_hari_pagi:'🌅',setengah_hari_siang:'🌤️'};
+    const alasanIcons={lembur:icon('moon'),sakit:icon('hospital'),customer_visit:icon('car'),setengah_hari_pagi:icon('sunrise'),setengah_hari_siang:icon('cloud-sun')};
     const tipeLabel=o.tipe==='pulang_awal'
-      ?`⏰ Pulang ${o.jam_pulang}`
+      ?`${icon('clock')} Pulang ${o.jam_pulang}`
       :o.tipe==='absen_inject'
-        ?`${alasanIcons[o.alasan]||'📝'} ${o.nama}${o.jam_masuk?' ('+o.jam_masuk+'→'+o.jam_pulang+')':o.jam_pulang?' (→'+o.jam_pulang+')':''} <span style="font-size:10px;color:var(--text-muted)">[inject]</span>`
-        :`🔄 ${state.appShifts.find(s=>s.id===o.shift_id)?.nama||o.shift_id}`;
+        ?`${alasanIcons[o.alasan]||icon('file-text')} ${o.nama}${o.jam_masuk?' ('+o.jam_masuk+'→'+o.jam_pulang+')':o.jam_pulang?' (→'+o.jam_pulang+')':''} <span style="font-size:10px;color:var(--text-muted)">[inject]</span>`
+        :`${icon('refresh-cw')} ${state.appShifts.find(s=>s.id===o.shift_id)?.nama||o.shift_id}`;
     const berlakuLabel=o.berlaku_untuk==='semua'?'Semua'
       :Array.isArray(o.berlaku_untuk)?o.berlaku_untuk.map(pin=>{const p=state.pegawaiList.find(x=>String(x.pin)===String(pin));return p?p.nama.split(' ')[0]:pin;}).join(', ')
       :String(o.berlaku_untuk);
@@ -587,7 +588,7 @@ export function renderOverridesTable() {
         ${o.created_by?`<div style="font-weight:600;color:var(--text)">${escHtml(o.created_by)}</div>`:''}
         ${o.created_at?`<div>${new Date(o.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>`:'—'}
       </td>
-      <td><button class="btn-icon del" onclick="deleteOverride('${escHtml(o.id)}')" title="Hapus">🗑️</button></td>
+      <td><button class="btn-icon del" onclick="deleteOverride('${escHtml(o.id)}')" title="Hapus">${icon('trash-2')}</button></td>
     </tr>`;
   }).join('');
 }
@@ -595,11 +596,11 @@ export function renderOverridesTable() {
 // ── DEPARTEMEN ──
 async function saveDepartmentsOnly() {
   try{
-    const res=await fetch('/api/settings');
+    const res=await fetch('/api/settings',{headers:authHeaders()});
     const {data}=await res.json();
     data.departments=state.departments;
     await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({data})});
-  }catch(e){showToast('❌','Gagal menyimpan departemen');}
+  }catch(e){showToast('Gagal','Gagal menyimpan departemen');}
 }
 
 export function renderDepartmentsCard() {
@@ -634,12 +635,12 @@ export async function addDepartment() {
   const inp=document.getElementById('dept-input');
   const nama=(inp?.value||'').trim();
   if(!nama) return;
-  if(state.departments.includes(nama)){showToast('⚠️','Departemen sudah ada');return;}
+  if(state.departments.includes(nama)){showToast('Peringatan','Departemen sudah ada');return;}
   state.departments.push(nama);
   inp.value='';
   renderDepartmentsCard();
   await saveDepartmentsOnly();
-  showToast('✅ Tersimpan',`Departemen "${nama}" ditambahkan`);
+  showToast('Tersimpan',`Departemen "${nama}" ditambahkan`);
 }
 
 export async function removeDepartment(idx) {
@@ -647,7 +648,7 @@ export async function removeDepartment(idx) {
   state.departments.splice(idx,1);
   renderDepartmentsCard();
   await saveDepartmentsOnly();
-  showToast('🗑️ Dihapus',`Departemen "${nama}" dihapus`);
+  showToast('Dihapus',`Departemen "${nama}" dihapus`);
 }
 
 // ── ADMIN PASSWORD ──
@@ -679,7 +680,7 @@ export async function adminResetUserPassword() {
     const res=await fetch('/api/auth/admin-reset-password',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({pin})});
     const json=await res.json();
     if(!json.success){errEl.textContent=json.message;errEl.classList.add('show');return;}
-    okEl.textContent=json.message;okEl.classList.add('show');
+    okEl.textContent=json.message+(json.temp_password?' Password sementara: '+json.temp_password:'');okEl.classList.add('show');
     document.getElementById('resetpw-pin').value='';
   }catch(e){errEl.textContent='Gagal terhubung ke server.';errEl.classList.add('show');}
 }

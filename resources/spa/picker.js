@@ -1,11 +1,12 @@
 import { state } from './state.js';
 import { escHtml, switchTab } from './utils.js';
+import { authHeaders } from './auth.js';
 import { getShiftForPin } from './settings.js';
 import { loadPersonalAbsensi } from './table.js';
 
 export async function initPicker() {
   try {
-    const res = await fetch('/api/pegawai');
+    const res = await fetch('/api/pegawai', { headers: authHeaders() });
     const { data } = await res.json();
     state.pegawaiList = data || [];
   } catch (e) { state.pegawaiList = []; }

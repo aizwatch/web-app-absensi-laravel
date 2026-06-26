@@ -1,7 +1,9 @@
 import { state } from './state.js';
 import { escHtml, formatTanggal } from './utils.js';
 import { getShiftForPin } from './settings.js';
+import { authHeaders } from './auth.js';
 import { timeCell } from './table.js';
+import { icon } from './icons.js';
 
 export function switchFilterStab(tab) {
   ['rekap', 'bermasalah'].forEach(t => {
@@ -36,7 +38,7 @@ export async function applyBermasalah() {
 export function renderBermasalah(data) {
   const tbody = document.getElementById('bermasalah-tbody');
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Tidak ada karyawan bermasalah di bulan ini</div></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">${icon('check-circle')}</div><div class="empty-text">Tidak ada karyawan bermasalah di bulan ini</div></div></td></tr>`;
     return;
   }
   tbody.innerHTML = data.map((row, i) => {
@@ -97,7 +99,7 @@ export async function applyFilter() {
     const params=new URLSearchParams();
     if(dari)   params.append('tanggal_dari',dari);
     if(sampai) params.append('tanggal_sampai',sampai);
-    const res=await fetch(`/api/absensi/filter?${params}`);
+    const res=await fetch(`/api/absensi/filter?${params}`,{headers:authHeaders()});
     const {data}=await res.json();
     let filtered=data||[];
     if(nama) filtered=filtered.filter(r=>(r.nama||'').toLowerCase().includes(nama));
@@ -118,7 +120,7 @@ export async function applyFilter() {
 export function renderFilterTable(data) {
   const tbody=document.getElementById('filter-tbody');
   if(!data||!data.length){
-    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Tidak ada data</div></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">${icon('search')}</div><div class="empty-text">Tidak ada data</div></div></td></tr>`;
     return;
   }
   tbody.innerHTML=data.map(row=>{
@@ -133,8 +135,8 @@ export function renderFilterTable(data) {
     const ist2Cell=istInc?`<span class="td-time empty">—</span>`:timeCell(row.scan_istirahat2,'ist',shift);
     const adminBtnsF=state.authUser?.role==='admin'
       ?`<span style="display:inline-flex;gap:3px;margin-left:4px">
-           <button class="btn-icon" style="font-size:11px;padding:1px 4px" onclick="openInjectModal('${escHtml(String(row.pin))}','${escHtml(row.tanggal)}','${escHtml(row.nama||'')}')">⚙️</button>
-           <button class="btn-icon" style="font-size:11px;padding:1px 4px" onclick="openRowHistory('${escHtml(String(row.pin))}','${escHtml(row.tanggal)}','${escHtml(row.nama||'')}')">📋</button>
+           <button class="btn-icon" style="font-size:11px;padding:1px 4px" onclick="openInjectModal('${escHtml(String(row.pin))}','${escHtml(row.tanggal)}','${escHtml(row.nama||'')}')">${icon('settings')}</button>
+           <button class="btn-icon" style="font-size:11px;padding:1px 4px" onclick="openRowHistory('${escHtml(String(row.pin))}','${escHtml(row.tanggal)}','${escHtml(row.nama||'')}')">${icon('clipboard-list')}</button>
          </span>`:'';
     return `<tr>
       <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">${escHtml(String(row.pin))}</td>
@@ -169,6 +171,6 @@ export function resetFilter() {
   document.getElementById('f-sampai').value=today;
   document.getElementById('f-nama').value='';
   document.getElementById('filter-tbody').innerHTML=
-    `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>`;
+    `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">${icon('search')}</div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>`;
   document.getElementById('filter-badge').textContent='0 record';
 }

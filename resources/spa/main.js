@@ -1,6 +1,7 @@
 import './app.css';
 
 // ── IMPORTS ──
+import { icon } from './icons.js';
 import { state } from './state.js';
 import { initClock, toggleTheme, switchTab, switchStab, switchPengaturanStab, switchAdminStab } from './utils.js';
 import {
@@ -73,6 +74,8 @@ function mobileNavSwitch(tabId, navItemId) {
 
 // ── EXPOSE TO window (required by inline onclick= in HTML) ──
 Object.assign(window, {
+  // icons
+  icon,
   // theme & nav
   toggleTheme, switchTab, switchStab, switchPengaturanStab, switchAdminStab,
   mobileNavSwitch,
@@ -150,6 +153,7 @@ async function afterLogin() {
   }
   updatePendingBadge();
   populateAmAdminPinSelect();
+  _startPolling();
 }
 setAfterLogin(afterLogin);
 
@@ -222,8 +226,6 @@ document.addEventListener('visibilitychange', () => {
     }
   }
 });
-
-_startPolling();
 
 // ── BOOT AUTH ──
 (async () => {

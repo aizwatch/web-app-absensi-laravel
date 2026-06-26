@@ -1,12 +1,14 @@
 import { state } from './state.js';
 import { escHtml, fmtTime, formatTanggal, showToast, setStatus, HARI, HARI_LABELS } from './utils.js';
+import { authHeaders } from './auth.js';
 import { getShiftForPin } from './settings.js';
+import { icon } from './icons.js';
 
 export const POLL_INTERVAL = 5000;
 
 export async function pollAbsensi() {
   try {
-    const res  = await fetch('/api/absensi/hari-ini');
+    const res  = await fetch('/api/absensi/hari-ini', { headers: authHeaders() });
     const json = await res.json();
     if (!json.success) throw new Error();
     const { data, total } = json;
@@ -16,7 +18,7 @@ export async function pollAbsensi() {
     document.getElementById('badge-total').textContent = `${total} karyawan`;
     if (state.prevPins && state.prevTotal > 0) {
       const newEntry = data.find(r => r.scan_masuk && !state.prevPins.has(String(r.pin)));
-      if (newEntry) showToast('✅ Update Absensi', `${newEntry.nama||'PIN '+newEntry.pin}`);
+      if (newEntry) showToast('Update Absensi', `${newEntry.nama||'PIN '+newEntry.pin}`);
     }
     state.prevPins  = new Set(data.filter(r=>r.scan_masuk).map(r=>String(r.pin)));
     state.prevTotal = total;
@@ -86,7 +88,7 @@ export function renderTable(tbodyId, data, isLive) {
 
   const allRows = [...scannedRows, ...absentRows];
   if (!allRows.length) {
-    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Belum ada data absensi</div></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">${icon('clipboard-list')}</div><div class="empty-text">Belum ada data absensi</div></div></td></tr>`;
     return;
   }
   tbody.innerHTML = allRows.join('');
@@ -127,7 +129,7 @@ export async function loadPersonalAbsensi() {
   document.getElementById('p-month-label').textContent=label;
   document.getElementById('p-table-month').textContent=label.toUpperCase();
   try {
-    const res=await fetch(`/api/absensi/karyawan/${encodeURIComponent(state.selectedEmployee.pin)}?bulan=${state.currentMonth}`);
+    const res=await fetch(`/api/absensi/karyawan/${encodeURIComponent(state.selectedEmployee.pin)}?bulan=${state.currentMonth}`,{headers:authHeaders()});
     const {data}=await res.json();
     renderPersonalTable(data||[]);
   } catch(e) {
@@ -185,20 +187,21 @@ export function renderPersonalTable(data) {
       :`<span class="td-durasi zero">—</span>`;
     let statusHtml;
     if(isWeekend) statusHtml=`<span class="td-status status-libur">Libur</span>`;
-    else if(isHoliday) statusHtml=`<span class="td-status status-libur" title="${escHtml(holiday.nama)}">🗓️ ${escHtml(holiday.nama)}</span>`;
+    else if(isHoliday) statusHtml=`<span class="td-status status-libur" title="${escHtml(holiday.nama)}">${icon('calendar')} ${escHtml(holiday.nama)}</span>`;
     else if(isFuture) statusHtml=`<span class="td-status status-future">—</span>`;
-    else if(row&&row.catatan) statusHtml=`<span class="td-status status-catatan" title="${escHtml(row.catatan)}">📝 ${escHtml(row.catatan)}</span>`;
-    else if(row&&row.override){const ovLabel=escHtml(row.override.nama||(row.override.tipe==='pulang_awal'?'Pulang Awal':'Ganti Shift'));statusHtml=`<span class="td-status status-override" title="${ovLabel}">✏️ ${ovLabel}</span>`;}
+    else if(row&&row.catatan) statusHtml=`<span class="td-status status-catatan" title="${escHtml(row.catatan)}">${icon('file-text')} ${escHtml(row.catatan)}</span>`;
+    else if(row&&row.override){const ovLabel=escHtml(row.override.nama||(row.override.tipe==='pulang_awal'?'Pulang Awal':'Ganti Shift'));statusHtml=`<span class="td-status status-override" title="${ovLabel}">${icon('edit')} ${ovLabel}</span>`;}
     else if(row&&row.scan_masuk) statusHtml=`<span class="td-status status-hadir">Hadir</span>`;
     else statusHtml=`<span class="td-status status-alpha">Tidak Hadir</span>`;
     const _injRowPin=row?String(row.pin):(state.selectedEmployee?String(state.selectedEmployee.pin):null);
     const _injRowNama=row?(row.nama||''):(state.selectedEmployee?(state.selectedEmployee.nama||''):'');
     const adminBtns=(!isWeekend&&!isHoliday&&!isFuture&&state.authUser?.role==='admin'&&_injRowPin)
       ?`<span style="display:inline-flex;gap:3px;margin-left:4px">
-           <button class="btn-icon" style="font-size:11px;padding:1px 4px" onclick="openInjectModal('${escHtml(_injRowPin)}','${dateStr}','${escHtml(_injRowNama)}')">⚙️</button>
-           <button class="btn-icon" style="font-size:11px;padding:1px 4px" onclick="openRowHistory('${escHtml(_injRowPin)}','${dateStr}','${escHtml(_injRowNama)}')">📋</button>
+           <button class="btn-icon" style="font-size:11px;padding:1px 4px" onclick="openInjectModal('${escHtml(_injRowPin)}','${dateStr}','${escHtml(_injRowNama)}')">${icon('settings')}</button>
+           <button class="btn-icon" style="font-size:11px;padding:1px 4px" onclick="openRowHistory('${escHtml(_injRowPin)}','${dateStr}','${escHtml(_injRowNama)}')">${icon('clipboard-list')}</button>
          </span>`:'';
-    rows.push(`<tr class="${(isWeekend||isHoliday||isFuture)?'td-weekend':''}">
+    const todayAttr=dateStr===todayStr?' data-today="1"':'';
+    rows.push(`<tr class="${(isWeekend||isHoliday||isFuture)?'td-weekend':''}"${todayAttr}>
       <td class="td-tanggal" data-label="">${formatTanggal(dateStr)}</td>
       <td class="td-hari" data-label="Hari" style="font-size:12px;color:var(--text-muted)"><span class="hari-full">${HARI[dayOfWeek]}</span><span class="hari-short">${HARI_LABELS[dayOfWeek]}</span></td>
       <td data-label="Masuk">${timeCell(row?row.scan_masuk:null,'masuk',shift)}</td>
@@ -209,6 +212,8 @@ export function renderPersonalTable(data) {
     </tr>`);
   }
   tbody.innerHTML=rows.join('');
+  const todayRow=tbody.querySelector('tr[data-today]');
+  if(todayRow) setTimeout(()=>todayRow.scrollIntoView({behavior:'smooth',block:'center'}),100);
   document.getElementById('p-badge').textContent=`${daysInMonth} hari`;
   document.getElementById('ps-total').textContent=totalKerja;
   document.getElementById('ps-hadir').textContent=hadir;

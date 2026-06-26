@@ -3,6 +3,7 @@ import { escHtml, showToast, switchStab } from './utils.js';
 import { authHeaders } from './auth.js';
 import { populatePickerSelect } from './picker.js';
 import { openPengaturanSettings, renderDepartmentsCard } from './settings.js';
+import { icon } from './icons.js';
 
 export function openAdminModal() {
   adminInit();
@@ -39,7 +40,7 @@ export async function adminLoadScans() {
   try{
     const params=new URLSearchParams({dari,sampai});
     if(pin) params.append('pin',pin);
-    const res=await fetch(`/api/att_log/raw?${params}`);
+    const res=await fetch(`/api/att_log/raw?${params}`,{headers:authHeaders()});
     const {data}=await res.json();
     renderRawScans(data||[]);
     document.getElementById('adm-raw-badge').textContent=`${(data||[]).length} record`;
@@ -50,7 +51,7 @@ export async function adminLoadScans() {
 
 export function renderRawScans(data) {
   const tbody=document.getElementById('adm-raw-tbody');
-  if(!data.length){tbody.innerHTML=`<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Tidak ada data</div></div></td></tr>`;return;}
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">${icon('clipboard-list')}</div><div class="empty-text">Tidak ada data</div></div></td></tr>`;return;}
   tbody.innerHTML=data.map((r,i)=>`
     <tr id="raw-row-${i}">
       <td>${escHtml(r.nama||'—')}</td>
@@ -60,10 +61,10 @@ export function renderRawScans(data) {
         <input id="raw-edit-dt-${i}" type="datetime-local" value="${r.scan_date.replace(' ','T').slice(0,16)}" style="display:none" />
       </td>
       <td style="white-space:nowrap">
-        <span id="raw-view-btns-${i}"><button class="btn-icon" onclick="adminEditScanRow(${i})" title="Edit">✏️</button><button class="btn-icon" onclick="adminDeleteScan('${escHtml(r.sn)}','${escHtml(r.scan_date)}','${escHtml(String(r.pin))}')" title="Hapus">🗑️</button></span>
+        <span id="raw-view-btns-${i}"><button class="btn-icon" onclick="adminEditScanRow(${i})" title="Edit">${icon('pencil')}</button><button class="btn-icon" onclick="adminDeleteScan('${escHtml(r.sn)}','${escHtml(r.scan_date)}','${escHtml(String(r.pin))}')" title="Hapus">${icon('trash-2')}</button></span>
         <span id="raw-edit-btns-${i}" style="display:none">
-          <button class="btn-icon" onclick="adminSaveScan(${i},'${escHtml(r.sn)}','${escHtml(r.scan_date)}','${escHtml(String(r.pin))}')" title="Simpan">✅</button>
-          <button class="btn-icon" onclick="adminCancelScanRow(${i})" title="Batal">❌</button>
+          <button class="btn-icon" onclick="adminSaveScan(${i},'${escHtml(r.sn)}','${escHtml(r.scan_date)}','${escHtml(String(r.pin))}')" title="Simpan">${icon('check-circle')}</button>
+          <button class="btn-icon" onclick="adminCancelScanRow(${i})" title="Batal">${icon('x-circle')}</button>
         </span>
       </td>
     </tr>`).join('');
@@ -92,7 +93,7 @@ export async function adminSaveScan(i, sn, scan_date_lama, pin) {
     const res=await fetch('/api/att_log/scan',{method:'PUT',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({data:{sn,scan_date_lama,pin,scan_date_baru}})});
     const json=await res.json();
     if(!json.success){alert(json.message);return;}
-    showToast('✅ Berhasil','Waktu scan diperbarui');
+    showToast('Berhasil','Waktu scan diperbarui');
     adminLoadScans();
   }catch(e){alert(e.message);}
 }
@@ -103,14 +104,14 @@ export async function adminDeleteScan(sn, scan_date, pin) {
     const res = await fetch('/api/att_log/scan', {method:'DELETE', headers:{'Content-Type':'application/json',...authHeaders()}, body:JSON.stringify({data:{sn, scan_date, pin}})});
     const json = await res.json();
     if (!json.success) { alert(json.message); return; }
-    showToast('🗑️ Dihapus', 'Scan berhasil dihapus');
+    showToast('Dihapus', 'Scan berhasil dihapus');
     adminLoadScans();
   } catch(e) { alert(e.message); }
 }
 
 export async function adminLoadPegawai() {
   try{
-    const res=await fetch('/api/pegawai');
+    const res=await fetch('/api/pegawai',{headers:authHeaders()});
     const {data}=await res.json();
     state.pegawaiList=data||[];
     renderAdminPegawai();
@@ -121,7 +122,7 @@ export async function adminLoadPegawai() {
 
 export function renderAdminPegawai() {
   const tbody=document.getElementById('adm-peg-tbody');
-  if(!state.pegawaiList.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">Tidak ada karyawan</div></div></td></tr>`;return;}
+  if(!state.pegawaiList.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">${icon('users')}</div><div class="empty-text">Tidak ada karyawan</div></div></td></tr>`;return;}
   const deptOpts=state.departments.map(d=>`<option value="${escHtml(d)}">${escHtml(d)}</option>`).join('');
   tbody.innerHTML=state.pegawaiList.map((p,i)=>`
     <tr id="peg-row-${i}">
@@ -145,12 +146,12 @@ export function renderAdminPegawai() {
       </td>
       <td style="white-space:nowrap">
         <span id="peg-view-btns-${i}">
-          <button class="btn-icon" onclick="adminEditPegawaiRow(${i})" title="Edit">✏️</button>
-          <button class="btn-icon del" onclick="adminDeletePegawai('${escHtml(String(p.pin))}','${escHtml(p.nama)}')" title="Hapus">🗑️</button>
+          <button class="btn-icon" onclick="adminEditPegawaiRow(${i})" title="Edit">${icon('pencil')}</button>
+          <button class="btn-icon del" onclick="adminDeletePegawai('${escHtml(String(p.pin))}','${escHtml(p.nama)}')" title="Hapus">${icon('trash-2')}</button>
         </span>
         <span id="peg-edit-btns-${i}" style="display:none">
-          <button class="btn-icon" onclick="adminSavePegawai(${i},'${escHtml(String(p.pin))}')" title="Simpan">✅</button>
-          <button class="btn-icon" onclick="adminCancelPegawaiRow(${i})" title="Batal">❌</button>
+          <button class="btn-icon" onclick="adminSavePegawai(${i},'${escHtml(String(p.pin))}')" title="Simpan">${icon('check-circle')}</button>
+          <button class="btn-icon" onclick="adminCancelPegawaiRow(${i})" title="Batal">${icon('x-circle')}</button>
         </span>
       </td>
     </tr>`).join('');
@@ -182,7 +183,7 @@ export async function adminSavePegawai(i, pin) {
     const res=await fetch(`/api/pegawai/${encodeURIComponent(pin)}`,{method:'PUT',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({data:{pegawai_nama:nama,pegawai_nip:nip,pegawai_telp:telp,pegawai_departemen:dept||null,pegawai_status:parseInt(status)}})});
     const json=await res.json();
     if(!json.success){alert(json.message);return;}
-    showToast('✅ Berhasil',`${nama} diperbarui`);
+    showToast('Berhasil',`${nama} diperbarui`);
     await adminLoadPegawai(); populatePickerSelect();
   }catch(e){alert(e.message);}
 }
@@ -193,7 +194,7 @@ export async function adminDeletePegawai(pin, nama) {
     const res=await fetch(`/api/pegawai/${encodeURIComponent(pin)}`,{method:'DELETE',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({})});
     const json=await res.json();
     if(!json.success){alert(json.message);return;}
-    showToast('🗑️ Dihapus',`${nama} dihapus`);
+    showToast('Dihapus',`${nama} dihapus`);
     await adminLoadPegawai(); populatePickerSelect();
   }catch(e){alert(e.message);}
 }
@@ -215,7 +216,7 @@ export async function adminAddPegawai() {
     okEl.textContent=`Karyawan "${nama}" berhasil ditambahkan`; okEl.classList.add('show');
     document.getElementById('np-pin').value=document.getElementById('np-nama').value=document.getElementById('np-nip').value=document.getElementById('np-telp').value=document.getElementById('np-dept').value='';
     await adminLoadPegawai(); populatePickerSelect();
-    showToast('✅ Berhasil',`${nama} ditambahkan`);
+    showToast('Berhasil',`${nama} ditambahkan`);
   }catch(e){errEl.textContent=e.message;errEl.classList.add('show');}
 }
 
@@ -241,7 +242,7 @@ export async function runBackfill() {
   errEl.classList.remove('show'); okEl.classList.remove('show');
   if(!dari||!sampai){errEl.textContent='Pilih rentang tanggal terlebih dahulu.';errEl.classList.add('show');return;}
   if(dari>sampai){errEl.textContent='Tanggal dari tidak boleh lebih besar dari sampai.';errEl.classList.add('show');return;}
-  btn.textContent='⏳ Memproses...'; btn.disabled=true;
+  btn.textContent='Memproses...'; btn.disabled=true;
   try{
     const payload={start_date:dari,end_date:sampai};
     if(cloudId) payload.cloud_id=cloudId;
@@ -249,10 +250,10 @@ export async function runBackfill() {
     const json=await res.json();
     if(!json.success) throw new Error(json.message);
     const mesin=cloudId||'semua mesin';
-    okEl.textContent=`✅ Selesai (${mesin}) — ${json.inserted} data baru, ${json.duplicate} duplikat diabaikan (total: ${json.total}).`;
+    okEl.textContent=`Selesai (${mesin}) — ${json.inserted} data baru, ${json.duplicate} duplikat diabaikan (total: ${json.total}).`;
     okEl.classList.add('show');
-  }catch(e){errEl.textContent='❌ '+e.message;errEl.classList.add('show');}
-  finally{btn.textContent='🔄 Sinkronisasi';btn.disabled=false;}
+  }catch(e){errEl.textContent=e.message;errEl.classList.add('show');}
+  finally{btn.innerHTML=icon('refresh-cw') + ' Sinkronisasi';btn.disabled=false;}
 }
 
 export async function runSetTime() {
@@ -262,25 +263,25 @@ export async function runSetTime() {
   const btn   = document.getElementById('settime-btn');
   errEl.classList.remove('show'); okEl.classList.remove('show');
   if (!confirm(`Kirim perintah sync jam (${tz}) ke semua mesin?\n\nMesin selain REVO/VIDA/VEGA/VIVO series akan RESTART otomatis.`)) return;
-  btn.textContent = '⏳ Mengirim...'; btn.disabled = true;
+  btn.textContent = 'Mengirim...'; btn.disabled = true;
   try {
     const res  = await fetch('/api/sync/set-time', {method:'POST', headers:{'Content-Type':'application/json',...authHeaders()}, body:JSON.stringify({timezone:tz})});
     const json = await res.json();
     if (!json.success && !json.results) throw new Error(json.message || 'Gagal');
     const results = json.results || [];
-    const lines   = results.map(r => `${r.cloud_id}: ${r.success ? '✅ OK' : '❌ ' + (r.message||'Gagal')}`).join(' | ');
+    const lines   = results.map(r => `${r.cloud_id}: ${r.success ? 'OK' : (r.message||'Gagal')}`).join(' | ');
     if (json.success) {
-      okEl.textContent  = `✅ Perintah terkirim — ${lines}`;
+      okEl.textContent  = `Perintah terkirim — ${lines}`;
       okEl.classList.add('show');
     } else {
-      errEl.textContent = `⚠️ Sebagian gagal — ${lines}`;
+      errEl.textContent = `Sebagian gagal — ${lines}`;
       errEl.classList.add('show');
     }
   } catch(e) {
-    errEl.textContent = '❌ ' + e.message;
+    errEl.textContent = e.message;
     errEl.classList.add('show');
   } finally {
-    btn.textContent = '🕐 Sync Jam'; btn.disabled = false;
+    btn.innerHTML = icon('clock') + ' Sync Jam'; btn.disabled = false;
   }
 }
 
@@ -301,7 +302,7 @@ export async function runSyncUserInfo() {
     ? (state.pegawaiList||[]).find(p=>String(p.pin)===pin)?.nama || pin
     : 'semua karyawan';
   if (!confirm(`Kirim data ke mesin untuk ${label}?\n\nProses ini mungkin membutuhkan beberapa detik.`)) return;
-  btn.textContent = '⏳ Mengirim...'; btn.disabled = true;
+  btn.textContent = 'Mengirim...'; btn.disabled = true;
   try {
     const body = pin ? {pin} : {};
     const res  = await fetch('/api/sync/user-info', {method:'POST', headers:{'Content-Type':'application/json',...authHeaders()}, body:JSON.stringify(body)});
@@ -310,17 +311,17 @@ export async function runSyncUserInfo() {
     const results = json.results || [];
     const lines   = results.map(r => `${r.cloud_id}: ${r.sent} terkirim${r.failed ? `, ${r.failed} gagal` : ''}`).join(' | ');
     if (json.success) {
-      okEl.textContent = `✅ Selesai — ${json.total_karyawan} karyawan — ${lines}`;
+      okEl.textContent = `Selesai — ${json.total_karyawan} karyawan — ${lines}`;
       okEl.classList.add('show');
     } else {
-      errEl.textContent = `⚠️ Sebagian gagal — ${lines}`;
+      errEl.textContent = `Sebagian gagal — ${lines}`;
       errEl.classList.add('show');
     }
   } catch(e) {
-    errEl.textContent = '❌ ' + e.message;
+    errEl.textContent = e.message;
     errEl.classList.add('show');
   } finally {
-    btn.textContent = '👤 Sync'; btn.disabled = false;
+    btn.innerHTML = icon('user') + ' Sync'; btn.disabled = false;
   }
 }
 
