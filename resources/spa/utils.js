@@ -1,3 +1,5 @@
+import { icon } from './icons.js';
+
 export const HARI        = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 export const HARI_LABELS = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 
@@ -75,7 +77,7 @@ export function switchAdminStab(id, btn) {
 
 export function applyTheme(dark) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
-  document.getElementById('theme-btn').textContent = dark ? '☀️' : '🌙';
+  document.getElementById('theme-btn').innerHTML = dark ? icon('sun') : icon('moon');
 }
 
 export function toggleTheme() {

@@ -14,14 +14,14 @@
 <link rel="apple-touch-icon" href="/favicon.png">
 <!-- PWA: installable + standalone -->
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#0077cc" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0a0e1a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FAFAF9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0A09" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LT Absensi">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/build/spa/app.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/build/spa/app.css?v=3">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -30,7 +30,7 @@
   <div style="margin-bottom:32px;display:flex;align-items:center;gap:12px">
     <div class="logo-icon"><img src="/favicon.png" style="width:22px;height:22px;object-fit:contain"></div>
     <div>
-      <div class="logo-text" style="font-family:var(--font-mono);font-size:15px;font-weight:600">ABSENSI MONITOR</div>
+      <div class="logo-text" style="font-family:var(--font-heading);font-size:15px;font-weight:600">ABSENSI MONITOR</div>
       <span style="font-size:11px;color:var(--text-muted)">Absensi Karyawan Realtime Dashboard</span>
     </div>
   </div>
@@ -48,7 +48,7 @@
   <div class="auth-box">
     <div class="auth-logo">
       <div class="logo-icon"><img src="/favicon.png" style="width:22px;height:22px;object-fit:contain"></div>
-      <div class="logo-text" style="font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--text)">ABSENSI MONITOR</div>
+      <div class="logo-text" style="font-family:var(--font-heading);font-size:15px;font-weight:600;color:var(--text)">ABSENSI MONITOR</div>
     </div>
     <div class="auth-title">Masuk</div>
     <div class="auth-sub">Pilih akun dan masukkan password</div>
@@ -71,7 +71,7 @@
 
 <div class="fullscreen-overlay" id="overlay-force-pw">
   <div class="auth-box">
-    <div class="auth-title">🔐 Buat Password Baru</div>
+    <div class="auth-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Buat Password Baru</div>
     <div class="auth-sub">Login pertama — wajib atur password (min. 6 karakter).</div>
     <div class="form-group">
       <label>Password Baru</label>
@@ -111,11 +111,11 @@
         </div>
         <div id="header-user-info" style="display:none"><strong id="header-username"></strong></div>
         <div class="header-btns">
-          <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
-          <button class="theme-toggle" id="btn-user-settings" onclick="openUserSettingsModal()" title="Pengaturan Akun" style="display:none">⚙️</button>
-          <button class="theme-toggle" id="btn-dashboard" onclick="openDashboardModal()" title="Dashboard Kehadiran" style="display:none">📊</button>
-          <button class="theme-toggle" id="btn-admin" onclick="openAdminModal()" title="Menu Admin" style="display:none">🛠️</button>
-          <button class="theme-toggle" id="btn-logout" onclick="doLogout()" title="Logout" style="display:none">🚪</button>
+          <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+          <button class="theme-toggle" id="btn-user-settings" onclick="openUserSettingsModal()" title="Pengaturan Akun" style="display:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+          <button class="theme-toggle" id="btn-dashboard" onclick="openDashboardModal()" title="Dashboard Kehadiran" style="display:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
+          <button class="theme-toggle" id="btn-admin" onclick="openAdminModal()" title="Menu Admin" style="display:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button>
+          <button class="theme-toggle" id="btn-logout" onclick="doLogout()" title="Logout" style="display:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
         </div>
       </div>
     </div>
@@ -127,10 +127,10 @@
 
         <div class="tabs" style="justify-content:space-between">
       <div style="display:flex;gap:4px">
-        <button class="tab-btn active" id="tab-btn-personal" onclick="switchTab('tab-personal', this)">👤 Absensi Saya</button>
-        <button class="tab-btn" id="tab-btn-live" onclick="switchTab('tab-live', this)">⚡ Live Hari Ini</button>
+        <button class="tab-btn active" id="tab-btn-personal" onclick="switchTab('tab-personal', this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Absensi Saya</button>
+        <button class="tab-btn" id="tab-btn-live" onclick="switchTab('tab-live', this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Live Hari Ini</button>
       </div>
-      <button class="tab-btn" id="tab-btn-mandiri" onclick="switchTab('tab-mandiri', this);initAbsensiMandiri()" style="margin-left:auto;position:relative">📋 Absensi Mandiri<span id="am-pending-badge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;padding:0 5px;border-radius:9px;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--bg, #fff);box-sizing:border-box">0</span></button>
+      <button class="tab-btn" id="tab-btn-mandiri" onclick="switchTab('tab-mandiri', this);initAbsensiMandiri()" style="margin-left:auto;position:relative"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Absensi Mandiri<span id="am-pending-badge" style="display:none;position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;padding:0 5px;border-radius:9px;line-height:18px;text-align:center;box-shadow:0 0 0 2px var(--bg, #fff);box-sizing:border-box">0</span></button>
     </div>
 
         <div id="tab-personal" class="tab-content active">
@@ -150,7 +150,7 @@
             <button onclick="changeMonth(1)" title="Bulan berikutnya">›</button>
           </div>
           <div style="position:relative">
-            <button class="btn btn-ghost" id="btn-ganti-karyawan" style="font-size:13px" onclick="showPicker()">🔄 Ganti Karyawan</button>
+            <button class="btn btn-ghost" id="btn-ganti-karyawan" style="font-size:13px" onclick="showPicker()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Ganti Karyawan</button>
             <div id="picker-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.18);min-width:220px;max-height:280px;overflow-y:auto;padding:6px 0"></div>
           </div>
         </div>
@@ -195,7 +195,7 @@
               </tr>
             </thead>
             <tbody id="personal-tbody">
-              <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">👤</div><div class="empty-text">Pilih karyawan untuk melihat data</div></div></td></tr>
+              <tr><td colspan="8"><div class="empty-state"><div class="empty-icon"><svg class="icon" style="width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="empty-text">Pilih karyawan untuk melihat data</div></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -229,15 +229,19 @@
 
             <div class="legend">
         <div class="legend-item">
-          <div class="legend-dot" style="background:rgba(255,200,0,0.5);border:1px solid #ffd700"></div>
+          <div class="legend-dot" style="background:rgba(180,83,9,0.25);border:1px solid #B45309"></div>
           Terlambat (setelah 08:06)
         </div>
         <div class="legend-item">
-          <div class="legend-dot" style="background:rgba(0,220,255,0.3);border:1px solid #00d4ff"></div>
+          <div class="legend-dot" style="background:rgba(220,38,38,0.2);border:1px solid var(--danger)"></div>
+          Sangat Terlambat (lebih dari 08:30)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(37,99,235,0.2);border:1px solid #2563eb"></div>
           Pulang awal (sebelum 17:00)
         </div>
         <div class="legend-item">
-          <div class="legend-dot" style="background:rgba(255,100,180,0.4);border:1px solid #ff80c0"></div>
+          <div class="legend-dot" style="background:rgba(168,85,247,0.2);border:1px solid #7c3aed"></div>
           Istirahat tidak lengkap (1x scan)
         </div>
       </div>
@@ -265,7 +269,7 @@
               </tr>
             </thead>
             <tbody id="live-tbody">
-              <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Menunggu data absensi...</div></div></td></tr>
+              <tr><td colspan="8"><div class="empty-state"><div class="empty-icon"><svg class="icon" style="width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg></div><div class="empty-text">Menunggu data absensi...</div></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -277,24 +281,24 @@
 
                 <div>
           <div class="admin-form-card">
-            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">📋 Ajukan Absensi Mandiri</div>
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Ajukan Absensi Mandiri</div>
 
             <div class="form-group">
               <label>Tipe</label>
               <select id="am-tipe" onchange="toggleAmFields()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                <option value="lembur">🌙 Lembur</option>
-                <option value="customer_visit">🚗 Customer Visit</option>
-                <option value="lupa">⏰ Lupa (Maks. 3x)</option>
-                <option value="sakit">🏥 Sakit (MC)</option>
-                <option value="ganti_shift">🔄 Ganti Shift</option>
+                <option value="lembur"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Lembur</option>
+                <option value="customer_visit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg> Customer Visit</option>
+                <option value="lupa"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Lupa (Maks. 3x)</option>
+                <option value="sakit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"/><path d="M14 14h-4"/><path d="M14 18h-4"/><path d="M14 8h-4"/><path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"/><path d="M18 22V4a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v18"/></svg> Sakit (MC)</option>
+                <option value="ganti_shift"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Ganti Shift</option>
               </select>
               <div class="hint" id="am-tipe-hint" style="margin-top:6px"></div>
             </div>
             <div class="form-group" style="display:none" id="am-shift-wrap">
               <label>Pilih Shift <span style="color:#e53e3e">*</span></label>
               <select id="am-shift-id" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                <option value="setengah_pagi_preset">🌅 Setengah Hari (masuk pagi) — 08:00–11:00</option>
-                <option value="setengah_siang_preset">🌤️ Setengah Hari (masuk siang) — 10:50–17:00</option>
+                <option value="setengah_pagi_preset"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg> Setengah Hari (masuk pagi) — 08:00–11:00</option>
+                <option value="setengah_siang_preset"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></svg> Setengah Hari (masuk siang) — 10:50–17:00</option>
               </select>
             </div>
             <div class="form-group">
@@ -328,14 +332,14 @@
 
             <div class="alert-err" id="am-err" style="margin-bottom:10px"></div>
             <div class="alert-ok"  id="am-ok"  style="margin-bottom:10px"></div>
-            <button class="btn btn-primary" onclick="submitAbsensiMandiri()">📤 Kirim Permintaan</button>
+            <button class="btn btn-primary" onclick="submitAbsensiMandiri()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Kirim Permintaan</button>
           </div>
         </div>
 
                 <div>
           <div class="admin-form-card" style="height:100%;box-sizing:border-box">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-              <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">📂 Riwayat Saya</div>
+              <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Riwayat Saya</div>
               <button class="btn btn-ghost" style="font-size:12px" onclick="loadMyRequests()">↻ Refresh</button>
             </div>
             <div id="am-my-list" style="font-size:13px;color:var(--text-muted)">Memuat...</div>
@@ -345,14 +349,14 @@
       </div>
             <div id="am-admin-panel" style="display:none;margin-top:20px">
         <div class="admin-form-card">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--warn);margin-bottom:12px">🛡️ Panel Admin — Persetujuan Absensi Mandiri</div>
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--warn);margin-bottom:12px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Panel Admin — Persetujuan Absensi Mandiri</div>
           <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">
             <div class="filter-group" style="margin:0">
               <label style="font-size:11px">Status</label>
               <select id="am-admin-filter" onchange="loadAdminRequests()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);outline:none">
-                <option value="pending">⏳ Menunggu</option>
-                <option value="approved">✅ Disetujui</option>
-                <option value="rejected">❌ Ditolak</option>
+                <option value="pending"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg> Menunggu</option>
+                <option value="approved"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Disetujui</option>
+                <option value="rejected"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Ditolak</option>
                 <option value="all">Semua</option>
               </select>
             </div>
@@ -381,14 +385,14 @@
 
 <div class="modal-overlay" id="modal-admin">
   <div class="modal-box wide" style="max-width:1100px">
-    <div class="modal-title">🛠️ Menu Admin<button class="modal-close" onclick="closeAdminModal()">×</button></div>
+    <div class="modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Menu Admin<button class="modal-close" onclick="closeAdminModal()">×</button></div>
 
     <div class="admin-stab-bar">
-      <button class="admin-stab-btn active" id="astab-btn-attlog" onclick="switchAdminStab('astab-attlog',this)">📋 Koreksi Absensi</button>
-      <button class="admin-stab-btn" id="astab-btn-pegawai" onclick="switchAdminStab('astab-pegawai',this)">👥 Data Karyawan</button>
-      <button class="admin-stab-btn" id="astab-btn-filter" onclick="switchAdminStab('astab-filter',this)">🔍 Filter & Cari</button>
-      <button class="admin-stab-btn" id="astab-btn-sync" onclick="switchAdminStab('astab-sync',this);loadSyncDevices();populateSyncUserSelect()">🔄 Sinkronisasi</button>
-      <button class="admin-stab-btn" id="astab-btn-pengaturan" onclick="switchAdminStab('astab-pengaturan',this);openPengaturanSettings()">⚙️ Pengaturan</button>
+      <button class="admin-stab-btn active" id="astab-btn-attlog" onclick="switchAdminStab('astab-attlog',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Koreksi Absensi</button>
+      <button class="admin-stab-btn" id="astab-btn-pegawai" onclick="switchAdminStab('astab-pegawai',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Data Karyawan</button>
+      <button class="admin-stab-btn" id="astab-btn-filter" onclick="switchAdminStab('astab-filter',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Filter & Cari</button>
+      <button class="admin-stab-btn" id="astab-btn-sync" onclick="switchAdminStab('astab-sync',this);loadSyncDevices();populateSyncUserSelect()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sinkronisasi</button>
+      <button class="admin-stab-btn" id="astab-btn-pengaturan" onclick="switchAdminStab('astab-pengaturan',this);openPengaturanSettings()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Pengaturan</button>
     </div>
 
     <div class="modal-body-scroll">
@@ -429,7 +433,7 @@
                 </tr>
               </thead>
               <tbody id="adm-raw-tbody">
-                <tr><td colspan="4"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>
+                <tr><td colspan="4"><div class="empty-state"><div class="empty-icon"><svg class="icon" style="width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg></div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -439,12 +443,12 @@
             <div class="admin-stab-pane" id="astab-pegawai">
 
         <div style="margin-bottom:12px">
-          <button class="btn btn-primary" style="font-size:13px" onclick="openDeptModal()">🏢 Kelola Departemen</button>
+          <button class="btn btn-primary" style="font-size:13px" onclick="openDeptModal()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> Kelola Departemen</button>
         </div>
 
         <div class="admin-form-card">
           <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">＋ Tambah Karyawan Baru</div>
-          <div class="form-row" style="grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px">
+          <div class="form-row" style="grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
             <div class="filter-group"><label>PIN *</label><input type="text" id="np-pin" placeholder="mis. 123" /></div>
             <div class="filter-group"><label>Nama *</label><input type="text" id="np-nama" placeholder="Nama lengkap" /></div>
             <div class="filter-group"><label>NIP</label><input type="text" id="np-nip" placeholder="NIP (opsional)" /></div>
@@ -479,7 +483,7 @@
                 </tr>
               </thead>
               <tbody id="adm-peg-tbody">
-                <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">Memuat data...</div></div></td></tr>
+                <tr><td colspan="7"><div class="empty-state"><div class="empty-icon"><svg class="icon" style="width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="empty-text">Memuat data...</div></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -489,8 +493,8 @@
             <div class="admin-stab-pane" id="astab-filter">
 
         <div class="fstab-bar">
-          <button class="fstab-btn active" id="fstab-btn-rekap" onclick="switchFilterStab('rekap')">📋 Rekap Absensi</button>
-          <button class="fstab-btn" id="fstab-btn-bermasalah" onclick="switchFilterStab('bermasalah')">⚠️ Absensi Bermasalah</button>
+          <button class="fstab-btn active" id="fstab-btn-rekap" onclick="switchFilterStab('rekap')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Rekap Absensi</button>
+          <button class="fstab-btn" id="fstab-btn-bermasalah" onclick="switchFilterStab('bermasalah')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Absensi Bermasalah</button>
         </div>
 
         <div id="fstab-rekap">
@@ -505,12 +509,12 @@
             </div>
             <div class="filter-group">
               <label>Nama Karyawan</label>
-              <input type="text" id="f-nama" placeholder="Ketik nama..." style="min-width:160px" />
+              <input type="text" id="f-nama" placeholder="Ketik nama..." style="min-width:100px" />
             </div>
             <button class="btn btn-primary" onclick="applyFilter()">Tampilkan</button>
             <button class="btn btn-ghost" onclick="resetFilter()">Reset</button>
             <button class="btn btn-ghost" onclick="exportFilter()" style="color:#217346;border-color:#217346" title="Export ke Excel">⬇ Excel</button>
-            <button class="btn btn-ghost" onclick="openLaporanModal()" style="color:#c0392b;border-color:#c0392b" title="Cetak Laporan PDF">🖨 Laporan</button>
+            <button class="btn btn-ghost" onclick="openLaporanModal()" style="color:#c0392b;border-color:#c0392b" title="Cetak Laporan PDF"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Laporan</button>
           </div>
           <div class="table-wrap" style="position:relative" id="filter-wrap">
             <div class="table-header">
@@ -532,7 +536,7 @@
                   </tr>
                 </thead>
                 <tbody id="filter-tbody">
-                  <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>
+                  <tr><td colspan="8"><div class="empty-state"><div class="empty-icon"><svg class="icon" style="width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><div class="empty-text">Pilih filter lalu klik Tampilkan</div></div></td></tr>
                 </tbody>
               </table>
             </div>
@@ -565,7 +569,7 @@
                   </tr>
                 </thead>
                 <tbody id="bermasalah-tbody">
-                  <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Pilih bulan lalu klik Tampilkan</div></div></td></tr>
+                  <tr><td colspan="6"><div class="empty-state"><div class="empty-icon"><svg class="icon" style="width:48px;height:48px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="empty-text">Pilih bulan lalu klik Tampilkan</div></div></td></tr>
                 </tbody>
               </table>
             </div>
@@ -576,7 +580,7 @@
 
             <div class="admin-stab-pane" id="astab-sync">
         <div class="admin-form-card">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">🔄 Backfill Data dari Fingerspot API</div>
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Backfill Data dari Fingerspot API</div>
           <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Tarik data absensi yang terlewat (misal saat server mati) langsung dari server Fingerspot.io. Maksimal 60 hari ke belakang.</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
             <div class="filter-group">
@@ -593,25 +597,25 @@
               <label>Sampai Tanggal</label>
               <input type="date" id="sync-sampai" />
             </div>
-            <button class="btn btn-primary" id="sync-btn" onclick="runBackfill()">🔄 Sinkronisasi</button>
+            <button class="btn btn-primary" id="sync-btn" onclick="runBackfill()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sinkronisasi</button>
           </div>
           <div class="alert-err" id="sync-err" style="margin-top:12px;margin-bottom:0"></div>
           <div class="alert-ok"  id="sync-ok"  style="margin-top:12px;margin-bottom:0"></div>
         </div>
 
         <div class="admin-form-card" style="margin-top:16px">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px">🕐 Sync Jam Mesin</div>
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Sync Jam Mesin</div>
           <p style="font-size:13px;color:var(--text2);margin-bottom:4px">Kirim perintah set timezone ke semua mesin via Fingerspot Cloud API. Mesin akan menyesuaikan jam ke timezone yang dipilih.</p>
-          <p style="font-size:12px;color:#f59e0b;margin-bottom:14px">⚠️ Mesin absensi selain REVO/VIDA/VEGA/VIVO series akan <strong>restart otomatis</strong> saat perintah dieksekusi.</p>
+          <p style="font-size:12px;color:#f59e0b;margin-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Mesin absensi selain REVO/VIDA/VEGA/VIVO series akan <strong>restart otomatis</strong> saat perintah dieksekusi.</p>
           <div>
-            <button class="btn btn-primary" id="settime-btn" onclick="runSetTime()">🕐 Sync Jam ke Mesin</button>
+            <button class="btn btn-primary" id="settime-btn" onclick="runSetTime()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Sync Jam ke Mesin</button>
           </div>
           <div class="alert-err" id="settime-err" style="margin-top:12px;margin-bottom:0"></div>
           <div class="alert-ok"  id="settime-ok"  style="margin-top:12px;margin-bottom:0"></div>
         </div>
 
         <div class="admin-form-card" style="margin-top:16px">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px">👤 Sync Karyawan ke Mesin</div>
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Sync Karyawan ke Mesin</div>
           <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Kirim data PIN &amp; nama karyawan ke semua mesin absensi. Berguna saat ada karyawan baru atau perubahan nama.</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
             <div class="filter-group">
@@ -620,7 +624,7 @@
                 <option value="">— Semua Karyawan —</option>
               </select>
             </div>
-            <button class="btn btn-primary" id="syncuser-btn" onclick="runSyncUserInfo()">👤 Sync</button>
+            <button class="btn btn-primary" id="syncuser-btn" onclick="runSyncUserInfo()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Sync</button>
           </div>
           <div class="alert-err" id="syncuser-err" style="margin-top:4px;margin-bottom:0"></div>
           <div class="alert-ok"  id="syncuser-ok"  style="margin-top:4px;margin-bottom:0"></div>
@@ -631,11 +635,11 @@
             <div class="admin-stab-pane" id="astab-pengaturan">
 
                 <div class="pstab-bar">
-          <button class="pstab-btn active" onclick="switchPengaturanStab('pstab-shifts',this)">📋 Shift Kerja</button>
-          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-assign',this)">👤 Penugasan</button>
-          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-holidays',this)">🗓️ Hari Libur</button>
-          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-overrides',this)">📅 Override Harian</button>
-          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-resetpw',this)">👥 Reset Password User</button>
+          <button class="pstab-btn active" onclick="switchPengaturanStab('pstab-shifts',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Shift Kerja</button>
+          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-assign',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Penugasan</button>
+          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-holidays',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Hari Libur</button>
+          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-overrides',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Override Harian</button>
+          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-resetpw',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Reset Password User</button>
         </div>
 
         <div style="padding:0 4px">
@@ -703,7 +707,7 @@
         </div>
 
                 <div class="pstab-pane" id="pstab-assign">
-          <input type="text" class="emp-search" id="emp-search" placeholder="🔍 Cari nama atau PIN..." oninput="filterEmpRows()" />
+          <input type="text" class="emp-search" id="emp-search" placeholder="Cari nama atau PIN..." oninput="filterEmpRows()" />
           <table class="settings-table">
             <thead><tr><th style="width:80px">PIN</th><th>Nama Karyawan</th><th style="width:160px">Shift</th></tr></thead>
             <tbody id="assign-tbody">
@@ -738,9 +742,9 @@
               <div class="form-group" style="margin:0">
                 <label>Tipe Override</label>
                 <select id="ov-tipe" onchange="toggleOvFields()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                  <option value="pulang_awal">⏰ Pulang Lebih Awal</option>
-                  <option value="ganti_shift">🔄 Ganti Shift Harian</option>
-                  <option value="absen_manual">✍️ Koreksi/Inject Absensi (Bulk)</option>
+                  <option value="pulang_awal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pulang Lebih Awal</option>
+                  <option value="ganti_shift"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Ganti Shift Harian</option>
+                  <option value="absen_manual"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Koreksi/Inject Absensi (Bulk)</option>
                 </select>
               </div>
               <div class="form-group" style="margin:0" id="ov-field-pulang">
@@ -757,11 +761,11 @@
                 <div class="form-group" style="margin:0">
                   <label>Alasan</label>
                   <select id="ov-alasan" onchange="toggleOvAlasan()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                    <option value="lembur">🌙 Lembur</option>
-                    <option value="sakit">🏥 Sakit (MC)</option>
-                    <option value="customer_visit">🚗 Customer Visit</option>
-                    <option value="setengah_hari_siang">🌤️ Setengah Hari Siang</option>
-                    <option value="setengah_hari_pagi">🌅 Setengah Hari Pagi</option>
+                    <option value="lembur"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Lembur</option>
+                    <option value="sakit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"/><path d="M14 14h-4"/><path d="M14 18h-4"/><path d="M14 8h-4"/><path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"/><path d="M18 22V4a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v18"/></svg> Sakit (MC)</option>
+                    <option value="customer_visit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg> Customer Visit</option>
+                    <option value="setengah_hari_siang"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></svg> Setengah Hari Siang</option>
+                    <option value="setengah_hari_pagi"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg> Setengah Hari Pagi</option>
                   </select>
                 </div>
               </div>
@@ -794,7 +798,7 @@
             </div>
             <div id="ov-karyawan-wrap" style="display:none;margin-bottom:10px">
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <button type="button" class="btn btn-ghost" style="font-size:13px" onclick="openOvKaryawanPicker()">👥 Pilih Karyawan...</button>
+                <button type="button" class="btn btn-ghost" style="font-size:13px" onclick="openOvKaryawanPicker()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Pilih Karyawan...</button>
                 <span id="ov-karyawan-label" style="font-size:13px;color:var(--text-muted)">Belum ada dipilih</span>
               </div>
             </div>
@@ -810,7 +814,7 @@
 
                 <div class="pstab-pane" id="pstab-resetpw">
           <div style="max-width:420px">
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Reset password karyawan ke kosong. User bisa login tanpa password dan wajib atur password sendiri saat login pertama. Sesi aktif user akan diakhiri.</p>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Reset password karyawan. Sistem akan generate password sementara 6 karakter. Berikan password tersebut ke karyawan untuk login. User wajib atur password baru saat login. Sesi aktif user akan diakhiri.</p>
             <div class="form-group">
               <label>Karyawan</label>
               <select id="resetpw-pin" style="width:100%">
@@ -824,7 +828,7 @@
         </div>
 
                 <div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 0;border-top:1px solid var(--border);margin-top:16px">
-          <button class="btn btn-primary" onclick="saveSettings()">💾 Simpan Pengaturan</button>
+          <button class="btn btn-primary" onclick="saveSettings()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Pengaturan</button>
         </div>
 
       </div>
@@ -836,11 +840,11 @@
 
 <div class="modal-overlay" id="modal-settings">
   <div class="modal-box">
-    <div class="modal-title">⚙️ Pengaturan Akun<button class="modal-close" onclick="closeSettingsModal()">×</button></div>
+    <div class="modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Pengaturan Akun<button class="modal-close" onclick="closeSettingsModal()">×</button></div>
 
     <div class="stab-bar">
-      <button class="stab-btn active" onclick="switchStab('us-profil',this)">👤 Profil</button>
-      <button class="stab-btn" onclick="switchStab('us-password',this)">🔐 Ganti Password</button>
+      <button class="stab-btn active" onclick="switchStab('us-profil',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profil</button>
+      <button class="stab-btn" onclick="switchStab('us-password',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Ganti Password</button>
     </div>
 
     <div class="modal-body-scroll">
@@ -885,15 +889,15 @@
 
 <nav class="mobile-bottom-nav" id="mobile-nav" aria-label="Navigasi utama">
   <button class="mobile-nav-item active" id="mnav-personal" onclick="mobileNavSwitch('tab-personal','mnav-personal')">
-    <span class="mobile-nav-icon">👤</span>
+    <span class="mobile-nav-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
     <span>Saya</span>
   </button>
   <button class="mobile-nav-item" id="mnav-live" onclick="mobileNavSwitch('tab-live','mnav-live')">
-    <span class="mobile-nav-icon">⚡</span>
+    <span class="mobile-nav-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
     <span>Live</span>
   </button>
   <button class="mobile-nav-item" id="mnav-mandiri" onclick="mobileNavSwitch('tab-mandiri','mnav-mandiri');initAbsensiMandiri()" style="position:relative">
-    <span class="mobile-nav-icon">📋</span>
+    <span class="mobile-nav-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg></span>
     <span>Mandiri</span>
     <span id="mnav-pending-badge" style="display:none;position:absolute;top:4px;right:10px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;padding:0 4px;border-radius:8px;line-height:16px;text-align:center;box-sizing:border-box">0</span>
   </button>
@@ -903,7 +907,7 @@
 
 <div class="modal-overlay" id="modal-laporan">
   <div class="modal-box" style="max-width:420px">
-    <div class="modal-title">🖨 Cetak Laporan<button class="modal-close" onclick="closeLaporanModal()">×</button></div>
+    <div class="modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Cetak Laporan<button class="modal-close" onclick="closeLaporanModal()">×</button></div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px" id="lap-range-info">Memuat...</div>
     <div class="form-group">
       <label>Karyawan</label>
@@ -915,14 +919,14 @@
     <div class="alert-err" id="lap-err" style="margin-bottom:10px"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeLaporanModal()">Batal</button>
-      <button class="btn btn-primary" id="lap-btn" onclick="generateLaporan()">🖨 Generate PDF</button>
+      <button class="btn btn-primary" id="lap-btn" onclick="generateLaporan()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Generate PDF</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modal-am-confirm">
   <div class="modal-box" style="max-width:360px">
-    <div class="modal-title">🔐 Konfirmasi Password<button class="modal-close" onclick="closeAmConfirm()">×</button></div>
+    <div class="modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Konfirmasi Password<button class="modal-close" onclick="closeAmConfirm()">×</button></div>
     <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Masukkan password Anda untuk mengirim permintaan.</p>
     <div class="form-group">
       <div class="pin-input-wrap">
@@ -956,15 +960,15 @@
 
 <div class="modal-overlay" id="modal-inject-row">
   <div class="modal-box" style="max-width:440px">
-    <div class="modal-title">⚙️ Inject Absensi <span id="inj-title" style="font-size:13px;font-weight:400;color:var(--text-muted)"></span><button class="modal-close" onclick="closeInjectModal()">×</button></div>
+    <div class="modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Inject Absensi <span id="inj-title" style="font-size:13px;font-weight:400;color:var(--text-muted)"></span><button class="modal-close" onclick="closeInjectModal()">×</button></div>
     <div class="form-group">
       <label>Alasan</label>
       <select id="inj-alasan" onchange="toggleInjAlasan()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-        <option value="lembur">🌙 Lembur</option>
-        <option value="customer_visit">🚗 Customer Visit</option>
-        <option value="sakit">🏥 Sakit (MC)</option>
-        <option value="ganti_shift">🔄 Ganti Shift</option>
-        <option value="lainnya">📝 Lainnya</option>
+        <option value="lembur"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Lembur</option>
+        <option value="customer_visit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg> Customer Visit</option>
+        <option value="sakit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"/><path d="M14 14h-4"/><path d="M14 18h-4"/><path d="M14 8h-4"/><path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"/><path d="M18 22V4a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v18"/></svg> Sakit (MC)</option>
+        <option value="ganti_shift"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Ganti Shift</option>
+        <option value="lainnya"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Lainnya</option>
       </select>
     </div>
     <div style="display:none;grid-template-columns:1fr 1fr;gap:10px" id="inj-wrap-lainnya">
@@ -998,14 +1002,14 @@
     <p id="inj-hint" style="font-size:12px;color:var(--text-muted);margin:-4px 0 12px"></p>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeInjectModal()">Batal</button>
-      <button class="btn btn-primary" id="inj-confirm-btn" onclick="confirmInjectModal()">✓ Simpan</button>
+      <button class="btn btn-primary" id="inj-confirm-btn" onclick="confirmInjectModal()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Simpan</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modal-row-history">
   <div class="modal-box" style="max-width:500px">
-    <div class="modal-title">📋 Riwayat Perubahan <span id="hist-title" style="font-size:13px;font-weight:400;color:var(--text-muted)"></span><button class="modal-close" onclick="document.getElementById('modal-row-history').classList.remove('open')">×</button></div>
+    <div class="modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Riwayat Perubahan <span id="hist-title" style="font-size:13px;font-weight:400;color:var(--text-muted)"></span><button class="modal-close" onclick="document.getElementById('modal-row-history').classList.remove('open')">×</button></div>
     <div id="hist-body" style="font-size:13px"></div>
   </div>
 </div>
@@ -1016,7 +1020,7 @@
       <span style="font-weight:600;font-size:15px">Pilih Karyawan</span>
       <button class="modal-close" onclick="closeOvKaryawanPicker()" style="background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;line-height:1">×</button>
     </div>
-    <input type="text" id="ov-picker-search" placeholder="🔍 Cari nama atau PIN..." oninput="filterOvPicker()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;margin-bottom:10px;width:100%;box-sizing:border-box" />
+    <input type="text" id="ov-picker-search" placeholder="Cari nama atau PIN..." oninput="filterOvPicker()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;margin-bottom:10px;width:100%;box-sizing:border-box" />
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <button type="button" class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="ovPickerSelectAll()">Pilih Semua</button>
       <button type="button" class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="ovPickerClearAll()">Hapus Semua</button>
@@ -1155,12 +1159,12 @@
   </div>
 </div>
 
-<script type="module" src="/build/spa/app.js"></script>
+<script type="module" src="/build/spa/app.js?v=3"></script>
 
 <div class="modal-overlay" id="modal-dept" onclick="if(event.target===this)closeDeptModal()">
   <div class="modal-box" style="max-width:420px;width:100%">
     <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">
-      <span style="font-size:14px;font-weight:600;color:var(--text)">🏢 Kelola Departemen</span>
+      <span style="font-size:14px;font-weight:600;color:var(--text)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> Kelola Departemen</span>
       <button class="modal-close" onclick="closeDeptModal()" style="margin-left:0">✕</button>
     </div>
     <div class="modal-body-scroll" style="padding:16px">

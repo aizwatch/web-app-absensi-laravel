@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { escHtml, showToast } from './utils.js';
 import { authHeaders } from './auth.js';
+import { icon } from './icons.js';
 
 const PRESET_LABEL = {'setengah_pagi_preset':'Setengah Hari (masuk pagi)','setengah_siang_preset':'Setengah Hari (masuk siang)'};
 let _pendingFile = null;
@@ -155,7 +156,7 @@ export async function submitAmConfirmed() {
   const kirimBtn = document.querySelector('#modal-am-confirm .btn-primary');
   ceEl.classList.remove('show');
   if (!pw) { ceEl.textContent='Password wajib diisi.'; ceEl.classList.add('show'); return; }
-  kirimBtn.textContent='⏳ Memproses...'; kirimBtn.disabled=true;
+  kirimBtn.textContent='Memproses...'; kirimBtn.disabled=true;
   const tanggal  = document.getElementById('am-tanggal').value;
   const jam      = document.getElementById('am-jam').value;
   const tipe     = document.getElementById('am-tipe').value;
@@ -181,11 +182,11 @@ export async function submitAmConfirmed() {
     if (!json.success) { ceEl.textContent=json.message||'Terjadi kesalahan.'; ceEl.classList.add('show'); return; }
     closeAmConfirm();
     const okEl = document.getElementById('am-ok');
-    okEl.textContent='✅ '+json.message; okEl.classList.add('show');
+    okEl.textContent=json.message; okEl.classList.add('show');
     document.getElementById('am-catatan').value='';
     fileEl.value=''; _pendingFile = null; _pendingBlob = null; _pendingFileName = null;
     document.getElementById('am-attachment-preview').style.display='none';
-    showToast('📤 Terkirim','Permintaan dikirim ke admin');
+    showToast('Terkirim','Permintaan dikirim ke admin');
     await loadMyRequests();
     if (state.authUser?.role==='admin') await loadAdminRequests();
     updatePendingBadge();
@@ -209,12 +210,12 @@ export async function loadMyRequests() {
             <span style="margin-left:8px;font-size:12px;color:var(--text-muted)">${escHtml(r.tanggal)}${r.jam?' '+escHtml(r.jam.slice(0,5)):''}</span>
           </div>
           <span class="td-status ${r.status==='approved'?'status-hadir':r.status==='rejected'?'status-alpha':'status-terlambat'}" style="font-size:11px;white-space:nowrap">
-            ${r.status==='approved'?'✅ Disetujui':r.status==='rejected'?'❌ Ditolak':'⏳ Menunggu'}
+            ${r.status==='approved'?icon('check-circle')+' Disetujui':r.status==='rejected'?icon('x-circle')+' Ditolak':icon('hourglass')+' Menunggu'}
           </span>
         </div>
         ${(()=>{const {note,jam2}=parseCatatan(r.tipe,r.catatan);const parts=[note,jam2?'Scan 2: '+jam2:''].filter(Boolean);return parts.length?`<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${escHtml(parts.join(' · '))}</div>`:'';})()}
         ${r.review_catatan?`<div style="font-size:12px;color:var(--accent);margin-top:4px">Admin: ${escHtml(r.review_catatan)}</div>`:''}
-        ${r.attachment_url?`<a href="#" onclick="openAttachmentModal('${r.attachment_url+(r.attachment_url.includes('?')?'&':'?')+'token='+encodeURIComponent(state.authToken||'')}','${r.attachment_ext||''}');return false" style="font-size:12px;color:var(--accent);display:inline-block;margin-top:4px">📎 Lihat Lampiran</a>`:''}
+        ${r.attachment_url?`<a href="#" onclick="openAttachmentModal('${r.attachment_url+(r.attachment_url.includes('?')?'&':'?')+'token='+encodeURIComponent(state.authToken||'')}','${r.attachment_ext||''}');return false" style="font-size:12px;color:var(--accent);display:inline-block;margin-top:4px">Lihat Lampiran</a>`:''}
       </div>`).join('');
   } catch(e) { el.innerHTML='<div style="color:var(--danger)">Gagal memuat.</div>'; }
 }
@@ -255,22 +256,22 @@ export async function loadAdminRequests() {
         <td>${escHtml(r.tanggal)}</td>
         <td style="text-align:center">${r.jam?escHtml(r.jam.slice(0,5)):'—'}</td>
         <td><span style="white-space:nowrap">${escHtml(r.tipe_label)}</span></td>
-        <td style="font-size:12px;word-break:break-word">${(()=>{const {note,jam2}=parseCatatan(r.tipe,r.catatan);const parts=[note,jam2?'Scan 2: '+jam2:''].filter(Boolean);return parts.length?escHtml(parts.join(' · ')):'—';})()}${r.review_catatan?`<div style="color:var(--accent);margin-top:2px">💬 ${escHtml(r.review_catatan)}</div>`:''}</td>
-        <td style="text-align:center">${r.attachment_url?`<a href="#" onclick="openAttachmentModal('${r.attachment_url+(r.attachment_url.includes('?')?'&':'?')+'token='+encodeURIComponent(state.authToken||'')}','${r.attachment_ext||''}');return false" style="font-size:12px;color:var(--accent)">📎 Lihat</a>`:'—'}</td>
+        <td style="font-size:12px;word-break:break-word">${(()=>{const {note,jam2}=parseCatatan(r.tipe,r.catatan);const parts=[note,jam2?'Scan 2: '+jam2:''].filter(Boolean);return parts.length?escHtml(parts.join(' · ')):'—';})()}${r.review_catatan?`<div style="color:var(--accent);margin-top:2px">${escHtml(r.review_catatan)}</div>`:''}</td>
+        <td style="text-align:center">${r.attachment_url?`<a href="#" onclick="openAttachmentModal('${r.attachment_url+(r.attachment_url.includes('?')?'&':'?')+'token='+encodeURIComponent(state.authToken||'')}','${r.attachment_ext||''}');return false" style="font-size:12px;color:var(--accent)">Lihat</a>`:'—'}</td>
         <td style="text-align:center"><span class="td-status ${r.status==='approved'?'status-hadir':r.status==='rejected'?'status-alpha':'status-terlambat'}" style="font-size:11px">
-          ${r.status==='approved'?'✅ Disetujui':r.status==='rejected'?'❌ Ditolak':'⏳ Menunggu'}
+          ${r.status==='approved'?icon('check-circle')+' Disetujui':r.status==='rejected'?icon('x-circle')+' Ditolak':icon('hourglass')+' Menunggu'}
         </span></td>
         <td style="text-align:center">${r.status==='pending'?`
           <div style="display:flex;flex-direction:column;gap:6px">
             <input type="text" id="am-note-${r.id}" placeholder="Catatan admin (opsional)" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);outline:none;width:100%;box-sizing:border-box;text-align:left" />
             <div style="display:flex;gap:6px">
-              <button class="btn btn-primary" style="font-size:11px;padding:4px 10px;flex:1" onclick="adminActionMandiri(${r.id},'approve')">✅ Setuju</button>
-              <button class="btn" style="font-size:11px;padding:4px 10px;flex:1;background:var(--danger);color:#fff;border:none;border-radius:8px;cursor:pointer" onclick="adminActionMandiri(${r.id},'reject')">❌ Tolak</button>
+              <button class="btn btn-primary" style="font-size:11px;padding:4px 10px;flex:1" onclick="adminActionMandiri(${r.id},'approve')">${icon('check-circle')} Setuju</button>
+              <button class="btn" style="font-size:11px;padding:4px 10px;flex:1;background:var(--danger);color:#fff;border:none;border-radius:8px;cursor:pointer" onclick="adminActionMandiri(${r.id},'reject')">${icon('x-circle')} Tolak</button>
             </div>
           </div>`:r.status==='approved'?`
           <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
             <span style="font-size:11px;color:var(--text-muted)">${r.reviewed_by?(()=>{const p=state.pegawaiList.find(p=>String(p.pin)===String(r.reviewed_by));return 'oleh '+escHtml(p?p.nama:r.reviewed_by);})():''}</span>
-            <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="revokeAndEditMandiri(${r.id})">✏️ Edit</button>
+            <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="revokeAndEditMandiri(${r.id})">${icon('edit')} Edit</button>
           </div>`:`<span style="font-size:11px;color:var(--text-muted)">${r.reviewed_by?(()=>{const p=state.pegawaiList.find(p=>String(p.pin)===String(r.reviewed_by));return 'oleh '+escHtml(p?p.nama:r.reviewed_by);})():''}</span>`}
         </td>
       </tr>`).join('')+'</tbody></table></div>';
@@ -286,7 +287,7 @@ export async function adminActionMandiri(id, action) {
     });
     const json = await res.json();
     if (!json.success) { alert(json.message); return; }
-    showToast(action==='approve'?'✅ Disetujui':'❌ Ditolak', json.message);
+    showToast(action==='approve'?'Disetujui':'Ditolak', json.message);
     await loadAdminRequests();
     await loadMyRequests();
     updatePendingBadge();
@@ -301,7 +302,7 @@ export async function revokeAndEditMandiri(id) {
     });
     const json = await res.json();
     if (!json.success) { alert(json.message); return; }
-    showToast('✏️ Dibatalkan', json.message);
+    showToast('Dibatalkan', json.message);
     await loadAdminRequests();
     await loadMyRequests();
     updatePendingBadge();

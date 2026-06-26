@@ -3,6 +3,7 @@ import { escHtml } from './utils.js';
 import { renderOverridesTable } from './settings.js';
 import { loadPersonalAbsensi } from './table.js';
 import { applyFilter } from './filter.js';
+import { icon } from './icons.js';
 
 export function openInjectModal(pin, tanggal, nama) {
   state.injPin=pin; state.injTanggal=tanggal;
@@ -121,23 +122,23 @@ export async function openRowHistory(pin, tanggal, nama) {
     return false;
   });
 
-  const alasanIcons={lembur:'🌙',sakit:'🏥',customer_visit:'🚗',setengah_hari_pagi:'🌅',setengah_hari_siang:'🌤️',ganti_shift:'🔄',lainnya:'📝'};
+  const alasanIcons={lembur:icon('moon'),sakit:icon('hospital'),customer_visit:icon('car'),setengah_hari_pagi:icon('sunrise'),setengah_hari_siang:icon('cloud-sun'),ganti_shift:icon('refresh-cw'),lainnya:icon('file-text')};
   const rows=[];
 
   // scan_note entry — selalu tampil jika ada (siapapun yang buat)
   if(scanNoteEntry){
     rows.push(`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
-      <span style="font-size:18px">📝</span>
+      <span style="font-size:18px">${icon('file-text')}</span>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">Catatan: ${escHtml(scanNoteEntry.catatan)}</div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">scan_notes aktif</div>
       </div>
-      <button class="btn-icon del" title="Hapus catatan" onclick="deleteScanNote('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}')">🗑️</button>
+      <button class="btn-icon del" title="Hapus catatan" onclick="deleteScanNote('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}')">${icon('trash-2')}</button>
     </div>`);
   }
 
   ovEntries.forEach(o=>{
-    const icon=o.tipe==='absen_inject'?(alasanIcons[o.alasan]||'📝'):o.tipe==='ganti_shift'?'🔄':'⏰';
+    const icn=o.tipe==='absen_inject'?(alasanIcons[o.alasan]||icon('file-text')):o.tipe==='ganti_shift'?icon('refresh-cw'):icon('clock');
     const detail=o.tipe==='absen_inject'
       ?`${o.nama}${o.jam_masuk?' ('+o.jam_masuk+'→'+(o.jam_pulang||'')+')':(o.jam_pulang?' (→'+o.jam_pulang+')':'')}`
       :o.tipe==='ganti_shift'
@@ -145,12 +146,12 @@ export async function openRowHistory(pin, tanggal, nama) {
         :`${o.nama} — pulang ${o.jam_pulang}`;
     const byAt=[o.created_by,o.created_at?new Date(o.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):null].filter(Boolean).join(' · ');
     rows.push(`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
-      <span style="font-size:18px">${icon}</span>
+      <span style="font-size:18px">${icn}</span>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">${escHtml(detail)}</div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${escHtml(byAt||'—')}</div>
       </div>
-      <button class="btn-icon del" title="Hapus" onclick="deleteOverride('${escHtml(o.id)}');openRowHistory('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}')">🗑️</button>
+      <button class="btn-icon del" title="Hapus" onclick="deleteOverride('${escHtml(o.id)}');openRowHistory('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}')">${icon('trash-2')}</button>
     </div>`);
   });
 
