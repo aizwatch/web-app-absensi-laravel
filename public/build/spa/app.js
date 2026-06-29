@@ -80,7 +80,7 @@ var e={moon:`<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`,sun:`<
       <td class="td-tanggal" data-label="">${o(c)}</td>
       <td class="td-hari" data-label="Hari" style="font-size:12px;color:var(--text-muted)"><span class="hari-full">${r[l]}</span><span class="hari-short">${i[l]}</span></td>
       <td data-label="Masuk">${B(C?C.scan_masuk:null,`masuk`,p)}</td>
-      <td data-label="Mulai Istirahat" ${S&&C&&C.scan_masuk&&C.has_ist_window&&!C.scan_istirahat1&&!C.scan_istirahat2?`class="cell-missing"`:``}>${E}</td><td data-label="Selesai Istirahat" ${S&&C&&C.scan_masuk&&C.has_ist_window&&!C.scan_istirahat1&&!C.scan_istirahat2?`class="cell-missing"`:``}>${D}</td>
+      <td data-label="Mulai Istirahat" ${S&&C&&C.scan_masuk&&C.has_ist_window&&(!C.scan_istirahat1||!C.scan_istirahat2)?`class="cell-missing"`:``}>${E}</td><td data-label="Selesai Istirahat" ${S&&C&&C.scan_masuk&&C.has_ist_window&&(!C.scan_istirahat1||!C.scan_istirahat2)?`class="cell-missing"`:``}>${D}</td>
       <td data-label="Pulang" ${S&&C&&C.scan_masuk&&!C.scan_pulang?`class="cell-missing"`:``}>${B(C?C.scan_pulang:null,`pulang`,p)}</td>
       <td data-label="Durasi Istirahat">${O}</td>
       <td data-label="Status">${k}${M}</td>

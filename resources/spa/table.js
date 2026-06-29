@@ -207,7 +207,7 @@ export function renderPersonalTable(data) {
       <td class="td-tanggal" data-label="">${formatTanggal(dateStr)}</td>
       <td class="td-hari" data-label="Hari" style="font-size:12px;color:var(--text-muted)"><span class="hari-full">${HARI[dayOfWeek]}</span><span class="hari-short">${HARI_LABELS[dayOfWeek]}</span></td>
       <td data-label="Masuk">${timeCell(row?row.scan_masuk:null,'masuk',shift)}</td>
-      <td data-label="Mulai Istirahat" ${isPast&&row&&row.scan_masuk&&row.has_ist_window&&!row.scan_istirahat1&&!row.scan_istirahat2?'class="cell-missing"':''}>${ist1Cell}</td><td data-label="Selesai Istirahat" ${isPast&&row&&row.scan_masuk&&row.has_ist_window&&!row.scan_istirahat1&&!row.scan_istirahat2?'class="cell-missing"':''}>${ist2Cell}</td>
+      <td data-label="Mulai Istirahat" ${isPast&&row&&row.scan_masuk&&row.has_ist_window&&(!row.scan_istirahat1||!row.scan_istirahat2)?'class="cell-missing"':''}>${ist1Cell}</td><td data-label="Selesai Istirahat" ${isPast&&row&&row.scan_masuk&&row.has_ist_window&&(!row.scan_istirahat1||!row.scan_istirahat2)?'class="cell-missing"':''}>${ist2Cell}</td>
       <td data-label="Pulang" ${isPast&&row&&row.scan_masuk&&!row.scan_pulang?'class="cell-missing"':''}>${timeCell(row?row.scan_pulang:null,'pulang',shift)}</td>
       <td data-label="Durasi Istirahat">${durasi}</td>
       <td data-label="Status">${statusHtml}${adminBtns}</td>
