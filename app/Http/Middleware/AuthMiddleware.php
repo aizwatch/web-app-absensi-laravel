@@ -11,7 +11,7 @@ class AuthMiddleware
 {
     public function handle(Request $request, Closure $next, string $role = null): mixed
     {
-        $token = $request->bearerToken();
+        $token = $request->bearerToken() ?: $request->query('token');
 
         if (! $token) {
             return response()->json(['success' => false, 'message' => 'Tidak terautentikasi'], 401);
