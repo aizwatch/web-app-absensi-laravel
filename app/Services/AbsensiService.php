@@ -54,9 +54,18 @@ class AbsensiService
             $istDari   = isset($shift['ist_window_dari'])   ? $shift['ist_window_dari']   . ':00' : null;
             $istSampai = isset($shift['ist_window_sampai']) ? $shift['ist_window_sampai'] . ':00' : null;
 
+            // Deduplicate scans within 5 minutes of each other
+            $deduped = [];
+            $toMin = fn($t) => (int)explode(':', $t)[0] * 60 + (int)explode(':', $t)[1];
+            foreach ($scans as $s) {
+                if (empty($deduped) || ($toMin($s) - $toMin(end($deduped))) >= 5) {
+                    $deduped[] = $s;
+                }
+            }
+
             // Klasifikasi scan
-            $scanMasuk = $scans[0] ?? null;
-            $restScans = array_slice($scans, 1);
+            $scanMasuk = $deduped[0] ?? null;
+            $restScans = array_slice($deduped, 1);
             $lastScan  = end($restScans) ?: null;
 
             if ($istDari && $istSampai) {
@@ -78,7 +87,6 @@ class AbsensiService
 
             $durasiIstirahat = null;
             if ($istDari && $istSampai && $scanIstirahat1 && $scanIstirahat2) {
-                $toMin = fn($t) => (int)explode(':', $t)[0] * 60 + (int)explode(':', $t)[1];
                 $durasiIstirahat = $toMin($scanIstirahat2) - $toMin($scanIstirahat1);
             }
 

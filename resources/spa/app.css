@@ -461,6 +461,20 @@
     color: var(--text);
   }
 
+  .cell-missing {
+    background: rgba(220,38,38,0.08);
+  }
+  .cell-missing .td-time.empty {
+    color: #dc2626;
+    font-weight: 600;
+  }
+  [data-theme="dark"] .cell-missing {
+    background: rgba(248,113,113,0.12);
+  }
+  [data-theme="dark"] .cell-missing .td-time.empty {
+    color: #f87171;
+  }
+
   /* Legend */
   .legend {
     display: flex; gap: 16px; align-items: center;
