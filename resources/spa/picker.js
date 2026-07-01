@@ -8,7 +8,7 @@ export async function initPicker() {
   try {
     const res = await fetch('/api/pegawai', { headers: authHeaders() });
     const { data } = await res.json();
-    state.pegawaiList = data || [];
+    state.pegawaiList = (data || []).filter(p => p.status === 1);
   } catch (e) { state.pegawaiList = []; }
   populatePickerSelect();
 }
