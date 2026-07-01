@@ -74,11 +74,15 @@ class AbsensiController extends Controller
                 && !$row['scan_istirahat1']
                 && !$row['scan_istirahat2'];
 
+            $isMissingPulang = $row['scan_masuk']
+                && !$row['scan_pulang']
+                && ($row['scan_istirahat1'] || $row['scan_istirahat2']);
+
             $hasIstWindow = $row['has_ist_window'] ?? false;
             $istCount     = ($row['scan_istirahat1'] ? 1 : 0) + ($row['scan_istirahat2'] ? 1 : 0);
             $isIstTunggal = $hasIstWindow && $row['scan_masuk'] && $istCount === 1;
 
-            if (!$isScanTunggal && !$isIstTunggal) continue;
+            if (!$isScanTunggal && !$isMissingPulang && !$isIstTunggal) continue;
 
             if (!isset($problems[$pin])) {
                 $problems[$pin] = [
@@ -105,6 +109,13 @@ class AbsensiController extends Controller
                     'tanggal' => $tanggal,
                     'jam'     => $jamScan,
                     'jenis'   => $jenis,
+                ];
+            }
+            if ($isMissingPulang) {
+                $problems[$pin]['scan_tunggal'][] = [
+                    'tanggal' => $tanggal,
+                    'jam'     => $row['scan_masuk'],
+                    'jenis'   => 'masuk_only',
                 ];
             }
             if ($isIstTunggal) {
