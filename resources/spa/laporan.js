@@ -166,7 +166,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
       return sum+1;
     },0);
     const nonWorkDays=p.rows.length-workDays.length;
-    const potonganTelat=Math.floor(telat/3);
+    const potonganTelat=Math.floor(telat/4);
     const hadirTotal=hadirDecimal+nonWorkDays-potonganTelat;
     const hadir=hadirTotal%1===0?hadirTotal:+hadirTotal.toFixed(2);
     // totalIst: semua row yang ada scan_masuk + durasi_istirahat lengkap (termasuk catatan & veryLate)
