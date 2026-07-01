@@ -115,7 +115,7 @@ class AbsensiController extends Controller
                 $problems[$pin]['scan_tunggal'][] = [
                     'tanggal' => $tanggal,
                     'jam'     => $row['scan_masuk'],
-                    'jenis'   => 'masuk_only',
+                    'jenis'   => 'missing_pulang',
                 ];
             }
             if ($isIstTunggal) {

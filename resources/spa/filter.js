@@ -59,8 +59,8 @@ export function renderBermasalah(data) {
               <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">1x Scan</div>
               <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
                 ${row.scan_tunggal.map(d => {
-                  const label = d.jenis === 'pulang_only' ? 'pulang' : d.jenis === 'ist_only' ? 'istirahat' : 'masuk';
-                  return `<span class="chip-warn">${formatTanggal(d.tanggal)} <span style="color:var(--text-muted);font-size:11px">${d.jam} (${label})</span></span>`;
+                  const label = d.jenis === 'pulang_only' ? 'lupa masuk' : d.jenis === 'ist_only' ? 'lupa istirahat' : d.jenis === 'missing_pulang' ? 'lupa pulang' : 'lupa ist. & pulang';
+                  return `<span class="chip-warn">${formatTanggal(d.tanggal)} <span style="color:var(--text-muted);font-size:11px">${d.jam} — ${label}</span></span>`;
                 }).join('')}
               </div>` : ''}
             ${row.ist_tunggal.length ? `

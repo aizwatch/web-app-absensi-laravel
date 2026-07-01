@@ -103,7 +103,7 @@ var e={moon:`<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`,sun:`<
             ${e.scan_tunggal.length?`
               <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">1x Scan</div>
               <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
-                ${e.scan_tunggal.map(e=>{let t=e.jenis===`pulang_only`?`pulang`:e.jenis===`ist_only`?`istirahat`:`masuk`;return`<span class="chip-warn">${o(e.tanggal)} <span style="color:var(--text-muted);font-size:11px">${e.jam} (${t})</span></span>`}).join(``)}
+                ${e.scan_tunggal.map(e=>{let t=e.jenis===`pulang_only`?`lupa masuk`:e.jenis===`ist_only`?`lupa istirahat`:e.jenis===`missing_pulang`?`lupa pulang`:`lupa ist. & pulang`;return`<span class="chip-warn">${o(e.tanggal)} <span style="color:var(--text-muted);font-size:11px">${e.jam} — ${t}</span></span>`}).join(``)}
               </div>`:``}
             ${e.ist_tunggal.length?`
               <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">1x Scan Istirahat</div>
