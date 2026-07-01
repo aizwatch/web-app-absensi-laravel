@@ -15,7 +15,7 @@ class AbsensiService
                 p.pegawai_nama AS nama,
                 DATE_FORMAT(a.scan_date, '%H:%i:%s') AS jam
             FROM att_log a
-            LEFT JOIN pegawai p ON CAST(a.pin AS CHAR) = CAST(p.pegawai_pin AS CHAR)
+            INNER JOIN pegawai p ON CAST(a.pin AS CHAR) = CAST(p.pegawai_pin AS CHAR) AND p.pegawai_status = 1
             WHERE DATE(a.scan_date) BETWEEN ? AND ?
             ORDER BY a.pin, a.scan_date ASC
         ", [$dari, $sampai]);
@@ -125,7 +125,8 @@ class AbsensiService
             if ($tanggal < $dari || $tanggal > $sampai) continue;
             if (isset($existingKeys["{$tanggal}|{$pin}"])) continue; // sudah ada dari att_log
 
-            $pegawai = DB::table('pegawai')->where('pegawai_pin', $pin)->first();
+            $pegawai = DB::table('pegawai')->where('pegawai_pin', $pin)->where('pegawai_status', 1)->first();
+            if (!$pegawai) continue;
             $shiftId = $settings['employee_shifts'][(string)$pin] ?? 'normal';
             $shift   = collect($settings['shifts'])->firstWhere('id', $shiftId) ?? $settings['shifts'][0] ?? null;
 
