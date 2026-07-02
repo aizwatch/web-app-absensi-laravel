@@ -74,7 +74,7 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'message' => 'Username tidak ditemukan'], 401);
         }
 
-        if ($user->password && ! Hash::check($password, $user->password)) {
+        if (! $user->password || ! Hash::check($password, $user->password)) {
             return response()->json(['success' => false, 'message' => 'Password salah'], 401);
         }
 
