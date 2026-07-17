@@ -335,6 +335,9 @@ class AbsensiMandiriController extends Controller
                     'pin'       => $pin,
                     'verifymode'=> 1,
                     'inoutmode' => 2,
+                    'reserved'  => 0,
+                    'work_code' => 0,
+                    'att_id'    => '0',
                 ]);
             }
             if ($jam2) {
@@ -344,6 +347,9 @@ class AbsensiMandiriController extends Controller
                     'pin'       => $pin,
                     'verifymode'=> 1,
                     'inoutmode' => 2,
+                    'reserved'  => 0,
+                    'work_code' => 0,
+                    'att_id'    => '0',
                 ]);
             }
             // Tambah ke scan_notes
