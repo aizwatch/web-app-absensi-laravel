@@ -158,7 +158,11 @@ class AbsensiMandiriController extends Controller
         }
 
         // Terapkan efek
-        $this->applyEffect($row, $auth->username);
+        try {
+            $this->applyEffect($row, $auth->username);
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
 
         DB::table('absensi_mandiri')->where('id', $id)->update([
             'status'        => 'approved',
@@ -326,6 +330,20 @@ class AbsensiMandiriController extends Controller
                 $rawCatatan = preg_replace('/\|\|jam2=\d{2}:\d{2}/', '', $rawCatatan);
             }
             $catatan = trim($label . ($rawCatatan ? ' — ' . $rawCatatan : ''));
+
+            // Cek dulu apakah jam absensi ini sudah terisi (PK att_log = sn+scan_date+pin)
+            if ($row->jam) {
+                $scanDate = $tanggal . ' ' . $row->jam;
+                if (DB::table('att_log')->where('pin', $pin)->where('scan_date', $scanDate)->exists()) {
+                    throw new \RuntimeException("Absensi jam {$row->jam} tanggal {$tanggal} sudah terisi, tidak bisa disetujui.");
+                }
+            }
+            if ($jam2) {
+                $scanDate2 = $tanggal . ' ' . $jam2;
+                if (DB::table('att_log')->where('pin', $pin)->where('scan_date', $scanDate2)->exists()) {
+                    throw new \RuntimeException("Absensi jam {$jam2} tanggal {$tanggal} sudah terisi, tidak bisa disetujui.");
+                }
+            }
 
             // Inject scan(s) ke att_log
             if ($row->jam) {
