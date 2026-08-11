@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { escHtml } from './utils.js';
+import { escHtml, isSetengahHari } from './utils.js';
 
 let _pollInterval = null;
 let _clockInterval = null;
@@ -199,7 +199,7 @@ function _calcMonth(pin, rows, yr, mo) {
   const holidays       = (state.appHolidays || []).map(h => h.tanggal);
   const shift          = _getShift(pin);
   const workDayNums    = shift.hari_kerja || [1,2,3,4,5,6];
-  const batasSetengah  = ((shift.batas_setengah_hari) || '08:30') + ':00';
+  const batasSetengah  = shift.batas_setengah_hari;
   const shiftHasIst    = !!(shift.ist_window_dari && shift.ist_window_sampai);
 
   const days = new Date(+yr, +mo, 0).getDate();
@@ -217,7 +217,7 @@ function _calcMonth(pin, rows, yr, mo) {
   });
 
   const getIstPenalty = r => {
-    if (!shiftHasIst || !r.scan_masuk || r.catatan || r.scan_masuk >= batasSetengah) return null;
+    if (!shiftHasIst || !r.scan_masuk || r.catatan || isSetengahHari(r.scan_masuk, batasSetengah)) return null;
     if ((r.scan_istirahat1 && !r.scan_istirahat2) || (!r.scan_istirahat1 && r.scan_istirahat2)) return 'pink';
     if (r.durasi_istirahat == null) return null;
     const s = r.durasi_istirahat - 60;
@@ -226,17 +226,17 @@ function _calcMonth(pin, rows, yr, mo) {
 
   const alpha       = workDays.filter(r => !r.scan_masuk && !r.catatan).length;
   const ket         = workDays.filter(r => r.catatan).length;
-  const telatSekali = workDays.filter(r => r.scan_masuk && !r.catatan && r.scan_masuk >= batasSetengah).length;
+  const telatSekali = workDays.filter(r => r.scan_masuk && !r.catatan && isSetengahHari(r.scan_masuk, batasSetengah)).length;
   const batasStr    = shift.batas_terlambat ? (shift.batas_terlambat + ':00') : null;
   const telat       = workDays.filter(r => {
-    if (!r.scan_masuk || r.catatan || r.scan_masuk >= batasSetengah) return false;
+    if (!r.scan_masuk || r.catatan || isSetengahHari(r.scan_masuk, batasSetengah)) return false;
     return batasStr && r.scan_masuk > batasStr;
   }).length;
 
   const hadirDecimal = workDays.reduce((sum, r) => {
     if (r.catatan) return sum + 1;
     if (!r.scan_masuk) return sum;
-    if (r.scan_masuk >= batasSetengah) return sum + 0.5;
+    if (isSetengahHari(r.scan_masuk, batasSetengah)) return sum + 0.5;
     const ip = getIstPenalty(r);
     if (ip === 'merah') return sum;
     if (ip === 'pink')  return sum + 0.5;
@@ -250,7 +250,7 @@ function _calcMonth(pin, rows, yr, mo) {
 
   // selisih istirahat
   const hadirRows  = shiftHasIst ? workDays.filter(r => {
-    if (!r.scan_masuk || r.catatan || r.scan_masuk >= batasSetengah) return false;
+    if (!r.scan_masuk || r.catatan || isSetengahHari(r.scan_masuk, batasSetengah)) return false;
     if ((r.scan_istirahat1 && !r.scan_istirahat2) || (!r.scan_istirahat1 && r.scan_istirahat2)) return false;
     return true;
   }) : [];

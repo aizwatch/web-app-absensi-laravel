@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { escHtml, fmtTime, formatTanggal, showToast, setStatus, HARI, HARI_LABELS } from './utils.js';
+import { escHtml, fmtTime, formatTanggal, showToast, setStatus, isSetengahHari, HARI, HARI_LABELS } from './utils.js';
 import { authHeaders } from './auth.js';
 import { getShiftForPin } from './settings.js';
 import { icon } from './icons.js';
@@ -32,8 +32,7 @@ export function timeCell(val, type, shift) {
   if (!val) return `<span class="td-time empty">—</span>`;
   if (type==='masuk') {
     const batas        = shift&&shift.batas_terlambat ? shift.batas_terlambat+':00' : null;
-    const batasSetengah = shift&&shift.batas_setengah_hari ? shift.batas_setengah_hari+':00' : '08:30:00';
-    if (val>=batasSetengah) return `<span class="cell-very-late">${fmtTime(val)}</span>`;
+    if (isSetengahHari(val, shift&&shift.batas_setengah_hari)) return `<span class="cell-very-late">${fmtTime(val)}</span>`;
     if (batas&&val>batas)   return `<span class="cell-late">${fmtTime(val)}</span>`;
     return `<span class="td-time cell-ok">${fmtTime(val)}</span>`;
   }

@@ -21,6 +21,13 @@ export function formatTanggal(str) {
   return `<span class="tgl-full">${full}</span><span class="tgl-short">${hari}, ${tgl} ${bln}</span><span class="tgl-m-date">${tgl}</span>`;
 }
 
+// Scan masuk sudah lewat batas setengah hari? Dibandingkan per menit, detik diabaikan:
+// batas 08:30 → 08:30:59 masih dihitung Terlambat, 08:31 baru 1/2 Hari.
+export function isSetengahHari(scanMasuk, batasSetengah) {
+  if (!scanMasuk) return false;
+  return scanMasuk.slice(0,5) > (batasSetengah || '08:30').slice(0,5);
+}
+
 export function fmtTime(val) {
   return `<span class="t-full">${val}</span><span class="t-short">${val.substring(0,5)}</span>`;
 }
