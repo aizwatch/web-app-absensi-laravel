@@ -133,7 +133,7 @@ export function closeAmConfirm() {
 }
 
 export function openAttachmentModal(url, ext) {
-  const imgExts = ['jpg','jpeg','png','gif','webp','heic','heif'];
+  const imgExts = ['jpg','jpeg','png','gif','webp'];
   const img = document.getElementById('attachment-modal-img');
   const nopreview = document.getElementById('attachment-modal-nopreview');
   const dl = document.getElementById('attachment-modal-download');
