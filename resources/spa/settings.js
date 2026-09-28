@@ -86,7 +86,7 @@ export function formatHariKerja(arr) {
 export function renderShiftsTable() {
   const tbody = document.getElementById('shifts-tbody');
   if (!state.appShifts.length) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada shift</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada shift</td></tr>`;
     return;
   }
   tbody.innerHTML = state.appShifts.map((s, i) => {
@@ -106,6 +106,8 @@ export function renderShiftsTable() {
           <input id="si-setengah-${i}" type="time" value="${s.batas_setengah_hari||'08:30'}" style="display:none" /></td>
       <td><span id="sv-pulang-${i}">${s.jam_pulang}</span>
           <input id="si-pulang-${i}" type="time" value="${s.jam_pulang}" style="display:none" /></td>
+      <td><span id="sv-pulangresmi-${i}">${s.jam_pulang_resmi||'—'}</span>
+          <input id="si-pulangresmi-${i}" type="time" value="${s.jam_pulang_resmi||''}" style="display:none" /></td>
       <td>
         <span id="sv-ist-${i}" style="font-size:11px">${s.ist_window_dari && s.ist_window_sampai ? s.ist_window_dari+'–'+s.ist_window_sampai : '—'}</span>
         <span id="si-ist-${i}" style="display:none;gap:4px;align-items:center">
@@ -137,7 +139,7 @@ export function renderShiftsTable() {
 }
 
 export function editShiftRow(i) {
-  ['nama','masuk','batas','setengah','pulang'].forEach(f => {
+  ['nama','masuk','batas','setengah','pulang','pulangresmi'].forEach(f => {
     document.getElementById(`sv-${f}-${i}`).style.display = 'none';
     document.getElementById(`si-${f}-${i}`).style.display = '';
   });
@@ -158,9 +160,10 @@ export function cancelShiftRow(i) {
   document.getElementById(`si-batas-${i}`).value    = s.batas_terlambat || '';
   document.getElementById(`si-setengah-${i}`).value = s.batas_setengah_hari || '08:30';
   document.getElementById(`si-pulang-${i}`).value   = s.jam_pulang;
+  document.getElementById(`si-pulangresmi-${i}`).value = s.jam_pulang_resmi || '';
   document.getElementById(`si-ist-dari-${i}`).value   = s.ist_window_dari || '';
   document.getElementById(`si-ist-sampai-${i}`).value = s.ist_window_sampai || '';
-  ['nama','masuk','batas','setengah','pulang'].forEach(f => {
+  ['nama','masuk','batas','setengah','pulang','pulangresmi'].forEach(f => {
     document.getElementById(`sv-${f}-${i}`).style.display = '';
     document.getElementById(`si-${f}-${i}`).style.display = 'none';
   });
@@ -183,6 +186,7 @@ export function saveShiftRow(i) {
     batas_terlambat:     document.getElementById(`si-batas-${i}`).value,
     batas_setengah_hari: document.getElementById(`si-setengah-${i}`).value,
     jam_pulang:          document.getElementById(`si-pulang-${i}`).value,
+    jam_pulang_resmi:    document.getElementById(`si-pulangresmi-${i}`).value || null,
     ist_window_dari:     document.getElementById(`si-ist-dari-${i}`).value || null,
     ist_window_sampai:   document.getElementById(`si-ist-sampai-${i}`).value || null,
     hari_kerja:          hariChecked,
@@ -233,14 +237,16 @@ export function addShift() {
   const batas    = document.getElementById('ns-batas').value;
   const setengah = document.getElementById('ns-setengah').value;
   const pulang   = document.getElementById('ns-pulang').value;
+  const pulangResmi = document.getElementById('ns-pulang-resmi').value || null;
   if (!nama) { alert('Nama shift tidak boleh kosong'); return; }
   const hariChecked = [...document.querySelectorAll('.ns-hari:checked')].map(c => Number(c.value));
   const istDari   = document.getElementById('ns-ist-dari').value   || null;
   const istSampai = document.getElementById('ns-ist-sampai').value || null;
   const noOt = document.getElementById('ns-no-ot').checked || false;
   const id = nama.toLowerCase().replace(/\s+/g,'-') + '-' + Date.now();
-  state.appShifts.push({ id, nama, jam_masuk:masuk, batas_terlambat:batas, batas_setengah_hari:setengah, jam_pulang:pulang, ist_window_dari:istDari, ist_window_sampai:istSampai, hari_kerja:hariChecked, no_ot:noOt });
+  state.appShifts.push({ id, nama, jam_masuk:masuk, batas_terlambat:batas, batas_setengah_hari:setengah, jam_pulang:pulang, jam_pulang_resmi:pulangResmi, ist_window_dari:istDari, ist_window_sampai:istSampai, hari_kerja:hariChecked, no_ot:noOt });
   document.getElementById('ns-nama').value = '';
+  document.getElementById('ns-pulang-resmi').value = '';
   document.getElementById('ns-ist-dari').value = '';
   document.getElementById('ns-ist-sampai').value = '';
   document.getElementById('ns-no-ot').checked = false;

@@ -37,7 +37,7 @@ export function timeCell(val, type, shift) {
     return `<span class="td-time cell-ok">${fmtTime(val)}</span>`;
   }
   if (type==='pulang') {
-    const pulang = ((shift&&shift.jam_pulang)||'17:00')+':00';
+    const pulang = ((shift&&(shift.jam_pulang_resmi||shift.jam_pulang))||'17:00')+':00';
     return val<pulang
       ? `<span class="cell-early">${fmtTime(val)}</span>`
       : `<span class="td-time cell-ok">${fmtTime(val)}</span>`;
