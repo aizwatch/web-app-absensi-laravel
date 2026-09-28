@@ -92,6 +92,16 @@
   .admin-nav-item { white-space: nowrap; }
 }
 
+@media (max-width: 640px) {
+  /* form-row grids inside the admin modal (Tambah Karyawan, shift form,
+     override form) set their column count via an inline style attribute,
+     which the app's generic mobile `.form-row` reset can't beat without
+     !important. Scoped to .admin-view so nothing outside admin is affected. */
+  .admin-view .form-row { grid-template-columns: 1fr !important; }
+  .admin-section-head { flex-wrap: wrap; }
+  .shift-form-actions .btn { flex: 1; }
+}
+
 /* Cards / section chrome */
 .admin-view .admin-form-card {
   background: var(--av-surface); border: 1px solid var(--av-border);

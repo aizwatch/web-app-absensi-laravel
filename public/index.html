@@ -21,7 +21,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LT Absensi">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/build/spa/app.css?v=7">
+<link rel="stylesheet" href="/build/spa/app.css?v=8">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -726,12 +726,14 @@
 
       <div class="admin-stab-pane" id="pstab-assign">
         <input type="text" class="emp-search" id="emp-search" placeholder="Cari nama atau PIN..." oninput="filterEmpRows()" />
-        <table class="settings-table">
-          <thead><tr><th style="width:80px">PIN</th><th>Nama Karyawan</th><th style="width:160px">Shift</th></tr></thead>
-          <tbody id="assign-tbody">
-            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Memuat data karyawan...</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="settings-table">
+            <thead><tr><th style="width:80px">PIN</th><th>Nama Karyawan</th><th style="width:160px">Shift</th></tr></thead>
+            <tbody id="assign-tbody">
+              <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Memuat data karyawan...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="admin-stab-pane" id="pstab-holidays">
@@ -741,12 +743,14 @@
           <input type="text" id="hl-nama" placeholder="Nama hari libur (mis. Idul Fitri)" style="flex:2;min-width:180px" />
           <button class="btn btn-primary" style="font-size:13px" onclick="addHoliday()">＋ Tambah</button>
         </div>
-        <table class="settings-table" id="holidays-table">
-          <thead><tr><th style="width:130px">Tanggal</th><th>Nama Hari Libur</th><th style="width:50px"></th></tr></thead>
-          <tbody id="holidays-tbody">
-            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada hari libur</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="settings-table" id="holidays-table">
+            <thead><tr><th style="width:130px">Tanggal</th><th>Nama Hari Libur</th><th style="width:50px"></th></tr></thead>
+            <tbody id="holidays-tbody">
+              <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada hari libur</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="admin-stab-pane" id="pstab-overrides">
@@ -822,12 +826,14 @@
           </div>
           <button class="btn btn-primary" id="ov-add-btn" style="font-size:13px" onclick="addOverride()">＋ Tambah Override</button>
         </div>
-        <table class="settings-table" id="overrides-table">
-          <thead><tr><th style="width:110px">Tanggal</th><th>Keterangan</th><th style="width:150px">Tipe</th><th style="width:110px">Berlaku Untuk</th><th style="width:130px">Oleh</th><th style="width:40px"></th></tr></thead>
-          <tbody id="overrides-tbody">
-            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada override</td></tr>
-          </tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="settings-table" id="overrides-table">
+            <thead><tr><th style="width:110px">Tanggal</th><th>Keterangan</th><th style="width:150px">Tipe</th><th style="width:110px">Berlaku Untuk</th><th style="width:130px">Oleh</th><th style="width:40px"></th></tr></thead>
+            <tbody id="overrides-tbody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada override</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="admin-stab-pane" id="pstab-resetpw">
@@ -1183,7 +1189,7 @@
   </div>
 </div>
 
-<script type="module" src="/build/spa/app.js?v=7"></script>
+<script type="module" src="/build/spa/app.js?v=8"></script>
 
 
 </body>
