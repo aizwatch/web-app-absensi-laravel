@@ -507,7 +507,6 @@
   .toast {
     background: var(--surface);
     border: 1px solid var(--accent2);
-    border-left: 4px solid var(--accent2);
     border-radius: 10px; padding: 12px 18px;
     min-width: 280px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
@@ -771,14 +770,6 @@
   }
 
   /* ADMIN */
-  .admin-stab-bar {
-    display: flex; gap: 2px; margin-bottom: 24px;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    flex-shrink: 0;
-  }
-  .admin-stab-bar::-webkit-scrollbar { display: none; }
   .admin-stab-btn {
     padding: 10px 20px; background: none; border: none;
     font-family: var(--font-sans); font-size: 13px; font-weight: 500;
@@ -1151,44 +1142,6 @@
   }
   #header-user-info strong { color: var(--text); }
 
-  /* PENGATURAN SUB-TABS */
-  .pstab-bar {
-    display: flex; gap: 6px;
-    padding: 16px 20px;
-    margin-bottom: 0;
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: transparent;
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .pstab-bar::-webkit-scrollbar { display: none; }
-  .pstab-btn {
-    padding: 7px 16px; border-radius: 20px;
-    font-size: 12px; font-weight: 500; cursor: pointer;
-    border: 1px solid var(--border); background: var(--surface);
-    color: var(--text-muted);
-    transition: all 0.2s;
-    white-space: nowrap; flex-shrink: 0;
-    display: flex; align-items: center; gap: 5px;
-  }
-  .pstab-btn:hover {
-    border-color: var(--accent); color: var(--text);
-    background: var(--surface2);
-  }
-  .pstab-btn.active {
-    color: var(--btn-primary-text);
-    background: linear-gradient(135deg, #059669, #34D399);
-    border-color: transparent;
-    font-weight: 600;
-    box-shadow: 0 2px 8px var(--accent-glow);
-  }
-  .pstab-pane { display: none; padding: 18px 20px 0; }
-  .pstab-pane.active { display: block; }
-
 /* ═══════════════════════════════════════════════════════════
    DASHBOARD KEHADIRAN — always dark
    ═══════════════════════════════════════════════════════════ */
@@ -1323,7 +1276,7 @@
   scrollbar-width: none;
 }
 .fstab-bar::-webkit-scrollbar { display: none; }
-.fstab-btn  { font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.fstab-btn  { font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; white-space: nowrap; flex-shrink: 0; }
 .fstab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* filter bar */

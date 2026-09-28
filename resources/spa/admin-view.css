@@ -1,0 +1,199 @@
+/* ADMIN VIEW — scoped visual refresh for the widened Menu Admin modal.
+   Everything here is scoped under .admin-view (the modal box itself), so
+   Absensi Saya / Live / Mandiri are untouched. */
+
+.admin-view {
+  --av-bg:            #F7F7F5;
+  --av-surface:       #FFFFFF;
+  --av-surface2:      #F2F2EF;
+  --av-grid:          #E4E2DE;
+  --av-border:        #D6D3D1;
+  --av-border-strong: #A8A29E;
+  --av-input-border:  #8E8781;
+  --av-row-alt:       #F6F5F2;
+  --av-text:          #1C1917;
+  --av-text-muted:    #57534E;
+  --av-text-dim:      #78716C;
+  --av-primary-bg:      #047857;
+  --av-primary-bg-hover: #065F46;
+  --av-primary-text:     #FFFFFF;
+  --av-accent-soft-bg:   #ECFDF5;
+  --av-accent-soft-text: #065F46;
+  --av-warn:   #B45309;
+  --av-danger: #B91C1C;
+  --av-focus:  #2563EB;
+}
+[data-theme="dark"] .admin-view {
+  --av-bg:            #0F0E0D;
+  --av-surface:       #1A1817;
+  --av-surface2:      #242220;
+  --av-grid:          #2C2A27;
+  --av-border:        #3A3733;
+  --av-border-strong: #57534E;
+  --av-input-border:  #78716C;
+  --av-row-alt:       #1F1D1B;
+  --av-text:          #F5F5F4;
+  --av-text-muted:    #C8C3BE;
+  --av-text-dim:      #A8A29E;
+  --av-primary-bg:      #34D399;
+  --av-primary-bg-hover: #6EE7B7;
+  --av-primary-text:     #052E16;
+  --av-accent-soft-bg:   rgba(52,211,153,.12);
+  --av-accent-soft-text: #6EE7B7;
+  --av-warn:   #FBBF24;
+  --av-danger: #F87171;
+  --av-focus:  #60A5FA;
+}
+
+/* Widen the Menu Admin modal well beyond the old 1100px cap */
+.modal-box.admin-view {
+  max-width: min(1600px, 96vw);
+  width: 96vw;
+  height: 92vh;
+  max-height: 92vh;
+  background: var(--av-bg);
+  border-color: var(--av-border-strong);
+}
+.modal-box.admin-view .modal-title { border-bottom-color: var(--av-border-strong); }
+
+/* Layout */
+.admin-layout { display: grid; grid-template-columns: 216px 1fr; gap: 28px; align-items: start; }
+.admin-nav {
+  position: sticky; top: 0; display: flex; flex-direction: column; gap: 22px;
+  padding-top: 2px;
+}
+.admin-nav-group { display: flex; flex-direction: column; gap: 2px; }
+.admin-nav-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--av-text-dim); padding: 0 12px; margin-bottom: 4px;
+}
+.admin-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  color: var(--av-text-muted); background: none; border: 1px solid transparent;
+  text-align: left; cursor: pointer; transition: background .15s, color .15s;
+}
+.admin-nav-item .icon { width: 16px; height: 16px; flex-shrink: 0; }
+.admin-nav-item:hover { background: var(--av-surface2); color: var(--av-text); }
+.admin-nav-item.active { background: var(--av-accent-soft-bg); color: var(--av-accent-soft-text); font-weight: 600; }
+.admin-content { min-width: 0; }
+
+@media (max-width: 900px) {
+  .admin-layout { display: block; }
+  .admin-nav {
+    position: static; flex-direction: row; gap: 6px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    margin-bottom: 20px; padding-bottom: 4px;
+  }
+  .admin-nav::-webkit-scrollbar { display: none; }
+  .admin-nav-group { flex-direction: row; gap: 4px; flex-shrink: 0; }
+  .admin-nav-label { display: none; }
+  .admin-nav-item { white-space: nowrap; }
+}
+
+@media (max-width: 640px) {
+  /* form-row grids inside the admin modal (Tambah Karyawan, shift form,
+     override form) set their column count via an inline style attribute,
+     which the app's generic mobile `.form-row` reset can't beat without
+     !important. Scoped to .admin-view so nothing outside admin is affected. */
+  .admin-view .form-row { grid-template-columns: 1fr !important; }
+  .admin-section-head { flex-wrap: wrap; }
+  .shift-form-actions .btn { flex: 1; }
+}
+
+/* Cards / section chrome */
+.admin-view .admin-form-card {
+  background: var(--av-surface); border: 1px solid var(--av-border);
+  border-radius: 12px; padding: 18px 20px; box-shadow: none; backdrop-filter: none;
+}
+.admin-view .section-title { font-size: 13px; font-weight: 700; color: var(--av-text); margin-bottom: 14px; }
+.admin-view .admin-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+.admin-view .hint { font-size: 12px; color: var(--av-text-muted); line-height: 1.5; }
+.admin-view .hint-warn { color: var(--av-warn); }
+.admin-view .field-required { color: var(--av-danger); }
+.admin-view .field-hint { color: var(--av-text-dim); font-weight: 400; text-transform: none; }
+.admin-view .table-wrap { background: var(--av-surface); border: 1px solid var(--av-border); box-shadow: none; }
+
+/* Tables: real borders, left-aligned, readable size, tabular numbers */
+.admin-view table { font-variant-numeric: tabular-nums; }
+.admin-view .settings-table,
+.admin-view .raw-scan-table,
+.admin-view table:not(.settings-table):not(.raw-scan-table) {
+  border: 1px solid var(--av-border-strong);
+}
+.admin-view table th {
+  text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: none;
+  color: var(--av-text-muted); background: var(--av-surface2); border-bottom: 1px solid var(--av-border-strong);
+}
+.admin-view table td {
+  text-align: left; font-size: 14px; color: var(--av-text); border-bottom: 1px solid var(--av-grid);
+}
+.admin-view table th.t-c, .admin-view table td.t-c { text-align: center; }
+.admin-view table tbody tr:nth-child(even) { background: var(--av-row-alt); }
+.admin-view table tbody tr:hover { background: var(--av-surface2); }
+.admin-view .sub { font-size: 11px; color: var(--av-text-dim); margin-top: 2px; }
+.admin-view .ot-yes { color: var(--av-accent-soft-text); font-weight: 600; }
+.admin-view .ot-no  { color: var(--av-text-muted); font-weight: 400; }
+
+/* Buttons */
+.admin-view .btn-primary {
+  background: var(--av-primary-bg); color: var(--av-primary-text);
+  box-shadow: none;
+}
+.admin-view .btn-primary:hover { background: var(--av-primary-bg-hover); transform: none; filter: none; box-shadow: none; }
+.admin-view .btn-primary:active { transform: none; }
+.admin-view .btn-ghost { color: var(--av-text-muted); border-color: var(--av-border-strong); }
+.admin-view .btn-ghost:hover { color: var(--av-text); border-color: var(--av-text-muted); }
+.admin-view .btn-icon { min-width: 32px; min-height: 32px; padding: 6px; color: var(--av-text-muted); }
+.admin-view .btn-icon:hover { background: var(--av-surface2); }
+.admin-view .modal-close { color: var(--av-text-muted); }
+.admin-view .modal-close:hover { color: var(--av-text); }
+
+/* Inputs + focus */
+.admin-view input, .admin-view select, .admin-view textarea {
+  background: var(--av-surface); border: 1px solid var(--av-input-border); color: var(--av-text);
+}
+.admin-view label { color: var(--av-text-muted); font-size: 12px; text-transform: none; letter-spacing: 0; }
+.admin-view :focus-visible { outline: 2px solid var(--av-focus); outline-offset: 2px; }
+.admin-view input:focus, .admin-view select:focus, .admin-view textarea:focus {
+  outline: 2px solid var(--av-focus); outline-offset: 1px; border-color: var(--av-focus); box-shadow: none;
+}
+
+/* Shift form */
+.shift-form {
+  display: none; margin-top: 16px;
+  background: var(--av-surface2); border: 1px solid var(--av-border);
+  border-radius: 12px; padding: 18px 20px;
+}
+.shift-form.open { display: block; }
+.shift-form-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.shift-form-head h3 { font-size: 14px; font-weight: 700; color: var(--av-text); margin: 0; }
+.shift-fieldset { border: 1px solid var(--av-border); border-radius: 10px; padding: 12px 14px 14px; margin: 0 0 14px; }
+.shift-fieldset legend { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--av-text-dim); padding: 0 6px; }
+.hari-checks { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; font-size: 13px; }
+.hari-checks label { display: flex; align-items: center; gap: 5px; color: var(--av-text); }
+.no-ot-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--av-text); cursor: pointer; }
+.shift-form-actions { display: flex; gap: 8px; margin-top: 4px; }
+.field-err {
+  background: rgba(185,28,28,.08); border: 1px solid var(--av-danger); color: var(--av-danger);
+  border-radius: 8px; padding: 10px 14px; font-size: 12px; margin-bottom: 12px;
+}
+.field-err ul { margin: 0; padding-left: 18px; }
+.field-warn {
+  background: rgba(180,83,9,.08); border: 1px solid var(--av-warn); color: var(--av-warn);
+  border-radius: 8px; padding: 10px 14px; font-size: 12px; margin-bottom: 12px;
+}
+.field-invalid { border-color: var(--av-danger) !important; }
+
+/* Save bar — sticky to the bottom of the modal's own scroll area */
+.save-bar {
+  position: sticky; bottom: 0; margin-top: 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 14px 20px;
+  background: var(--av-surface); border: 1px solid var(--av-border-strong);
+  border-radius: 12px; box-shadow: 0 -4px 20px rgba(0,0,0,.12);
+}
+.save-bar[hidden] { display: none; }
+.save-bar-actions { display: flex; gap: 8px; }
+#save-bar-text { font-size: 13px; font-weight: 600; color: var(--av-text); }

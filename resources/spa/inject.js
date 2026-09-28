@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { escHtml } from './utils.js';
-import { renderOverridesTable } from './settings.js';
+import { renderOverridesTable, patchOverridesNow, patchOverridesRemoveNow } from './settings.js';
 import { loadPersonalAbsensi } from './table.js';
 import { applyFilter } from './filter.js';
 import { icon } from './icons.js';
@@ -36,6 +36,12 @@ export function toggleInjAlasan() {
   document.getElementById('inj-hint').textContent=hints[alasan]||'';
 }
 
+function mergeScanNote(notes, pin, catatan, tanggal) {
+  const idx = notes.findIndex(n => String(n.pin) === String(pin) && n.tanggal === tanggal);
+  if (idx >= 0) { const copy = [...notes]; copy[idx] = { ...copy[idx], catatan }; return copy; }
+  return [...notes, { pin: String(pin), tanggal, catatan }];
+}
+
 export async function confirmInjectModal() {
   if(!state.injPin||!state.injTanggal) return;
   const alasan=document.getElementById('inj-alasan').value;
@@ -61,35 +67,25 @@ export async function confirmInjectModal() {
 
   try {
     const logEntry={id:'ov-inject-'+Date.now(),tanggal:state.injTanggal,nama:catatan,tipe:'absen_inject',alasan,berlaku_untuk:[String(state.injPin)],created_by:state.authUser?.name||state.authUser?.username||'?',created_at:new Date().toISOString()};
-    const fetchSettings=()=>fetch('/api/settings',{headers:{'Authorization':'Bearer '+state.authToken}}).then(r=>r.json()).then(j=>j.data||{});
-    const saveSettingsInject=(data)=>fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.authToken},body:JSON.stringify({data})}).then(r=>{if(!r.ok)throw new Error('settings save failed');});
 
     if(alasan==='sakit'){
-      const sData=await fetchSettings();
-      const notes=sData.scan_notes||[];
-      const idx=notes.findIndex(n=>String(n.pin)===String(state.injPin)&&n.tanggal===state.injTanggal);
-      if(idx>=0) notes[idx].catatan=catatan; else notes.push({pin:String(state.injPin),tanggal:state.injTanggal,catatan});
-      state.dailyOverrides.push({...logEntry,jam_masuk:null,jam_pulang:null});
-      await saveSettingsInject({...sData,scan_notes:notes,daily_overrides:state.dailyOverrides});
+      const entry={...logEntry,jam_masuk:null,jam_pulang:null};
+      await patchOverridesNow(server => ({ entries:[entry], extra:{ scan_notes: mergeScanNote(server.scan_notes||[], state.injPin, catatan, state.injTanggal) } }));
     } else if(alasan==='ganti_shift'){
       const shiftId=document.getElementById('inj-shift-id').value;
       const shift=state.appShifts.find(s=>s.id===shiftId);
-      const sData=await fetchSettings();
-      const ovEntry={id:'ov-'+Date.now(),tanggal:state.injTanggal,nama:catatan,tipe:'ganti_shift',shift_id:shiftId,jam_pulang:shift?.jam_pulang||'17:00',berlaku_untuk:[String(state.injPin)],created_by:logEntry.created_by,created_at:logEntry.created_at};
-      state.dailyOverrides.push(ovEntry);
-      await saveSettingsInject({...sData,daily_overrides:state.dailyOverrides});
+      const entry={id:'ov-'+Date.now(),tanggal:state.injTanggal,nama:catatan,tipe:'ganti_shift',shift_id:shiftId,jam_pulang:shift?.jam_pulang||'17:00',berlaku_untuk:[String(state.injPin)],created_by:logEntry.created_by,created_at:logEntry.created_at};
+      await patchOverridesNow(() => ({ entries:[entry] }));
     } else if(alasan==='lainnya'){
       await postScan(state.injTanggal+' '+jamLainnya+':00',catatan);
       if(jamLainnya2) await postScan(state.injTanggal+' '+jamLainnya2+':00',null);
-      state.dailyOverrides.push({...logEntry,jam_masuk:jamLainnya,jam_pulang:jamLainnya2||null});
-      const sData=await fetchSettings();
-      await saveSettingsInject({...sData,daily_overrides:state.dailyOverrides});
+      const entry={...logEntry,jam_masuk:jamLainnya,jam_pulang:jamLainnya2||null};
+      await patchOverridesNow(() => ({ entries:[entry] }));
     } else {
       if(jamMasuk) await postScan(state.injTanggal+' '+jamMasuk+':00',catatan);
       await postScan(state.injTanggal+' '+jamPulang+':00',jamMasuk?null:catatan);
-      state.dailyOverrides.push({...logEntry,jam_masuk:jamMasuk||null,jam_pulang:jamPulang||null});
-      const sData=await fetchSettings();
-      await saveSettingsInject({...sData,daily_overrides:state.dailyOverrides});
+      const entry={...logEntry,jam_masuk:jamMasuk||null,jam_pulang:jamPulang||null};
+      await patchOverridesNow(() => ({ entries:[entry] }));
     }
     closeInjectModal();
     if(document.getElementById('tab-personal').classList.contains('active')&&state.selectedEmployee)
@@ -173,34 +169,38 @@ export async function deleteScanNote(pin, tanggal, nama) {
   }catch(e){alert('Gagal hapus: '+(e.message||'cek koneksi'));}
 }
 
+// pulang_awal/ganti_shift added via the Pengaturan > Override tab are staged
+// (removed locally, persisted only on "Simpan Perubahan"). absen_inject
+// entries are always immediate, since they're tied to real att_log writes.
 export async function deleteOverride(id) {
   const entry=state.dailyOverrides.find(o=>o.id===id);
   if(!entry) return;
-  if(entry.tipe==='absen_inject'){
-    const pins=Array.isArray(entry.berlaku_untuk)?entry.berlaku_untuk:[entry.berlaku_untuk];
-    if(!confirm(`Hapus inject "${entry.nama||'entri ini'}" untuk ${pins.length} karyawan?\nScan di att_log dan catatan akan dihapus.`)) return;
-    const delScan=(pin,jam)=>fetch('/api/att_log/scan',{method:'DELETE',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.authToken},body:JSON.stringify({data:{sn:'MANUAL',scan_date:entry.tanggal+' '+jam+':00',pin:String(pin)}})});
-    const delScanNote=async(pin)=>{
-      const sRes=await fetch('/api/settings',{headers:{'Authorization':'Bearer '+state.authToken}});
-      const sData=(await sRes.json()).data||{};
-      sData.scan_notes=(sData.scan_notes||[]).filter(n=>!(String(n.pin)===String(pin)&&n.tanggal===entry.tanggal));
-      await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.authToken},body:JSON.stringify({data:sData})});
-    };
-    for(const pin of pins){
-      if(entry.alasan==='sakit') await delScanNote(pin).catch(()=>{});
-      else{
-        if(entry.jam_masuk) await delScan(pin,entry.jam_masuk).catch(()=>{});
-        if(entry.jam_pulang) await delScan(pin,entry.jam_pulang).catch(()=>{});
-      }
-    }
-  } else {
+
+  if (entry.tipe!=='absen_inject') {
     if(!confirm('Hapus override ini?')) return;
+    state.dailyOverrides=state.dailyOverrides.filter(o=>o.id!==id);
+    renderOverridesTable();
+    if(document.getElementById('tab-personal')?.classList.contains('active')&&state.selectedEmployee) loadPersonalAbsensi();
+    return;
   }
-  state.dailyOverrides=state.dailyOverrides.filter(o=>o.id!==id);
-  if(entry.tipe==='absen_inject'||entry.tipe==='ganti_shift'){
-    fetch('/api/settings',{headers:{'Authorization':'Bearer '+state.authToken}})
-      .then(r=>r.json()).then(j=>{const d=j.data||{};d.daily_overrides=state.dailyOverrides;return fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.authToken},body:JSON.stringify({data:d})});}).catch(()=>{});
+
+  const pins=Array.isArray(entry.berlaku_untuk)?entry.berlaku_untuk:[entry.berlaku_untuk];
+  if(!confirm(`Hapus inject "${entry.nama||'entri ini'}" untuk ${pins.length} karyawan?\nScan di att_log dan catatan akan dihapus.`)) return;
+  const delScan=(pin,jam)=>fetch('/api/att_log/scan',{method:'DELETE',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.authToken},body:JSON.stringify({data:{sn:'MANUAL',scan_date:entry.tanggal+' '+jam+':00',pin:String(pin)}})});
+  const delScanNote=async(pin)=>{
+    const sRes=await fetch('/api/settings',{headers:{'Authorization':'Bearer '+state.authToken}});
+    const sData=(await sRes.json()).data||{};
+    sData.scan_notes=(sData.scan_notes||[]).filter(n=>!(String(n.pin)===String(pin)&&n.tanggal===entry.tanggal));
+    await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.authToken},body:JSON.stringify({data:sData})});
+  };
+  for(const pin of pins){
+    if(entry.alasan==='sakit') await delScanNote(pin).catch(()=>{});
+    else{
+      if(entry.jam_masuk) await delScan(pin,entry.jam_masuk).catch(()=>{});
+      if(entry.jam_pulang) await delScan(pin,entry.jam_pulang).catch(()=>{});
+    }
   }
+  await patchOverridesRemoveNow(id);
   renderOverridesTable();
   if(document.getElementById('tab-personal')?.classList.contains('active')&&state.selectedEmployee) loadPersonalAbsensi();
 }

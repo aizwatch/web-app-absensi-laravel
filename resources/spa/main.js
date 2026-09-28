@@ -1,9 +1,10 @@
 import './app.css';
+import './admin-view.css';
 
 // ── IMPORTS ──
 import { icon } from './icons.js';
 import { state } from './state.js';
-import { initClock, toggleTheme, switchTab, switchStab, switchPengaturanStab, switchAdminStab } from './utils.js';
+import { initClock, toggleTheme, switchTab, switchStab, switchAdminStab } from './utils.js';
 import {
   doLogin, doForceChangePw, doLogout,
   loadAuthSession, loadLoginUsers, applyAuthUI,
@@ -15,9 +16,9 @@ import {
 } from './picker.js';
 import { loadAppSettings } from './settings.js';
 import {
-  saveSettings, openPengaturanSettings,
-  renderShiftsTable, editShiftRow, cancelShiftRow, saveShiftRow,
-  deleteShift, toggleAddShift, addShift, autoFillBatas, autoFillBatasNew,
+  saveSettings, discardSettings, isSettingsDirty,
+  renderShiftsTable, openShiftForm, cancelShiftForm, submitShiftForm,
+  deleteShift, autoFillBatasNew,
   filterEmpRows, assignShift,
   addHoliday, deleteHoliday,
   toggleOvFields, toggleOvAlasan, toggleOvKaryawan,
@@ -26,7 +27,6 @@ import {
   addOverride,
   adminResetUserPassword,
   renderDepartmentsCard, addDepartment, removeDepartment,
-  openDeptModal, closeDeptModal,
 } from './settings.js';
 import { pollAbsensi, changeMonth, loadPersonalAbsensi } from './table.js';
 import { applyFilter, resetFilter, exportFilter, switchFilterStab, applyBermasalah, toggleBermasalahDetail } from './filter.js';
@@ -35,7 +35,7 @@ import {
   confirmInjectModal, openRowHistory, deleteOverride, deleteScanNote,
 } from './inject.js';
 import {
-  openAdminModal, closeAdminModal, adminInit,
+  openAdminModal, closeAdminModal, showAdminSection, adminInit,
   adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan, adminDeleteScan,
   adminLoadPegawai, adminEditPegawaiRow, adminCancelPegawaiRow,
   adminSavePegawai, adminDeletePegawai, adminAddPegawai,
@@ -66,10 +66,19 @@ const _mnavTabMap = {
 
 function mobileNavSwitch(tabId, navItemId) {
   const desktopBtn = document.getElementById(_mnavTabMap[tabId]);
-  if (desktopBtn) switchTab(tabId, desktopBtn);
+  switchTab(tabId, desktopBtn || null);
   document.querySelectorAll('.mobile-nav-item').forEach(el => el.classList.remove('active'));
   const item = document.getElementById(navItemId);
   if (item) item.classList.add('active');
+}
+
+// ── GUARD: unsaved admin settings changes ──
+window.addEventListener('beforeunload', (e) => {
+  if (isSettingsDirty()) { e.preventDefault(); e.returnValue = ''; }
+});
+async function doLogoutGuarded() {
+  if (isSettingsDirty() && !confirm('Ada perubahan pengaturan yang belum disimpan. Tetap logout? Perubahan akan hilang.')) return;
+  await doLogout();
 }
 
 // ── EXPOSE TO window (required by inline onclick= in HTML) ──
@@ -77,19 +86,18 @@ Object.assign(window, {
   // icons
   icon,
   // theme & nav
-  toggleTheme, switchTab, switchStab, switchPengaturanStab, switchAdminStab,
+  toggleTheme, switchTab, switchStab, switchAdminStab,
   mobileNavSwitch,
 
   // auth
-  doLogin, doForceChangePw, doLogout,
+  doLogin, doForceChangePw, doLogout: doLogoutGuarded,
 
   // picker
   confirmPickerSelect, showPicker, changeMonth,
   _pickerSelect: (pin, nama) => selectEmployee(pin, nama),
 
   // settings — shifts
-  editShiftRow, cancelShiftRow, saveShiftRow, deleteShift,
-  toggleAddShift, addShift, autoFillBatas, autoFillBatasNew,
+  openShiftForm, cancelShiftForm, submitShiftForm, deleteShift, autoFillBatasNew,
 
   // settings — assign
   filterEmpRows, assignShift,
@@ -103,11 +111,9 @@ Object.assign(window, {
   toggleOvPin, ovPickerSelectAll, ovPickerClearAll, confirmOvKaryawanPicker,
   addOverride, deleteOverride,
 
-  // settings — password + departemen
-  adminResetUserPassword, saveSettings,
-  openPengaturanSettings,
+  // settings — password + departemen + save bar
+  adminResetUserPassword, saveSettings, discardSettings,
   renderDepartmentsCard, addDepartment, removeDepartment,
-  openDeptModal, closeDeptModal,
 
   // filter
   applyFilter, resetFilter, exportFilter,
@@ -117,8 +123,8 @@ Object.assign(window, {
   openInjectModal, closeInjectModal, toggleInjAlasan,
   confirmInjectModal, openRowHistory, deleteScanNote,
 
-  // admin modal
-  openAdminModal, closeAdminModal, switchAdminStab,
+  // admin page
+  openAdminModal, closeAdminModal, showAdminSection, switchAdminStab,
   adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan, adminDeleteScan,
   adminEditPegawaiRow, adminCancelPegawaiRow, adminSavePegawai,
   adminDeletePegawai, adminAddPegawai,

@@ -1,9 +1,26 @@
 import { state } from './state.js';
-import { escHtml, showToast, switchStab } from './utils.js';
+import { escHtml, showToast, switchStab, switchAdminStab } from './utils.js';
 import { authHeaders } from './auth.js';
 import { populatePickerSelect } from './picker.js';
-import { openPengaturanSettings, renderDepartmentsCard } from './settings.js';
+import { ensureSettingsLoaded, renderDepartmentsCard, isSettingsDirty } from './settings.js';
 import { icon } from './icons.js';
+
+const ADMIN_SECTION_PANES = {
+  scan: 'astab-attlog', pegawai: 'astab-pegawai', dept: 'astab-dept', rekap: 'astab-filter',
+  sync: 'astab-sync', shift: 'pstab-shifts', penugasan: 'pstab-assign', libur: 'pstab-holidays',
+  override: 'pstab-overrides', resetpw: 'pstab-resetpw',
+};
+const SETTINGS_SECTIONS = ['shift', 'penugasan', 'libur', 'override', 'resetpw'];
+
+export function showAdminSection(key, btn) {
+  const paneId = ADMIN_SECTION_PANES[key];
+  if (!paneId) return;
+  switchAdminStab(paneId, btn);
+  document.querySelectorAll('.admin-nav-item').forEach(el => el.setAttribute('aria-selected', el === btn ? 'true' : 'false'));
+  if (key === 'sync') { loadSyncDevices(); populateSyncUserSelect(); }
+  if (key === 'dept') renderDepartmentsCard();
+  if (SETTINGS_SECTIONS.includes(key)) ensureSettingsLoaded();
+}
 
 export function openAdminModal() {
   adminInit();
@@ -11,6 +28,7 @@ export function openAdminModal() {
 }
 
 export function closeAdminModal() {
+  if (isSettingsDirty() && !confirm('Ada perubahan pengaturan yang belum disimpan. Tetap tutup? Perubahan tidak hilang sampai kamu buang, tapi belum tersimpan ke server.')) return;
   document.getElementById('modal-admin').classList.remove('open');
 }
 

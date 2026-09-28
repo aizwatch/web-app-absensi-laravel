@@ -1,0 +1,41 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "public/index.html"
+        ],
+        "createdAt": "2026-09-28T03:41:38.396Z",
+        "reason": "preview img src set at runtime by absensi-mandiri.js (am-preview-img, attachment-modal-img), hidden by default; confirmed false positive in critique"
+      },
+      {
+        "rule": "overused-font",
+        "value": "montserrat",
+        "createdAt": "2026-09-28T03:51:04.318Z",
+        "reason": "pre-existing global brand typeface used app-wide before this session; changing it was out of scope (task was admin-only layout/save/visual fixes, user explicitly asked visual changes stay scoped to admin)"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "files": [
+          "resources/spa/laporan.js"
+        ],
+        "createdAt": "2026-09-28T03:51:04.358Z",
+        "reason": "false positive: print-only stylesheet inside a generated A4 report popup document, where a system font is the normal choice; confirmed in critique assessment"
+      },
+      {
+        "rule": "side-tab",
+        "value": "border-left: 3px solid #dc2626",
+        "files": [
+          "resources/spa/app.css"
+        ],
+        "createdAt": "2026-09-28T03:51:04.398Z",
+        "reason": "false positive: status marker on tr.row-belum-absen (unfilled attendance row) paired with a red row tint, not a card/callout accent border; confirmed in critique assessment; pre-existing, unrelated to admin-scoped changes"
+      }
+    ]
+  }
+}
