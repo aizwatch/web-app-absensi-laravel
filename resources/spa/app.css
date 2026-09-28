@@ -435,16 +435,16 @@
   }
 
   .cell-early {
-    background: rgba(37,99,235,0.12);
-    color: #2563eb;
+    background: rgba(220,38,38,0.12);
+    color: var(--danger);
     font-weight: 600;
     border-radius: 6px;
     padding: 4px 10px;
     display: inline-block;
   }
   [data-theme="dark"] .cell-early {
-    background: rgba(96,165,250,0.15);
-    color: #60a5fa;
+    background: rgba(248,113,113,0.15);
+    color: #f87171;
   }
 
   /* 1x scan istirahat saja — incomplete */
