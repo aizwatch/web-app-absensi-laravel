@@ -54,17 +54,11 @@ export function setStatus(online) {
   }
 }
 
-let _leaveGuard = null;
-export function setLeaveGuard(fn) { _leaveGuard = fn; }
-
 export function switchTab(id, btn) {
-  const leavingAdmin = document.getElementById('tab-admin')?.classList.contains('active') && id !== 'tab-admin';
-  if (leavingAdmin && _leaveGuard && !_leaveGuard()) return;
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if (btn) btn.classList.add('active');
-  document.body.classList.toggle('is-admin', id === 'tab-admin');
 }
 
 export function switchStab(id, btn) {

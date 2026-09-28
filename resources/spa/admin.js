@@ -2,7 +2,7 @@ import { state } from './state.js';
 import { escHtml, showToast, switchStab, switchAdminStab } from './utils.js';
 import { authHeaders } from './auth.js';
 import { populatePickerSelect } from './picker.js';
-import { ensureSettingsLoaded, renderDepartmentsCard } from './settings.js';
+import { ensureSettingsLoaded, renderDepartmentsCard, isSettingsDirty } from './settings.js';
 import { icon } from './icons.js';
 
 const ADMIN_SECTION_PANES = {
@@ -22,16 +22,15 @@ export function showAdminSection(key, btn) {
   if (SETTINGS_SECTIONS.includes(key)) ensureSettingsLoaded();
 }
 
-export function openAdminView() {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-admin').classList.add('active');
-  document.body.classList.add('is-admin');
+export function openAdminModal() {
   adminInit();
+  document.getElementById('modal-admin').classList.add('open');
 }
-// legacy name kept as alias — only #btn-admin's onclick referenced it
-export const openAdminModal = openAdminView;
+
+export function closeAdminModal() {
+  if (isSettingsDirty() && !confirm('Ada perubahan pengaturan yang belum disimpan. Tetap tutup? Perubahan tidak hilang sampai kamu buang, tapi belum tersimpan ke server.')) return;
+  document.getElementById('modal-admin').classList.remove('open');
+}
 
 export function adminInit() {
   const opts=`<option value="">— Semua —</option>`+

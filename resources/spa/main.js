@@ -4,7 +4,7 @@ import './admin-view.css';
 // ── IMPORTS ──
 import { icon } from './icons.js';
 import { state } from './state.js';
-import { initClock, toggleTheme, switchTab, switchStab, switchAdminStab, setLeaveGuard } from './utils.js';
+import { initClock, toggleTheme, switchTab, switchStab, switchAdminStab } from './utils.js';
 import {
   doLogin, doForceChangePw, doLogout,
   loadAuthSession, loadLoginUsers, applyAuthUI,
@@ -35,7 +35,7 @@ import {
   confirmInjectModal, openRowHistory, deleteOverride, deleteScanNote,
 } from './inject.js';
 import {
-  openAdminView, showAdminSection, adminInit,
+  openAdminModal, closeAdminModal, showAdminSection, adminInit,
   adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan, adminDeleteScan,
   adminLoadPegawai, adminEditPegawaiRow, adminCancelPegawaiRow,
   adminSavePegawai, adminDeletePegawai, adminAddPegawai,
@@ -72,11 +72,7 @@ function mobileNavSwitch(tabId, navItemId) {
   if (item) item.classList.add('active');
 }
 
-// ── LEAVE GUARD: unsaved admin settings changes ──
-setLeaveGuard(() => {
-  if (!isSettingsDirty()) return true;
-  return confirm('Ada perubahan pengaturan yang belum disimpan. Tetap tinggalkan halaman ini? Perubahan akan hilang.');
-});
+// ── GUARD: unsaved admin settings changes ──
 window.addEventListener('beforeunload', (e) => {
   if (isSettingsDirty()) { e.preventDefault(); e.returnValue = ''; }
 });
@@ -128,7 +124,7 @@ Object.assign(window, {
   confirmInjectModal, openRowHistory, deleteScanNote,
 
   // admin page
-  openAdminView, openAdminModal: openAdminView, showAdminSection, switchAdminStab,
+  openAdminModal, closeAdminModal, showAdminSection, switchAdminStab,
   adminLoadScans, adminEditScanRow, adminCancelScanRow, adminSaveScan, adminDeleteScan,
   adminEditPegawaiRow, adminCancelPegawaiRow, adminSavePegawai,
   adminDeletePegawai, adminAddPegawai,
@@ -175,6 +171,9 @@ document.getElementById('modal-am-confirm').addEventListener('click', function(e
   if (e.target === this) closeAmConfirm();
 });
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('modal-admin').addEventListener('click', function(e) {
+    if (e.target === this) closeAdminModal();
+  });
   document.getElementById('modal-laporan').addEventListener('click', function(e) {
     if (e.target === this) closeLaporanModal();
   });

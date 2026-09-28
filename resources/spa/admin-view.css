@@ -1,7 +1,8 @@
-/* ADMIN VIEW — scoped visual refresh. Applies only while body.is-admin
-   (Admin tab active); Absensi Saya / Live / Mandiri tabs are untouched. */
+/* ADMIN VIEW — scoped visual refresh for the widened Menu Admin modal.
+   Everything here is scoped under .admin-view (the modal box itself), so
+   Absensi Saya / Live / Mandiri are untouched. */
 
-body.is-admin {
+.admin-view {
   --av-bg:            #F7F7F5;
   --av-surface:       #FFFFFF;
   --av-surface2:      #F2F2EF;
@@ -22,7 +23,7 @@ body.is-admin {
   --av-danger: #B91C1C;
   --av-focus:  #2563EB;
 }
-[data-theme="dark"] body.is-admin {
+[data-theme="dark"] .admin-view {
   --av-bg:            #0F0E0D;
   --av-surface:       #1A1817;
   --av-surface2:      #242220;
@@ -44,18 +45,23 @@ body.is-admin {
   --av-focus:  #60A5FA;
 }
 
-/* Remove decoration while Admin is active */
-body.is-admin::before { display: none; }
-body.is-admin header {
-  background: var(--av-surface);
-  backdrop-filter: none; -webkit-backdrop-filter: none;
-  border-bottom-color: var(--av-border-strong);
+/* Widen the Menu Admin modal well beyond the old 1100px cap */
+.modal-box.admin-view {
+  max-width: min(1600px, 96vw);
+  width: 96vw;
+  height: 92vh;
+  max-height: 92vh;
+  background: var(--av-bg);
+  border-color: var(--av-border-strong);
 }
-body.is-admin .container { max-width: 1680px; }
+.modal-box.admin-view .modal-title { border-bottom-color: var(--av-border-strong); }
 
 /* Layout */
 .admin-layout { display: grid; grid-template-columns: 216px 1fr; gap: 28px; align-items: start; }
-.admin-nav { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 22px; }
+.admin-nav {
+  position: sticky; top: 0; display: flex; flex-direction: column; gap: 22px;
+  padding-top: 2px;
+}
 .admin-nav-group { display: flex; flex-direction: column; gap: 2px; }
 .admin-nav-label {
   font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
@@ -131,6 +137,8 @@ body.is-admin .container { max-width: 1680px; }
 .admin-view .btn-ghost:hover { color: var(--av-text); border-color: var(--av-text-muted); }
 .admin-view .btn-icon { min-width: 32px; min-height: 32px; padding: 6px; color: var(--av-text-muted); }
 .admin-view .btn-icon:hover { background: var(--av-surface2); }
+.admin-view .modal-close { color: var(--av-text-muted); }
+.admin-view .modal-close:hover { color: var(--av-text); }
 
 /* Inputs + focus */
 .admin-view input, .admin-view select, .admin-view textarea {
@@ -168,7 +176,7 @@ body.is-admin .container { max-width: 1680px; }
 }
 .field-invalid { border-color: var(--av-danger) !important; }
 
-/* Save bar */
+/* Save bar — sticky to the bottom of the modal's own scroll area */
 .save-bar {
   position: sticky; bottom: 0; margin-top: 20px;
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
@@ -179,7 +187,3 @@ body.is-admin .container { max-width: 1680px; }
 .save-bar[hidden] { display: none; }
 .save-bar-actions { display: flex; gap: 8px; }
 #save-bar-text { font-size: 13px; font-weight: 600; color: var(--av-text); }
-
-@media (max-width: 768px) {
-  .save-bar { position: sticky; bottom: calc(88px + env(safe-area-inset-bottom)); }
-}
