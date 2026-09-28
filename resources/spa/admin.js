@@ -1,18 +1,37 @@
 import { state } from './state.js';
-import { escHtml, showToast, switchStab } from './utils.js';
+import { escHtml, showToast, switchStab, switchAdminStab } from './utils.js';
 import { authHeaders } from './auth.js';
 import { populatePickerSelect } from './picker.js';
-import { openPengaturanSettings, renderDepartmentsCard } from './settings.js';
+import { ensureSettingsLoaded, renderDepartmentsCard } from './settings.js';
 import { icon } from './icons.js';
 
-export function openAdminModal() {
-  adminInit();
-  document.getElementById('modal-admin').classList.add('open');
+const ADMIN_SECTION_PANES = {
+  scan: 'astab-attlog', pegawai: 'astab-pegawai', dept: 'astab-dept', rekap: 'astab-filter',
+  sync: 'astab-sync', shift: 'pstab-shifts', penugasan: 'pstab-assign', libur: 'pstab-holidays',
+  override: 'pstab-overrides', resetpw: 'pstab-resetpw',
+};
+const SETTINGS_SECTIONS = ['shift', 'penugasan', 'libur', 'override', 'resetpw'];
+
+export function showAdminSection(key, btn) {
+  const paneId = ADMIN_SECTION_PANES[key];
+  if (!paneId) return;
+  switchAdminStab(paneId, btn);
+  document.querySelectorAll('.admin-nav-item').forEach(el => el.setAttribute('aria-selected', el === btn ? 'true' : 'false'));
+  if (key === 'sync') { loadSyncDevices(); populateSyncUserSelect(); }
+  if (key === 'dept') renderDepartmentsCard();
+  if (SETTINGS_SECTIONS.includes(key)) ensureSettingsLoaded();
 }
 
-export function closeAdminModal() {
-  document.getElementById('modal-admin').classList.remove('open');
+export function openAdminView() {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-admin').classList.add('active');
+  document.body.classList.add('is-admin');
+  adminInit();
 }
+// legacy name kept as alias — only #btn-admin's onclick referenced it
+export const openAdminModal = openAdminView;
 
 export function adminInit() {
   const opts=`<option value="">— Semua —</option>`+

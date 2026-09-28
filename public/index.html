@@ -21,7 +21,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LT Absensi">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/build/spa/app.css?v=5">
+<link rel="stylesheet" href="/build/spa/app.css?v=6">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -114,7 +114,7 @@
           <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
           <button class="theme-toggle" id="btn-user-settings" onclick="openUserSettingsModal()" title="Pengaturan Akun" style="display:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
           <button class="theme-toggle" id="btn-dashboard" onclick="openDashboardModal()" title="Dashboard Kehadiran" style="display:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
-          <button class="theme-toggle" id="btn-admin" onclick="openAdminModal()" title="Menu Admin" style="display:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button>
+          <button class="theme-toggle" id="btn-admin" onclick="openAdminView()" title="Menu Admin" style="display:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button>
           <button class="theme-toggle" id="btn-logout" onclick="doLogout()" title="Logout" style="display:none"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
         </div>
       </div>
@@ -383,33 +383,44 @@
   </div>
 </main>
 
-<div class="modal-overlay" id="modal-admin">
-  <div class="modal-box wide" style="max-width:1100px">
-    <div class="modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Menu Admin<button class="modal-close" onclick="closeAdminModal()">×</button></div>
+<section id="tab-admin" class="tab-content admin-view">
+  <div class="admin-layout">
+    <nav class="admin-nav" aria-label="Menu admin" role="tablist" aria-orientation="vertical">
+      <div class="admin-nav-group">
+        <div class="admin-nav-label">Data</div>
+        <button class="admin-nav-item admin-stab-btn active" id="anav-scan" role="tab" aria-selected="true" onclick="showAdminSection('scan',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Koreksi Absensi</button>
+        <button class="admin-nav-item admin-stab-btn" id="anav-pegawai" role="tab" aria-selected="false" onclick="showAdminSection('pegawai',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Data Karyawan</button>
+        <button class="admin-nav-item admin-stab-btn" id="anav-dept" role="tab" aria-selected="false" onclick="showAdminSection('dept',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> Departemen</button>
+        <button class="admin-nav-item admin-stab-btn" id="anav-rekap" role="tab" aria-selected="false" onclick="showAdminSection('rekap',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Filter &amp; Cari</button>
+      </div>
+      <div class="admin-nav-group">
+        <div class="admin-nav-label">Jadwal</div>
+        <button class="admin-nav-item admin-stab-btn" id="anav-shift" role="tab" aria-selected="false" onclick="showAdminSection('shift',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/></svg> Shift Kerja</button>
+        <button class="admin-nav-item admin-stab-btn" id="anav-penugasan" role="tab" aria-selected="false" onclick="showAdminSection('penugasan',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Penugasan Shift</button>
+        <button class="admin-nav-item admin-stab-btn" id="anav-libur" role="tab" aria-selected="false" onclick="showAdminSection('libur',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Hari Libur</button>
+        <button class="admin-nav-item admin-stab-btn" id="anav-override" role="tab" aria-selected="false" onclick="showAdminSection('override',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Override Harian</button>
+      </div>
+      <div class="admin-nav-group">
+        <div class="admin-nav-label">Sistem</div>
+        <button class="admin-nav-item admin-stab-btn" id="anav-sync" role="tab" aria-selected="false" onclick="showAdminSection('sync',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sinkronisasi</button>
+        <button class="admin-nav-item admin-stab-btn" id="anav-resetpw" role="tab" aria-selected="false" onclick="showAdminSection('resetpw',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Reset Password</button>
+      </div>
+    </nav>
 
-    <div class="admin-stab-bar">
-      <button class="admin-stab-btn active" id="astab-btn-attlog" onclick="switchAdminStab('astab-attlog',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Koreksi Absensi</button>
-      <button class="admin-stab-btn" id="astab-btn-pegawai" onclick="switchAdminStab('astab-pegawai',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Data Karyawan</button>
-      <button class="admin-stab-btn" id="astab-btn-filter" onclick="switchAdminStab('astab-filter',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Filter & Cari</button>
-      <button class="admin-stab-btn" id="astab-btn-sync" onclick="switchAdminStab('astab-sync',this);loadSyncDevices();populateSyncUserSelect()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sinkronisasi</button>
-      <button class="admin-stab-btn" id="astab-btn-pengaturan" onclick="switchAdminStab('astab-pengaturan',this);openPengaturanSettings()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Pengaturan</button>
-    </div>
+    <div class="admin-content">
 
-    <div class="modal-body-scroll">
-
-            <div class="admin-stab-pane active" id="astab-attlog">
-
+      <div class="admin-stab-pane active" id="astab-attlog">
         <div class="filter-bar" style="margin-bottom:16px">
           <div class="filter-group">
-            <label>Dari</label>
+            <label for="adm-dari">Dari</label>
             <input type="date" id="adm-dari" />
           </div>
           <div class="filter-group">
-            <label>Sampai</label>
+            <label for="adm-sampai">Sampai</label>
             <input type="date" id="adm-sampai" />
           </div>
           <div class="filter-group">
-            <label>Karyawan (opsional)</label>
+            <label for="adm-filter-pin">Karyawan (opsional)</label>
             <select id="adm-filter-pin" style="min-width:180px">
               <option value="">— Semua —</option>
             </select>
@@ -440,20 +451,16 @@
         </div>
       </div>
 
-            <div class="admin-stab-pane" id="astab-pegawai">
-
-        <div style="margin-bottom:12px">
-          <button class="btn btn-primary" style="font-size:13px" onclick="openDeptModal()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> Kelola Departemen</button>
-        </div>
+      <div class="admin-stab-pane" id="astab-pegawai">
 
         <div class="admin-form-card">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px">＋ Tambah Karyawan Baru</div>
+          <div class="section-title">＋ Tambah Karyawan Baru</div>
           <div class="form-row" style="grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px">
-            <div class="filter-group"><label>PIN *</label><input type="text" id="np-pin" placeholder="mis. 123" /></div>
-            <div class="filter-group"><label>Nama *</label><input type="text" id="np-nama" placeholder="Nama lengkap" /></div>
-            <div class="filter-group"><label>NIP</label><input type="text" id="np-nip" placeholder="NIP (opsional)" /></div>
-            <div class="filter-group"><label>Telp</label><input type="text" id="np-telp" placeholder="No. telepon" /></div>
-            <div class="filter-group"><label>Departemen</label>
+            <div class="filter-group"><label for="np-pin">PIN *</label><input type="text" id="np-pin" placeholder="mis. 123" /></div>
+            <div class="filter-group"><label for="np-nama">Nama *</label><input type="text" id="np-nama" placeholder="Nama lengkap" /></div>
+            <div class="filter-group"><label for="np-nip">NIP</label><input type="text" id="np-nip" placeholder="NIP (opsional)" /></div>
+            <div class="filter-group"><label for="np-telp">Telp</label><input type="text" id="np-telp" placeholder="No. telepon" /></div>
+            <div class="filter-group"><label for="np-dept">Departemen</label>
               <select id="np-dept">
                 <option value="">— Pilih —</option>
               </select>
@@ -490,25 +497,38 @@
         </div>
       </div>
 
-            <div class="admin-stab-pane" id="astab-filter">
+      <div class="admin-stab-pane" id="astab-dept">
+        <p class="hint" style="margin-bottom:16px">Departemen dipakai untuk mengelompokkan karyawan pada Data Karyawan dan Penugasan Shift.</p>
+        <div class="admin-form-card" style="max-width:480px">
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <input type="text" id="dept-input" placeholder="Nama departemen baru" style="flex:1" onkeydown="if(event.key==='Enter')addDepartment()" />
+            <button class="btn btn-primary" style="font-size:13px;white-space:nowrap" onclick="addDepartment()">＋ Tambah</button>
+          </div>
+          <div id="dept-list" style="display:flex;flex-direction:column;gap:8px">
+            <p class="hint" style="margin:0">Memuat...</p>
+          </div>
+        </div>
+      </div>
 
-        <div class="fstab-bar">
-          <button class="fstab-btn active" id="fstab-btn-rekap" onclick="switchFilterStab('rekap')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Rekap Absensi</button>
-          <button class="fstab-btn" id="fstab-btn-bermasalah" onclick="switchFilterStab('bermasalah')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Absensi Bermasalah</button>
+      <div class="admin-stab-pane" id="astab-filter">
+
+        <div class="fstab-bar" role="tablist" aria-label="Filter & Cari">
+          <button class="fstab-btn active" id="fstab-btn-rekap" role="tab" aria-selected="true" onclick="switchFilterStab('rekap')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Rekap Absensi</button>
+          <button class="fstab-btn" id="fstab-btn-bermasalah" role="tab" aria-selected="false" onclick="switchFilterStab('bermasalah')"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Absensi Bermasalah</button>
         </div>
 
         <div id="fstab-rekap">
           <div class="filter-bar" style="margin-bottom:16px">
             <div class="filter-group">
-              <label>Tanggal Dari</label>
+              <label for="f-dari">Tanggal Dari</label>
               <input type="date" id="f-dari" />
             </div>
             <div class="filter-group">
-              <label>Tanggal Sampai</label>
+              <label for="f-sampai">Tanggal Sampai</label>
               <input type="date" id="f-sampai" />
             </div>
             <div class="filter-group">
-              <label>Nama Karyawan</label>
+              <label for="f-nama">Nama Karyawan</label>
               <input type="text" id="f-nama" placeholder="Ketik nama..." style="min-width:100px" />
             </div>
             <button class="btn btn-primary" onclick="applyFilter()">Tampilkan</button>
@@ -546,7 +566,7 @@
         <div id="fstab-bermasalah" style="display:none">
           <div class="filter-bar" style="margin-bottom:16px">
             <div class="filter-group">
-              <label>Bulan</label>
+              <label for="fb-bulan">Bulan</label>
               <input type="month" id="fb-bulan" />
             </div>
             <button class="btn btn-primary" onclick="applyBermasalah()">Tampilkan</button>
@@ -578,23 +598,23 @@
 
       </div>
 
-            <div class="admin-stab-pane" id="astab-sync">
+      <div class="admin-stab-pane" id="astab-sync">
         <div class="admin-form-card">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Backfill Data dari Fingerspot API</div>
-          <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Tarik data absensi yang terlewat (misal saat server mati) langsung dari server Fingerspot.io. Maksimal 60 hari ke belakang.</p>
+          <div class="section-title">Backfill Data dari Fingerspot API</div>
+          <p class="hint" style="margin-bottom:16px">Tarik data absensi yang terlewat (misal saat server mati) langsung dari server Fingerspot.io. Maksimal 60 hari ke belakang.</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
             <div class="filter-group">
-              <label>Mesin</label>
+              <label for="sync-device">Mesin</label>
               <select id="sync-device" style="min-width:200px">
                 <option value="">— Semua Mesin —</option>
               </select>
             </div>
             <div class="filter-group">
-              <label>Dari Tanggal</label>
+              <label for="sync-dari">Dari Tanggal</label>
               <input type="date" id="sync-dari" />
             </div>
             <div class="filter-group">
-              <label>Sampai Tanggal</label>
+              <label for="sync-sampai">Sampai Tanggal</label>
               <input type="date" id="sync-sampai" />
             </div>
             <button class="btn btn-primary" id="sync-btn" onclick="runBackfill()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sinkronisasi</button>
@@ -604,9 +624,9 @@
         </div>
 
         <div class="admin-form-card" style="margin-top:16px">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Sync Jam Mesin</div>
-          <p style="font-size:13px;color:var(--text2);margin-bottom:4px">Kirim perintah set timezone ke semua mesin via Fingerspot Cloud API. Mesin akan menyesuaikan jam ke timezone yang dipilih.</p>
-          <p style="font-size:12px;color:#f59e0b;margin-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Mesin absensi selain REVO/VIDA/VEGA/VIVO series akan <strong>restart otomatis</strong> saat perintah dieksekusi.</p>
+          <div class="section-title">Sync Jam Mesin</div>
+          <p class="hint" style="margin-bottom:4px">Kirim perintah set timezone ke semua mesin via Fingerspot Cloud API. Mesin akan menyesuaikan jam ke timezone yang dipilih.</p>
+          <p class="hint hint-warn" style="margin-bottom:14px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Mesin absensi selain REVO/VIDA/VEGA/VIVO series akan <strong>restart otomatis</strong> saat perintah dieksekusi.</p>
           <div>
             <button class="btn btn-primary" id="settime-btn" onclick="runSetTime()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Sync Jam ke Mesin</button>
           </div>
@@ -615,11 +635,11 @@
         </div>
 
         <div class="admin-form-card" style="margin-top:16px">
-          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Sync Karyawan ke Mesin</div>
-          <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Kirim data PIN &amp; nama karyawan ke semua mesin absensi. Berguna saat ada karyawan baru atau perubahan nama.</p>
+          <div class="section-title">Sync Karyawan ke Mesin</div>
+          <p class="hint" style="margin-bottom:14px">Kirim data PIN &amp; nama karyawan ke semua mesin absensi. Berguna saat ada karyawan baru atau perubahan nama.</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
             <div class="filter-group">
-              <label>Karyawan</label>
+              <label for="syncuser-pin">Karyawan</label>
               <select id="syncuser-pin" style="min-width:220px">
                 <option value="">— Semua Karyawan —</option>
               </select>
@@ -629,216 +649,214 @@
           <div class="alert-err" id="syncuser-err" style="margin-top:4px;margin-bottom:0"></div>
           <div class="alert-ok"  id="syncuser-ok"  style="margin-top:4px;margin-bottom:0"></div>
         </div>
-
       </div>
 
-            <div class="admin-stab-pane" id="astab-pengaturan">
-
-                <div class="pstab-bar">
-          <button class="pstab-btn active" onclick="switchPengaturanStab('pstab-shifts',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Shift Kerja</button>
-          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-assign',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Penugasan</button>
-          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-holidays',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Hari Libur</button>
-          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-overrides',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Override Harian</button>
-          <button class="pstab-btn" onclick="switchPengaturanStab('pstab-resetpw',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Reset Password User</button>
+      <div class="admin-stab-pane" id="pstab-shifts">
+        <div class="admin-section-head">
+          <div class="section-title">Shift Kerja</div>
+          <button class="btn btn-primary" style="font-size:13px" onclick="openShiftForm()">＋ Tambah Shift</button>
         </div>
-
-        <div style="padding:0 4px">
-          <div class="alert-err" id="pengaturan-err" style="margin-top:12px"></div>
-          <div class="alert-ok"  id="pengaturan-ok"  style="margin-top:12px">Settings berhasil disimpan.</div>
-        </div>
-
-                <div class="pstab-pane active" id="pstab-shifts">
-          <table class="settings-table" id="shifts-table">
-            <thead>
-              <tr>
-                <th>Nama Shift</th>
-                <th>Jam Masuk</th>
-                <th>Batas Terlambat</th>
-                <th>Batas ½ Hari</th>
-                <th title="Threshold klasifikasi scan istirahat/pulang & cutoff OT">Batas Pulang</th>
-                <th title="Threshold warna merah di tabel absensi bila kosong pakai Batas Pulang">Jam Pulang</th>
-                <th>Window Istirahat</th>
-                <th>Hari Kerja</th>
-                <th style="width:60px;text-align:center" title="Hitung OT?">OT</th>
-                <th style="width:80px"></th>
-              </tr>
-            </thead>
-            <tbody id="shifts-tbody"></tbody>
-          </table>
-          <div style="margin-top:12px">
-            <button class="btn btn-ghost" style="font-size:13px" onclick="toggleAddShift()">＋ Tambah Shift</button>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="settings-table" id="shifts-table">
+              <thead>
+                <tr>
+                  <th>Nama</th>
+                  <th>Masuk</th>
+                  <th>Pulang</th>
+                  <th>Istirahat</th>
+                  <th>Hari Kerja</th>
+                  <th class="t-c" style="width:60px">OT</th>
+                  <th class="t-c" style="width:90px">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="shifts-tbody"></tbody>
+            </table>
           </div>
-          <div class="add-shift-form" id="add-shift-form">
-            <div class="form-row" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
-              <div class="form-group" style="margin:0"><label>Nama</label><input type="text" id="ns-nama" placeholder="contoh: CS" /></div>
-              <div class="form-group" style="margin:0"><label>Jam Masuk</label><input type="time" id="ns-masuk" value="08:00" oninput="autoFillBatasNew()" /></div>
-              <div class="form-group" style="margin:0"><label>Batas Terlambat</label><input type="time" id="ns-batas" value="08:06" placeholder="kosong=tidak ada" /></div>
-              <div class="form-group" style="margin:0"><label>Batas ½ Hari</label><input type="time" id="ns-setengah" value="08:30" /></div>
-              <div class="form-group" style="margin:0"><label>Batas Pulang</label><input type="time" id="ns-pulang" value="17:00" /></div>
-              <div class="form-group" style="margin:0"><label>Jam Pulang <span style="font-weight:400;color:var(--text-muted)">(opsional)</span></label><input type="time" id="ns-pulang-resmi" /></div>
-            </div>
-            <div class="form-row" style="grid-template-columns:1fr 1fr 3fr;gap:10px;margin-bottom:12px">
-              <div class="form-group" style="margin:0"><label>Ist. Dari <span style="font-weight:400;color:var(--text-muted)">(opsional)</span></label><input type="time" id="ns-ist-dari" /></div>
-              <div class="form-group" style="margin:0"><label>Ist. Sampai <span style="font-weight:400;color:var(--text-muted)">(opsional)</span></label><input type="time" id="ns-ist-sampai" /></div>
-              <div class="form-group" style="margin:0;align-self:end"><div class="hint" style="margin:0">Kosongkan jika shift ini tidak pakai istirahat. Scan dalam rentang ini dikategorikan sebagai istirahat.</div></div>
-            </div>
-            <div style="margin-bottom:10px">
-              <label style="font-size:12px;font-weight:500;display:block;margin-bottom:4px">Hari Kerja</label>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="1" checked> Sen</label>
-                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="2" checked> Sel</label>
-                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="3" checked> Rab</label>
-                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="4" checked> Kam</label>
-                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="5" checked> Jum</label>
-                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="6"> Sab</label>
-                <label style="font-size:12px;display:flex;align-items:center;gap:3px"><input type="checkbox" class="ns-hari" value="0"> Min</label>
-              </div>
-            </div>
-            <div style="margin-bottom:10px">
-              <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
-                <input type="checkbox" id="ns-no-ot" />
-                <span>Shift ini <b>tidak</b> hitung OT (scan pulang lewat jam pulang tidak dihitung)</span>
-              </label>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-primary" style="font-size:13px" onclick="addShift()">Tambah</button>
-              <button class="btn btn-ghost"   style="font-size:13px" onclick="toggleAddShift()">Batal</button>
-            </div>
+        </div>
+
+        <form class="shift-form" id="shift-form" onsubmit="submitShiftForm(event);return false" onkeydown="if(event.key==='Escape'){event.stopPropagation();cancelShiftForm();}">
+          <div class="shift-form-head">
+            <h3 id="shift-form-title">Tambah Shift</h3>
           </div>
-          <div class="hint" style="margin-top:12px">Batas terlambat = masuk lewat ini → kuning (kosongkan jika shift tidak ada keterlambatan). Batas ½ Hari = masuk lewat ini → merah. Hari Kerja = hari non-libur yang dihitung dalam rekap.</div>
-        </div>
-
-                <div class="pstab-pane" id="pstab-assign">
-          <input type="text" class="emp-search" id="emp-search" placeholder="Cari nama atau PIN..." oninput="filterEmpRows()" />
-          <table class="settings-table">
-            <thead><tr><th style="width:80px">PIN</th><th>Nama Karyawan</th><th style="width:160px">Shift</th></tr></thead>
-            <tbody id="assign-tbody">
-              <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Memuat data karyawan...</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-                <div class="pstab-pane" id="pstab-holidays">
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Tanggal yang ditandai libur tidak dihitung alpha di rekap karyawan.</p>
-          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-            <input type="date" id="hl-tanggal" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;flex:1;min-width:140px" />
-            <input type="text" id="hl-nama" placeholder="Nama hari libur (mis. Idul Fitri)" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;flex:2;min-width:180px" />
-            <button class="btn btn-primary" style="font-size:13px" onclick="addHoliday()">＋ Tambah</button>
+          <div class="field-err" id="shift-form-err" role="alert" aria-live="assertive" hidden></div>
+          <div class="field-warn" id="shift-form-warn" role="status" hidden></div>
+          <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="form-group" style="margin:0"><label for="ns-nama">Nama</label><input type="text" id="ns-nama" placeholder="contoh: CS" /></div>
+            <div class="form-group" style="margin:0"><label for="ns-masuk">Jam Masuk</label><input type="time" id="ns-masuk" value="08:00" oninput="autoFillBatasNew()" /></div>
+            <div class="form-group" style="margin:0"><label for="ns-pulang">Batas Pulang</label><input type="time" id="ns-pulang" value="17:00" /></div>
           </div>
-          <table class="settings-table" id="holidays-table">
-            <thead><tr><th style="width:130px">Tanggal</th><th>Nama Hari Libur</th><th style="width:50px"></th></tr></thead>
-            <tbody id="holidays-tbody">
-              <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada hari libur</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-                <div class="pstab-pane" id="pstab-overrides">
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Override berlaku satu hari untuk karyawan tertentu atau semua.</p>
-          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-              <div class="form-group" style="margin:0"><label>Tanggal</label><input type="date" id="ov-tanggal" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" /></div>
-              <div class="form-group" style="margin:0"><label>Keterangan</label><input type="text" id="ov-nama" placeholder="mis. Acara keluarga" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" /></div>
+          <fieldset class="shift-fieldset">
+            <legend>Keterlambatan</legend>
+            <div class="form-row" style="grid-template-columns:1fr 1fr;gap:12px">
+              <div class="form-group" style="margin:0"><label for="ns-batas">Batas Terlambat <span class="field-hint">(kosong = tidak ada)</span></label><input type="time" id="ns-batas" value="08:06" /></div>
+              <div class="form-group" style="margin:0"><label for="ns-setengah">Batas ½ Hari</label><input type="time" id="ns-setengah" value="08:30" /></div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-              <div class="form-group" style="margin:0">
-                <label>Tipe Override</label>
-                <select id="ov-tipe" onchange="toggleOvFields()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                  <option value="pulang_awal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pulang Lebih Awal</option>
-                  <option value="ganti_shift"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Ganti Shift Harian</option>
-                  <option value="absen_manual"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Koreksi/Inject Absensi (Bulk)</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin:0" id="ov-field-pulang">
-                <label>Jam Pulang Baru</label>
-                <input type="time" id="ov-jam-pulang" value="13:00" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
-              </div>
-              <div class="form-group" style="margin:0;display:none" id="ov-field-shift">
-                <label>Shift Pengganti</label>
-                <select id="ov-shift-id" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box"></select>
-              </div>
+          </fieldset>
+          <fieldset class="shift-fieldset">
+            <legend>Pulang &amp; Istirahat</legend>
+            <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;gap:12px">
+              <div class="form-group" style="margin:0"><label for="ns-pulang-resmi">Jam Pulang Resmi <span class="field-hint">(opsional)</span></label><input type="time" id="ns-pulang-resmi" /></div>
+              <div class="form-group" style="margin:0"><label for="ns-ist-dari">Istirahat Dari <span class="field-hint">(opsional)</span></label><input type="time" id="ns-ist-dari" /></div>
+              <div class="form-group" style="margin:0"><label for="ns-ist-sampai">Istirahat Sampai <span class="field-hint">(opsional)</span></label><input type="time" id="ns-ist-sampai" /></div>
             </div>
-            <div style="display:none" id="ov-field-manual">
-              <div style="margin-bottom:10px">
-                <div class="form-group" style="margin:0">
-                  <label>Alasan</label>
-                  <select id="ov-alasan" onchange="toggleOvAlasan()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                    <option value="lembur"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Lembur</option>
-                    <option value="sakit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"/><path d="M14 14h-4"/><path d="M14 18h-4"/><path d="M14 8h-4"/><path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"/><path d="M18 22V4a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v18"/></svg> Sakit (MC)</option>
-                    <option value="customer_visit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg> Customer Visit</option>
-                    <option value="setengah_hari_siang"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></svg> Setengah Hari Siang</option>
-                    <option value="setengah_hari_pagi"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg> Setengah Hari Pagi</option>
-                  </select>
-                </div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px" id="ov-wrap-jam-manual">
-                <div class="form-group" style="margin:0" id="ov-wrap-masuk">
-                  <label id="ov-label-masuk">Jam Masuk <span style="color:#e53e3e">*</span></label>
-                  <input type="time" id="ov-jam-masuk" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
-                </div>
-                <div class="form-group" style="margin:0" id="ov-wrap-pulang-manual">
-                  <label id="ov-label-pulang-manual">Jam Pulang <span style="color:#e53e3e">*</span></label>
-                  <input type="time" id="ov-jam-pulang-manual" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box" />
-                </div>
-              </div>
-              <div style="display:none;margin-bottom:10px" id="ov-wrap-shift-manual">
-                <div class="form-group" style="margin:0">
-                  <label>Shift Setengah Hari <span style="color:#e53e3e">*</span></label>
-                  <select id="ov-shift-manual" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box"></select>
-                </div>
-              </div>
-              <p id="ov-alasan-hint" style="font-size:12px;color:var(--text-muted);margin:0 0 10px"></p>
+          </fieldset>
+          <fieldset class="shift-fieldset">
+            <legend>Hari Kerja &amp; OT</legend>
+            <div class="hari-checks">
+              <label><input type="checkbox" class="ns-hari" value="1" checked> Sen</label>
+              <label><input type="checkbox" class="ns-hari" value="2" checked> Sel</label>
+              <label><input type="checkbox" class="ns-hari" value="3" checked> Rab</label>
+              <label><input type="checkbox" class="ns-hari" value="4" checked> Kam</label>
+              <label><input type="checkbox" class="ns-hari" value="5" checked> Jum</label>
+              <label><input type="checkbox" class="ns-hari" value="6"> Sab</label>
+              <label><input type="checkbox" class="ns-hari" value="0"> Min</label>
             </div>
-            <div style="margin-bottom:10px">
-              <div class="form-group" style="margin:0">
-                <label>Berlaku Untuk</label>
-                <select id="ov-berlaku" onchange="toggleOvKaryawan()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;width:100%;box-sizing:border-box">
-                  <option value="semua">Semua Karyawan</option>
-                  <option value="tertentu">Karyawan Tertentu</option>
-                </select>
-              </div>
-            </div>
-            <div id="ov-karyawan-wrap" style="display:none;margin-bottom:10px">
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <button type="button" class="btn btn-ghost" style="font-size:13px" onclick="openOvKaryawanPicker()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Pilih Karyawan...</button>
-                <span id="ov-karyawan-label" style="font-size:13px;color:var(--text-muted)">Belum ada dipilih</span>
-              </div>
-            </div>
-            <button class="btn btn-primary" style="font-size:13px" onclick="addOverride()">＋ Tambah Override</button>
+            <label class="no-ot-check"><input type="checkbox" id="ns-no-ot" /> Shift ini <b>tidak</b> hitung OT (scan pulang lewat jam pulang tidak dihitung)</label>
+          </fieldset>
+          <p class="hint">Batas terlambat = masuk lewat ini → kuning (kosongkan jika shift tidak ada keterlambatan). Batas ½ Hari = masuk lewat ini → merah. Hari Kerja = hari non-libur yang dihitung dalam rekap.</p>
+          <div class="shift-form-actions">
+            <button type="submit" class="btn btn-primary" id="shift-form-submit">Tambah</button>
+            <button type="button" class="btn btn-ghost" onclick="cancelShiftForm()">Batal</button>
           </div>
-          <table class="settings-table" id="overrides-table">
-            <thead><tr><th style="width:110px">Tanggal</th><th>Keterangan</th><th style="width:150px">Tipe</th><th style="width:110px">Berlaku Untuk</th><th style="width:130px">Oleh</th><th style="width:40px"></th></tr></thead>
-            <tbody id="overrides-tbody">
-              <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada override</td></tr>
-            </tbody>
-          </table>
-        </div>
+        </form>
+      </div>
 
-                <div class="pstab-pane" id="pstab-resetpw">
-          <div style="max-width:420px">
-            <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">Reset password karyawan. Sistem akan generate password sementara 6 karakter. Berikan password tersebut ke karyawan untuk login. User wajib atur password baru saat login. Sesi aktif user akan diakhiri.</p>
-            <div class="form-group">
-              <label>Karyawan</label>
-              <select id="resetpw-pin" style="width:100%">
-                <option value="">— Pilih Karyawan —</option>
+      <div class="admin-stab-pane" id="pstab-assign">
+        <input type="text" class="emp-search" id="emp-search" placeholder="Cari nama atau PIN..." oninput="filterEmpRows()" />
+        <table class="settings-table">
+          <thead><tr><th style="width:80px">PIN</th><th>Nama Karyawan</th><th style="width:160px">Shift</th></tr></thead>
+          <tbody id="assign-tbody">
+            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Memuat data karyawan...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="admin-stab-pane" id="pstab-holidays">
+        <p class="hint" style="margin-bottom:16px">Tanggal yang ditandai libur tidak dihitung alpha di rekap karyawan.</p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <input type="date" id="hl-tanggal" style="flex:1;min-width:140px" />
+          <input type="text" id="hl-nama" placeholder="Nama hari libur (mis. Idul Fitri)" style="flex:2;min-width:180px" />
+          <button class="btn btn-primary" style="font-size:13px" onclick="addHoliday()">＋ Tambah</button>
+        </div>
+        <table class="settings-table" id="holidays-table">
+          <thead><tr><th style="width:130px">Tanggal</th><th>Nama Hari Libur</th><th style="width:50px"></th></tr></thead>
+          <tbody id="holidays-tbody">
+            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada hari libur</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="admin-stab-pane" id="pstab-overrides">
+        <p class="hint" style="margin-bottom:16px">Override berlaku satu hari untuk karyawan tertentu atau semua.</p>
+        <div class="admin-form-card">
+          <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="form-group" style="margin:0"><label for="ov-tanggal">Tanggal</label><input type="date" id="ov-tanggal" /></div>
+            <div class="form-group" style="margin:0"><label for="ov-nama">Keterangan</label><input type="text" id="ov-nama" placeholder="mis. Acara keluarga" /></div>
+          </div>
+          <div class="form-row" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="form-group" style="margin:0">
+              <label for="ov-tipe">Tipe Override</label>
+              <select id="ov-tipe" onchange="toggleOvFields()">
+                <option value="pulang_awal"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pulang Lebih Awal</option>
+                <option value="ganti_shift"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Ganti Shift Harian</option>
+                <option value="absen_manual"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Koreksi/Inject Absensi (Bulk)</option>
               </select>
             </div>
-            <div class="alert-err" id="resetpw-err" style="margin-bottom:12px"></div>
-            <div class="alert-ok"  id="resetpw-ok"  style="margin-bottom:12px"></div>
-            <button class="btn btn-primary" onclick="adminResetUserPassword()">Reset Password</button>
+            <div class="form-group" style="margin:0" id="ov-field-pulang">
+              <label for="ov-jam-pulang">Jam Pulang Baru</label>
+              <input type="time" id="ov-jam-pulang" value="13:00" />
+            </div>
+            <div class="form-group" style="margin:0;display:none" id="ov-field-shift">
+              <label for="ov-shift-id">Shift Pengganti</label>
+              <select id="ov-shift-id"></select>
+            </div>
           </div>
+          <div style="display:none" id="ov-field-manual">
+            <div style="margin-bottom:10px">
+              <div class="form-group" style="margin:0">
+                <label for="ov-alasan">Alasan</label>
+                <select id="ov-alasan" onchange="toggleOvAlasan()">
+                  <option value="lembur"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Lembur</option>
+                  <option value="sakit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"/><path d="M14 14h-4"/><path d="M14 18h-4"/><path d="M14 8h-4"/><path d="M18 12h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h2"/><path d="M18 22V4a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v18"/></svg> Sakit (MC)</option>
+                  <option value="customer_visit"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg> Customer Visit</option>
+                  <option value="setengah_hari_siang"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m19.07 4.93-1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/></svg> Setengah Hari Siang</option>
+                  <option value="setengah_hari_pagi"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg> Setengah Hari Pagi</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px" id="ov-wrap-jam-manual">
+              <div class="form-group" style="margin:0" id="ov-wrap-masuk">
+                <label id="ov-label-masuk" for="ov-jam-masuk">Jam Masuk <span class="field-required">*</span></label>
+                <input type="time" id="ov-jam-masuk" />
+              </div>
+              <div class="form-group" style="margin:0" id="ov-wrap-pulang-manual">
+                <label id="ov-label-pulang-manual" for="ov-jam-pulang-manual">Jam Pulang <span class="field-required">*</span></label>
+                <input type="time" id="ov-jam-pulang-manual" />
+              </div>
+            </div>
+            <div style="display:none;margin-bottom:10px" id="ov-wrap-shift-manual">
+              <div class="form-group" style="margin:0">
+                <label for="ov-shift-manual">Shift Setengah Hari <span class="field-required">*</span></label>
+                <select id="ov-shift-manual"></select>
+              </div>
+            </div>
+            <p id="ov-alasan-hint" class="hint" style="margin:0 0 10px"></p>
+          </div>
+          <div style="margin-bottom:10px">
+            <div class="form-group" style="margin:0">
+              <label for="ov-berlaku">Berlaku Untuk</label>
+              <select id="ov-berlaku" onchange="toggleOvKaryawan()">
+                <option value="semua">Semua Karyawan</option>
+                <option value="tertentu">Karyawan Tertentu</option>
+              </select>
+            </div>
+          </div>
+          <div id="ov-karyawan-wrap" style="display:none;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button type="button" class="btn btn-ghost" style="font-size:13px" onclick="openOvKaryawanPicker()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Pilih Karyawan...</button>
+              <span id="ov-karyawan-label" style="font-size:13px;color:var(--text-muted)">Belum ada dipilih</span>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="ov-add-btn" style="font-size:13px" onclick="addOverride()">＋ Tambah Override</button>
         </div>
-
-                <div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 0;border-top:1px solid var(--border);margin-top:16px">
-          <button class="btn btn-primary" onclick="saveSettings()"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Pengaturan</button>
-        </div>
-
+        <table class="settings-table" id="overrides-table">
+          <thead><tr><th style="width:110px">Tanggal</th><th>Keterangan</th><th style="width:150px">Tipe</th><th style="width:110px">Berlaku Untuk</th><th style="width:130px">Oleh</th><th style="width:40px"></th></tr></thead>
+          <tbody id="overrides-tbody">
+            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:16px">Belum ada override</td></tr>
+          </tbody>
+        </table>
       </div>
-    </div>    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeAdminModal()">Tutup</button>
+
+      <div class="admin-stab-pane" id="pstab-resetpw">
+        <div style="max-width:420px">
+          <p class="hint" style="margin-bottom:18px">Reset password karyawan. Sistem akan generate password sementara 6 karakter. Berikan password tersebut ke karyawan untuk login. User wajib atur password baru saat login. Sesi aktif user akan diakhiri.</p>
+          <div class="form-group">
+            <label for="resetpw-pin">Karyawan</label>
+            <select id="resetpw-pin" style="width:100%">
+              <option value="">— Pilih Karyawan —</option>
+            </select>
+          </div>
+          <div class="alert-err" id="resetpw-err" style="margin-bottom:12px"></div>
+          <div class="alert-ok"  id="resetpw-ok"  style="margin-bottom:12px"></div>
+          <button class="btn btn-primary" onclick="adminResetUserPassword()">Reset Password</button>
+        </div>
+      </div>
+
+      <div class="alert-err" id="pengaturan-err" style="margin-top:12px"></div>
+      <div class="alert-ok"  id="pengaturan-ok"  style="margin-top:12px">Perubahan berhasil disimpan.</div>
+
+      <div class="save-bar" id="settings-save-bar" hidden>
+        <span id="save-bar-text" aria-live="polite"></span>
+        <div class="save-bar-actions">
+          <button class="btn btn-ghost" onclick="discardSettings()">Buang Perubahan</button>
+          <button class="btn btn-primary" onclick="saveSettings()">Simpan Perubahan</button>
+        </div>
+      </div>
+
     </div>
   </div>
-</div>
+</section>
 
 <div class="modal-overlay" id="modal-settings">
   <div class="modal-box">
@@ -905,7 +923,7 @@
   </button>
 </nav>
 
-<div id="toast-container"></div>
+<div id="toast-container" role="status" aria-live="polite"></div>
 
 <div class="modal-overlay" id="modal-laporan">
   <div class="modal-box" style="max-width:420px">
@@ -1161,25 +1179,8 @@
   </div>
 </div>
 
-<script type="module" src="/build/spa/app.js?v=5"></script>
+<script type="module" src="/build/spa/app.js?v=6"></script>
 
-<div class="modal-overlay" id="modal-dept" onclick="if(event.target===this)closeDeptModal()">
-  <div class="modal-box" style="max-width:420px;width:100%">
-    <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)">
-      <span style="font-size:14px;font-weight:600;color:var(--text)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> Kelola Departemen</span>
-      <button class="modal-close" onclick="closeDeptModal()" style="margin-left:0">✕</button>
-    </div>
-    <div class="modal-body-scroll" style="padding:16px">
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input type="text" id="dept-input" placeholder="Nama departemen baru" style="flex:1" onkeydown="if(event.key==='Enter')addDepartment()" />
-        <button class="btn btn-primary" style="font-size:13px;white-space:nowrap" onclick="addDepartment()">＋ Tambah</button>
-      </div>
-      <div id="dept-list" style="display:flex;flex-direction:column;gap:8px">
-        <p style="color:var(--text2);font-size:13px;margin:0">Memuat...</p>
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
