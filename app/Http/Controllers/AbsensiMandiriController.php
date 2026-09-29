@@ -64,6 +64,12 @@ class AbsensiMandiriController extends Controller
             return response()->json(['success' => false, 'message' => 'Tipe tidak valid'], 422);
         }
 
+        // customer_visit/lupa: Scan 2 (di catatan sebagai ||jam2=HH:MM) tidak boleh sama dengan Scan 1
+        if (in_array($tipe, ['customer_visit', 'lupa']) && $jam
+            && preg_match('/\|\|jam2=(\d{2}:\d{2})/', $catatan ?? '', $m) && substr($jam, 0, 5) === $m[1]) {
+            return response()->json(['success' => false, 'message' => 'Scan 2 tidak boleh sama dengan Scan 1'], 422);
+        }
+
         // Tipe 'lupa' dibatasi max 3x approved per karyawan
         if ($tipe === 'lupa') {
             $lupaCount = DB::table('absensi_mandiri')
@@ -157,20 +163,29 @@ class AbsensiMandiriController extends Controller
             return response()->json(['success' => false, 'message' => 'Request sudah diproses'], 422);
         }
 
-        // Terapkan efek
+        // Ubah status + terapkan efek dalam satu transaksi: kalau efek gagal, status
+        // tetap pending dan insert att_log yang sudah jalan ikut di-rollback.
         try {
-            $this->applyEffect($row, $auth->username);
+            DB::transaction(function () use ($row, $id, $auth, $request) {
+                // Update bersyarat status=pending → cegah double approve (klik ganda / 2 admin)
+                $updated = DB::table('absensi_mandiri')
+                    ->where('id', $id)->where('status', 'pending')
+                    ->update([
+                        'status'        => 'approved',
+                        'reviewed_by'   => $auth->username,
+                        'reviewed_at'   => now(),
+                        'review_catatan'=> $request->input('catatan'),
+                        'updated_at'    => now(),
+                    ]);
+                if (! $updated) {
+                    throw new \RuntimeException('Request sudah diproses');
+                }
+
+                $this->applyEffect($row, $auth->username);
+            });
         } catch (\RuntimeException $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
-
-        DB::table('absensi_mandiri')->where('id', $id)->update([
-            'status'        => 'approved',
-            'reviewed_by'   => $auth->username,
-            'reviewed_at'   => now(),
-            'review_catatan'=> $request->input('catatan'),
-            'updated_at'    => now(),
-        ]);
 
         return response()->json(['success' => true, 'message' => 'Disetujui dan diterapkan']);
     }
@@ -330,6 +345,11 @@ class AbsensiMandiriController extends Controller
                 $rawCatatan = preg_replace('/\|\|jam2=\d{2}:\d{2}/', '', $rawCatatan);
             }
             $catatan = trim($label . ($rawCatatan ? ' — ' . $rawCatatan : ''));
+
+            // Scan 2 sama dengan Scan 1 → cukup satu scan (kalau tidak, insert kedua kena duplicate PK)
+            if ($jam2 && $row->jam && substr($row->jam, 0, 5) === $jam2) {
+                $jam2 = null;
+            }
 
             // Cek dulu apakah jam absensi ini sudah terisi (PK att_log = sn+scan_date+pin)
             if ($row->jam) {
