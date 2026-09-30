@@ -72,10 +72,18 @@ export function previewAttachment() {
   reader.readAsArrayBuffer(file);
 }
 
+// Tanggal lokal (YYYY-MM-DD) bergeser offsetHari dari hari ini; toISOString() memakai UTC sehingga salah di 00:00-07:00 WIB
+function localDateStr(offsetHari) {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetHari);
+  return d.toLocaleDateString('sv-SE');
+}
+
 export function initAbsensiMandiri() {
-  const today = new Date().toISOString().slice(0,10);
-  if (!document.getElementById('am-tanggal').value)
-    document.getElementById('am-tanggal').value = today;
+  const today = localDateStr(0);
+  const tglEl = document.getElementById('am-tanggal');
+  tglEl.min = localDateStr(-1); // maks H+1 dari tanggal kejadian
+  if (!tglEl.value || tglEl.value < tglEl.min) tglEl.value = today;
   const isAdmin = state.authUser?.role==='admin';
   document.getElementById('am-admin-panel').style.display = isAdmin ? '' : 'none';
   loadMyRequests();
@@ -118,6 +126,7 @@ export function submitAbsensiMandiri() {
   const fileEl   = document.getElementById('am-attachment');
   const noJam    = tipe==='sakit'||tipe==='ganti_shift';
   if (!tanggal) { errEl.textContent='Tanggal wajib diisi.'; errEl.classList.add('show'); return; }
+  if (tanggal < localDateStr(-1)) { errEl.textContent='Absensi mandiri hanya bisa diisi paling lambat 1 hari setelah tanggal kejadian.'; errEl.classList.add('show'); return; }
   if (!noJam&&!jam) { errEl.textContent='Jam wajib diisi.'; errEl.classList.add('show'); return; }
   if (tipe==='ganti_shift'&&!document.getElementById('am-shift-id').value) { errEl.textContent='Pilih shift pengganti.'; errEl.classList.add('show'); return; }
   if (fileEl.files[0]&&fileEl.files[0].size>5*1024*1024) { errEl.textContent='File maksimal 5MB.'; errEl.classList.add('show'); return; }
