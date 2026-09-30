@@ -96,6 +96,8 @@ npm run build
 
 - Use `DB::table()` for `pegawai` and `att_log` queries (no Eloquent model)
 - Manual scan records use `sn='MANUAL'` in att_log
+- App timezone is `Asia/Jakarta` (WIB); in the SPA never use `toISOString()` for "today" (UTC) — use `toLocaleDateString('sv-SE')`
+- Absensi mandiri can only be submitted for yesterday or later (max H+1); future dates are allowed
 - Always use `escHtml()` when rendering user data in SPA innerHTML
 - Absensi mandiri approval uses `applyEffect()`/`undoEffect()` pattern for reversible side effects
 - Settings changes go through `SettingsManager::set()` then `::save()`

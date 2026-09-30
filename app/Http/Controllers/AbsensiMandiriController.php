@@ -64,6 +64,14 @@ class AbsensiMandiriController extends Controller
             return response()->json(['success' => false, 'message' => 'Tipe tidak valid'], 422);
         }
 
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+            return response()->json(['success' => false, 'message' => 'Format tanggal tidak valid'], 422);
+        }
+        // Absensi mandiri paling lambat H+1 dari tanggal kejadian (tanggal ke depan boleh)
+        if ($tanggal < now()->subDay()->toDateString()) {
+            return response()->json(['success' => false, 'message' => 'Absensi mandiri hanya bisa diisi paling lambat 1 hari setelah tanggal kejadian'], 422);
+        }
+
         // customer_visit/lupa: Scan 2 (di catatan sebagai ||jam2=HH:MM) tidak boleh sama dengan Scan 1
         if (in_array($tipe, ['customer_visit', 'lupa']) && $jam
             && preg_match('/\|\|jam2=(\d{2}:\d{2})/', $catatan ?? '', $m) && substr($jam, 0, 5) === $m[1]) {
