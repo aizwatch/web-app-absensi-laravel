@@ -99,6 +99,7 @@ npm run build
 - App timezone is `Asia/Jakarta` (WIB); in the SPA never use `toISOString()` for "today" (UTC) — use `toLocaleDateString('sv-SE')`
 - Absensi mandiri can only be submitted for yesterday or later (max H+1); future dates are allowed
 - Always use `escHtml()` when rendering user data in SPA innerHTML
+- After changing `resources/spa/`, run `npm run build:spa` and bump the `?v=` cache-buster on `app.js`/`app.css` in `public/index.html` (filenames are not hashed, browsers keep the old bundle otherwise)
 - Absensi mandiri approval uses `applyEffect()`/`undoEffect()` pattern for reversible side effects
 - Settings changes go through `SettingsManager::set()` then `::save()`
 - API responses are always `{success: bool, message?, data?}` — keep the shape, the SPA fetch helpers depend on it

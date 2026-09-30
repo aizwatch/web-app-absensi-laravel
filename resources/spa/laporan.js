@@ -16,6 +16,9 @@ export function hitungOtJam(row, jamPulangShift) {
   return jamPenuh + (sisaMenit >= 25 ? 0.5 : 0);
 }
 
+// Basis OT = jam pulang resmi kalau diisi; jam_pulang shift bisa dibuat lebih awal buat klasifikasi scan
+const jamPulangOt = shift => shift && (shift.jam_pulang_resmi || shift.jam_pulang);
+
 // 1.5 → "1,5" (format desimal Indonesia)
 const fmtOt = n => String(n).replace('.', ',');
 
@@ -126,7 +129,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
         durasiHtml=selisihStr!=null?`${r.durasi_istirahat} <span style="font-size:7.5px;color:${selisihColor};font-weight:700">${selisihStr}</span>`:`${r.durasi_istirahat}`;
       }
     }
-    const otJam = showOtCol ? hitungOtJam(r, shift && shift.jam_pulang) : 0;
+    const otJam = showOtCol ? hitungOtJam(r, jamPulangOt(shift)) : 0;
     const otHtml = otJam > 0 ? `<span style="color:#6b21a8;font-weight:700">${fmtOt(otJam)}j</span>` : '—';
     return `<tr style="background:${rowBg}">
       <td>${tglFmt} <span style="font-size:7.5px;color:#888">${dayName}</span></td>
@@ -143,7 +146,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
   function cardHtml(p){
     const shift=getShift(p.pin);
     const shiftNoOtCard=!!(shift&&shift.no_ot);
-    const totalOtJamCard=shiftNoOtCard?0:p.rows.reduce((sum,r)=>sum+hitungOtJam(r,shift&&shift.jam_pulang),0);
+    const totalOtJamCard=shiftNoOtCard?0:p.rows.reduce((sum,r)=>sum+hitungOtJam(r,jamPulangOt(shift)),0);
     const showOtCol=!shiftNoOtCard&&totalOtJamCard>0;
     const rows=p.rows.map(r=>rowHtml(r,shift,showOtCol)).join('');
     const shiftWorkDays=shift&&shift.hari_kerja&&shift.hari_kerja.length?shift.hari_kerja:[1,2,3,4,5,6];
@@ -188,7 +191,7 @@ export function printLaporanPdf(data, bulan, filterPin) {
     const totalIst=hadirRows.reduce((sum,r)=>sum+(r.durasi_istirahat!=null?r.durasi_istirahat:0),0);
     const selisihIst=totalIst-(hadirRows.length*60);
     const shiftNoOt=!!(shift&&shift.no_ot);
-    const totalOtJam=shiftNoOt?0:workDays.reduce((sum,r)=>sum+hitungOtJam(r,shift&&shift.jam_pulang),0);
+    const totalOtJam=shiftNoOt?0:workDays.reduce((sum,r)=>sum+hitungOtJam(r,jamPulangOt(shift)),0);
     return `<div class="emp-card">
       <div class="emp-title">PT. LONG TIME — Laporan Absensi ${escHtml(bulanLabel)}</div>
       <div class="emp-header"><span class="emp-name">${escHtml(p.nama)}</span><span class="emp-pin">PIN: ${escHtml(p.pin)}</span><span class="emp-shift">${shift?escHtml(shift.nama||''):''}</span></div>
