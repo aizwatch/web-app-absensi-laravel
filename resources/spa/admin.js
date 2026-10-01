@@ -4,11 +4,12 @@ import { authHeaders } from './auth.js';
 import { populatePickerSelect, initPicker } from './picker.js';
 import { ensureSettingsLoaded, renderDepartmentsCard, isSettingsDirty } from './settings.js';
 import { icon } from './icons.js';
+import { idcardLayout, renderFront, tglLahirOk, initIdCardAdmin } from './idcard.js';
 
 const ADMIN_SECTION_PANES = {
   scan: 'astab-attlog', pegawai: 'astab-pegawai', dept: 'astab-dept', rekap: 'astab-filter',
   sync: 'astab-sync', shift: 'pstab-shifts', penugasan: 'pstab-assign', libur: 'pstab-holidays',
-  override: 'pstab-overrides', resetpw: 'pstab-resetpw',
+  override: 'pstab-overrides', resetpw: 'pstab-resetpw', idcard: 'astab-idcard',
 };
 const SETTINGS_SECTIONS = ['shift', 'penugasan', 'libur', 'override', 'resetpw'];
 
@@ -19,6 +20,7 @@ export function showAdminSection(key, btn) {
   document.querySelectorAll('.admin-nav-item').forEach(el => el.setAttribute('aria-selected', el === btn ? 'true' : 'false'));
   if (key === 'sync') { loadSyncDevices(); populateSyncUserSelect(); }
   if (key === 'dept') renderDepartmentsCard();
+  if (key === 'idcard') initIdCardAdmin();
   if (SETTINGS_SECTIONS.includes(key)) ensureSettingsLoaded();
 }
 
@@ -351,6 +353,19 @@ const hideMsgs = (...ids) => ids.forEach(id => $(id).classList.remove('show'));
 // pin = karyawan yang diedit (diri sendiri atau, oleh admin, orang lain)
 let _profilPin = null;
 let _profilNama = '';
+let _profilData = null;
+
+// preview kartu depan di pane Profil (hanya bila admin sudah upload design)
+function _renderProfilIdCard() {
+  const L = idcardLayout(), d = _profilData;
+  $('us-idcard').style.display = L.depan && d ? '' : 'none';
+  if (!L.depan || !d) return;
+  $('us-idcard-hint').textContent = [
+    !d.foto && 'Belum ada foto.',
+    !tglLahirOk(d) && 'Isi Tanggal Lahir di Data Diri untuk melengkapi NIP.',
+  ].filter(Boolean).join(' ');
+  renderFront($('us-idcard-canvas'), L, d);
+}
 
 export async function openUserSettingsModal() {
   if (!state.authUser) return;
@@ -379,6 +394,8 @@ export async function openProfilModal(pin) {
   $('acc-nav-data').style.display   = hasPin ? '' : 'none';
   $('acc-nav-sec').style.display    = self ? '' : 'none';
   _setFotoHint(false);
+  _profilData = null;
+  _renderProfilIdCard();
   showAccountSection(hasPin ? 'us-profil' : 'us-password');
   renderAvatar($('us-avatar'), _profilNama, emp?.foto);
   $('modal-settings').classList.add('open');
@@ -395,6 +412,9 @@ export async function openProfilModal(pin) {
     $('us-gender').value = String(d.gender || 1);
     renderAvatar($('us-avatar'), _profilNama, d.foto);
     _setFotoHint(!!d.foto, d.foto_low, d.foto_dim);
+    _profilData = d;
+    $('us-username').textContent = d.nip || '—';
+    _renderProfilIdCard();
   } catch (e) { showMsg('us-data-err', 'Gagal terhubung ke server.'); }
 }
 
@@ -426,6 +446,7 @@ export async function saveProfil() {
     const json = await res.json();
     if (!json.success) { showMsg('us-data-err', json.message || 'Gagal menyimpan'); return; }
     showMsg('us-data-ok', json.message || 'Tersimpan');
+    if (_profilData) { _profilData.tgl_lahir = $('us-tgl').value || null; _renderProfilIdCard(); }
     adminLoadPegawai();
   } catch (e) { showMsg('us-data-err', 'Gagal terhubung ke server.'); }
 }
@@ -466,6 +487,7 @@ async function _refreshFoto() {
   if (document.getElementById('adm-peg-tbody')?.children.length) await adminLoadPegawai();
   const emp = state.pegawaiList.find(p => String(p.pin) === String(_profilPin));
   renderAvatar($('us-avatar'), _profilNama, emp?.foto);
+  if (_profilData) { _profilData.foto = emp?.foto || null; _renderProfilIdCard(); }
   // header tab Saya, kalau yang diganti = karyawan yang sedang tampil
   if (state.selectedEmployee && String(state.selectedEmployee.pin) === String(_profilPin))
     renderAvatar($('p-avatar'), _profilNama, emp?.foto);

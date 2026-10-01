@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\SettingsManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
@@ -39,9 +40,32 @@ class SettingsController extends Controller
         if (isset($data['departments']) && is_array($data['departments']))
             SettingsManager::set('departments', array_values(array_filter($data['departments'], fn($d) => !empty(trim($d)))));
 
+        if (isset($data['idcard']) && is_array($data['idcard'])) {
+            // url design hanya diubah lewat uploadIdCard
+            $cur = SettingsManager::get('idcard', []);
+            SettingsManager::set('idcard', array_merge($data['idcard'], array_intersect_key($cur, ['depan' => 1, 'belakang' => 1])));
+        }
+
         SettingsManager::save();
         \Log::info('Settings diperbarui oleh: ' . $request->attributes->get('auth_user')?->username);
 
         return response()->json(['success' => true, 'message' => 'Settings disimpan']);
+    }
+
+    /** POST /api/settings/idcard/{side} (admin) — design ID card depan/belakang */
+    public function uploadIdCard(Request $request, string $side)
+    {
+        $request->validate(['design' => 'required|image|mimes:jpg,jpeg,png|max:10240']);
+        $ext  = $request->file('design')->extension() === 'png' ? 'png' : 'jpg';
+        $disk = Storage::disk('public');
+        $disk->delete(["idcard/$side.png", "idcard/$side.jpg"]);
+        $path = $request->file('design')->storeAs('idcard', "$side.$ext", 'public');
+
+        $idcard = SettingsManager::get('idcard', []);
+        $idcard[$side] = "/storage/$path?v=" . $disk->lastModified($path);
+        SettingsManager::set('idcard', $idcard);
+        SettingsManager::save();
+
+        return response()->json(['success' => true, 'url' => $idcard[$side]]);
     }
 }

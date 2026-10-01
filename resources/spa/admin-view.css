@@ -216,3 +216,23 @@
 .acc-info { display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; font-size: 14px; line-height: 1.8; }
 .acc-info > span:nth-child(odd) { color: var(--text-muted); }
 .acc-info .mono { font-family: var(--font-mono); }
+
+/* ── ID Card ── */
+.idc-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; align-items: start; }
+.idc-upload { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.idc-upload .btn { cursor: pointer; }
+.idc-back { max-width: 120px; border-radius: 6px; border: 1px solid var(--border); }
+.idc-group { margin-bottom: 14px; }
+.idc-group-title { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+.idc-field { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 4px; }
+.idc-field input[type=range] { width: 100%; }
+.idc-field input[type=checkbox] { justify-self: start; width: auto; }
+.idc-field input[type=color] { width: 48px; height: 26px; padding: 0; border: none; background: none; }
+.idc-preview { position: sticky; top: 0; display: flex; flex-direction: column; gap: 10px; }
+.idc-canvas { width: 100%; max-width: 260px; height: auto; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.15); background: #fff; }
+.acc-idcard { margin-top: 20px; }
+.acc-idcard .idc-canvas { max-width: 200px; display: block; margin-bottom: 8px; }
+@media (max-width: 768px) {
+  .idc-layout { grid-template-columns: 1fr; }
+  .idc-preview { position: static; order: -1; }
+}

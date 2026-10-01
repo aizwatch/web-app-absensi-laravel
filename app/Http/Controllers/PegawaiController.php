@@ -9,10 +9,12 @@ use Illuminate\Support\Str;
 
 class PegawaiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // tgl_lahir hanya untuk admin (dipakai NIP di ID Card)
+        $admin = $request->attributes->get('auth_user')?->role === 'admin';
         $rows = DB::table('pegawai')
-            ->selectRaw('pegawai_pin AS pin, pegawai_nama AS nama, pegawai_nip AS nip, pegawai_telp AS telp, pegawai_departemen AS departemen, pegawai_status AS status')
+            ->selectRaw('pegawai_pin AS pin, pegawai_nama AS nama, pegawai_nip AS nip, pegawai_telp AS telp, pegawai_departemen AS departemen, pegawai_status AS status' . ($admin ? ', tgl_lahir' : ''))
             ->orderBy('pegawai_nama')
             ->get()
             ->each(function ($r) {
@@ -94,7 +96,7 @@ class PegawaiController extends Controller
         if ($deny = $this->deny($request, $pin)) return $deny;
 
         $row = DB::table('pegawai')->where('pegawai_pin', $pin)
-            ->selectRaw('pegawai_nama AS nama, pegawai_telp AS telp, tempat_lahir, tgl_lahir, gender')
+            ->selectRaw('pegawai_nama AS nama, pegawai_nip AS nip, pegawai_departemen AS departemen, pegawai_telp AS telp, tempat_lahir, tgl_lahir, gender')
             ->first();
         if (!$row)
             return response()->json(['success' => false, 'message' => 'Karyawan tidak ditemukan'], 404);

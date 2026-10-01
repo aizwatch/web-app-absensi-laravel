@@ -15,6 +15,7 @@ import {
   showPicker, selectEmployee, updatePersonalMeta,
 } from './picker.js';
 import { loadAppSettings } from './settings.js';
+import { idcardSet, renderIdCardPreview, uploadIdCardDesign, saveIdCardLayout, exportIdCardZip } from './idcard.js';
 import {
   saveSettings, discardSettings, isSettingsDirty,
   renderShiftsTable, openShiftForm, cancelShiftForm, submitShiftForm,
@@ -123,6 +124,9 @@ Object.assign(window, {
   // inject
   openInjectModal, closeInjectModal, toggleInjAlasan,
   confirmInjectModal, openRowHistory, deleteScanNote,
+
+  // id card
+  idcardSet, renderIdCardPreview, uploadIdCardDesign, saveIdCardLayout, exportIdCardZip,
 
   // admin page
   openAdminModal, closeAdminModal, showAdminSection, switchAdminStab,

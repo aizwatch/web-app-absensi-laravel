@@ -107,6 +107,7 @@ export async function loadAppSettings() {
     state.appHolidays    = data.holidays        || [];
     state.dailyOverrides = data.daily_overrides || [];
     state.departments    = data.departments     || [];
+    state.idcard         = data.idcard          || null;
     updatePersonalMeta();
   } catch (e) {}
 }

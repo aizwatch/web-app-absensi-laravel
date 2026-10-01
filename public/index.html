@@ -21,7 +21,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LT Absensi">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/build/spa/app.css?v=12">
+<link rel="stylesheet" href="/build/spa/app.css?v=13">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -393,6 +393,7 @@
         <button class="admin-nav-item admin-stab-btn active" id="anav-scan" role="tab" aria-selected="true" onclick="showAdminSection('scan',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="10" y1="12" x2="16" y2="12"/><line x1="10" y1="16" x2="16" y2="16"/><circle cx="7" cy="12" r="0.5"/><circle cx="7" cy="16" r="0.5"/></svg> Koreksi Absensi</button>
         <button class="admin-nav-item admin-stab-btn" id="anav-pegawai" role="tab" aria-selected="false" onclick="showAdminSection('pegawai',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Data Karyawan</button>
         <button class="admin-nav-item admin-stab-btn" id="anav-dept" role="tab" aria-selected="false" onclick="showAdminSection('dept',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> Departemen</button>
+        <button class="admin-nav-item admin-stab-btn" id="anav-idcard" role="tab" aria-selected="false" onclick="showAdminSection('idcard',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/></svg> ID Card</button>
         <button class="admin-nav-item admin-stab-btn" id="anav-rekap" role="tab" aria-selected="false" onclick="showAdminSection('rekap',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Filter &amp; Cari</button>
       </div>
       <div class="admin-nav-group">
@@ -508,6 +509,39 @@
           </div>
           <div id="dept-list" style="display:flex;flex-direction:column;gap:8px">
             <p class="hint" style="margin:0">Memuat...</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-stab-pane" id="astab-idcard">
+        <p class="hint" style="margin-bottom:16px">Upload design kartu (portrait CR80 54×85,6 mm, disarankan minimal 638×1012 px). Foto, nama, departemen, dan NIP ditempel otomatis di bagian depan.</p>
+        <div class="idc-layout">
+          <div class="idc-controls">
+            <div class="admin-form-card">
+              <div class="section-title">Design</div>
+              <div class="idc-upload">
+                <label class="btn btn-ghost">Upload Depan<input type="file" accept="image/png,image/jpeg" hidden onchange="uploadIdCardDesign('depan',this)" /></label>
+                <span class="acc-hint" id="idc-depan-info"></span>
+              </div>
+              <div class="idc-upload">
+                <label class="btn btn-ghost">Upload Belakang<input type="file" accept="image/png,image/jpeg" hidden onchange="uploadIdCardDesign('belakang',this)" /></label>
+                <span class="acc-hint" id="idc-belakang-info"></span>
+              </div>
+              <img id="idc-belakang-img" class="idc-back" alt="Design belakang" style="display:none" />
+            </div>
+            <div class="admin-form-card">
+              <div class="section-title">Posisi &amp; Gaya</div>
+              <div id="idc-fields"></div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="saveIdCardLayout()">Simpan Layout</button>
+              <button class="btn btn-ghost" onclick="exportIdCardZip(this)">Unduh ZIP ID Card</button>
+            </div>
+          </div>
+          <div class="idc-preview">
+            <div class="filter-group"><label for="idc-emp">Preview karyawan</label><select id="idc-emp" onchange="renderIdCardPreview()"></select></div>
+            <canvas id="idc-canvas" class="idc-canvas"></canvas>
+            <div class="acc-hint warn" id="idc-warn"></div>
           </div>
         </div>
       </div>
@@ -903,6 +937,11 @@
               <span>Role</span><span id="us-role">—</span>
               <span>PIN Karyawan</span><span id="us-pin" class="mono">—</span>
             </div>
+            <div id="us-idcard" class="acc-idcard" style="display:none">
+              <div class="section-title">Preview ID Card</div>
+              <canvas id="us-idcard-canvas" class="idc-canvas"></canvas>
+              <div class="acc-hint" id="us-idcard-hint"></div>
+            </div>
           </div>
 
           <div class="acc-pane" id="us-data">
@@ -1216,7 +1255,7 @@
   </div>
 </div>
 
-<script type="module" src="/build/spa/app.js?v=12"></script>
+<script type="module" src="/build/spa/app.js?v=13"></script>
 
 
 </body>

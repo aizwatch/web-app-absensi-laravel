@@ -40,6 +40,8 @@ Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
 // ── Settings ──
 Route::middleware(AuthMiddleware::class)->get('settings', [SettingsController::class, 'index']);
 Route::middleware([AuthMiddleware::class . ':admin'])->post('settings', [SettingsController::class, 'store']);
+Route::middleware([AuthMiddleware::class . ':admin'])->post('settings/idcard/{side}', [SettingsController::class, 'uploadIdCard'])
+    ->whereIn('side', ['depan', 'belakang']);
 
 // ── Pegawai ──
 Route::middleware(AuthMiddleware::class)->group(function () {
