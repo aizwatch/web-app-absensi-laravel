@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { escHtml, switchTab } from './utils.js';
+import { escHtml, switchTab, renderAvatar } from './utils.js';
 import { authHeaders } from './auth.js';
 import { getShiftForPin } from './settings.js';
 import { loadPersonalAbsensi } from './table.js';
@@ -64,7 +64,7 @@ export function showPicker() {
 export async function selectEmployee(pin, nama) {
   state.selectedEmployee = { pin, nama };
   document.getElementById('picker-overlay').classList.add('hidden');
-  document.getElementById('p-avatar').textContent = (nama || '?')[0].toUpperCase();
+  renderAvatar(document.getElementById('p-avatar'), nama, state.pegawaiList.find(p => String(p.pin) === String(pin))?.foto);
   document.getElementById('p-name').textContent = nama;
   updatePersonalMeta();
   switchTab('tab-personal', document.getElementById('tab-btn-personal'));

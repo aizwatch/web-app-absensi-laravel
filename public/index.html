@@ -21,7 +21,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LT Absensi">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/build/spa/app.css?v=9">
+<link rel="stylesheet" href="/build/spa/app.css?v=12">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -476,7 +476,7 @@
         <div class="table-wrap" id="adm-peg-wrap">
           <div class="table-header">
             <span class="table-title">DAFTAR KARYAWAN</span>
-            <span class="total-badge" id="adm-peg-badge">0 karyawan</span>
+            <span class="total-badge" id="adm-peg-badge">0 karyawan</span> <button class="btn btn-ghost" style="font-size:12px" onclick="exportFotoZip()" title="Foto asli semua karyawan">Unduh ZIP Foto</button>
           </div>
           <div class="table-scroll">
             <table class="raw-scan-table">
@@ -869,47 +869,74 @@
 </div>
 
 <div class="modal-overlay" id="modal-settings">
-  <div class="modal-box">
-    <div class="modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Pengaturan Akun<button class="modal-close" onclick="closeSettingsModal()">×</button></div>
-
-    <div class="stab-bar">
-      <button class="stab-btn active" onclick="switchStab('us-profil',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profil</button>
-      <button class="stab-btn" onclick="switchStab('us-password',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Ganti Password</button>
-    </div>
-
+  <div class="modal-box admin-view account-view">
+    <div class="modal-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> <span id="acc-title">Pengaturan Akun</span><button class="modal-close" onclick="closeSettingsModal()" aria-label="Tutup">×</button></div>
     <div class="modal-body-scroll">
-
-            <div class="stab-pane active" id="us-profil">
-        <div id="us-profil-content" style="font-size:14px;line-height:1.8">
-          <div style="display:grid;grid-template-columns:120px 1fr;gap:6px 12px">
-            <span style="color:var(--text-muted)">Nama</span>      <strong id="us-nama">—</strong>
-            <span style="color:var(--text-muted)">NIP</span>       <span id="us-username" style="font-family:var(--font-mono)">—</span>
-            <span style="color:var(--text-muted)">Role</span>      <span id="us-role">—</span>
-            <span style="color:var(--text-muted)">PIN Karyawan</span><span id="us-pin" style="font-family:var(--font-mono)">—</span>
+      <div class="admin-layout">
+        <nav class="admin-nav" aria-label="Menu akun" role="tablist" aria-orientation="vertical">
+          <div class="admin-nav-group">
+            <div class="admin-nav-label">Akun</div>
+            <button class="admin-nav-item acc-nav-btn active" id="acc-nav-profil" role="tab" onclick="showAccountSection('us-profil',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profil</button>
+            <button class="admin-nav-item acc-nav-btn" id="acc-nav-data" role="tab" onclick="showAccountSection('us-data',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Data Diri</button>
           </div>
-        </div>
-      </div>
+          <div class="admin-nav-group" id="acc-nav-sec">
+            <div class="admin-nav-label">Keamanan</div>
+            <button class="admin-nav-item acc-nav-btn" id="acc-nav-pw" role="tab" onclick="showAccountSection('us-password',this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Password</button>
+          </div>
+        </nav>
+        <div class="admin-content">
 
-            <div class="stab-pane" id="us-password">
-        <div style="max-width:360px">
-          <div class="form-group">
-            <label>Password Baru</label>
-            <div class="pin-input-wrap">
-              <input type="password" id="us-pw-baru" placeholder="Min. 6 karakter" maxlength="100" autocomplete="new-password" style="font-size:13px" />
+          <div class="acc-pane active" id="us-profil">
+            <div class="acc-photo">
+              <div class="acc-avatar" id="us-avatar">?</div>
+              <div class="acc-photo-actions">
+                <input type="file" id="us-foto-file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadFoto(this)" />
+                <button class="btn btn-primary" id="us-foto-btn" onclick="document.getElementById('us-foto-file').click()">Ganti Foto</button>
+                <button class="btn btn-ghost" id="us-foto-del" onclick="deleteFoto()">Hapus Foto</button>
+                <div class="acc-hint" id="us-foto-hint">Foto portrait (rasio 3:4). Disarankan minimal 600×800 px.</div>
+              </div>
+            </div>
+            <div class="alert-err" id="us-foto-err" style="margin-bottom:12px"></div>
+            <div class="acc-info">
+              <span>Nama</span><strong id="us-nama">—</strong>
+              <span>NIP</span><span id="us-username" class="mono">—</span>
+              <span>Role</span><span id="us-role">—</span>
+              <span>PIN Karyawan</span><span id="us-pin" class="mono">—</span>
             </div>
           </div>
-          <div class="form-group">
-            <label>Konfirmasi Password Baru</label>
-            <div class="pin-input-wrap">
-              <input type="password" id="us-pw-konfirm" placeholder="Ulangi password baru" maxlength="100" autocomplete="new-password" style="font-size:13px" />
+
+          <div class="acc-pane" id="us-data">
+            <div style="max-width:420px">
+              <div class="form-group"><label>No. HP</label><input type="tel" id="us-telp" maxlength="20" placeholder="08xxxxxxxxxx" style="font-size:13px" /></div>
+              <div class="form-group"><label>Tempat Lahir</label><input type="text" id="us-tempat" maxlength="50" style="font-size:13px" /></div>
+              <div class="form-group"><label>Tanggal Lahir</label><input type="date" id="us-tgl" style="font-size:13px" /></div>
+              <div class="form-group"><label>Jenis Kelamin</label>
+                <select id="us-gender" style="font-size:13px"><option value="1">Laki-laki</option><option value="2">Perempuan</option></select>
+              </div>
+              <div class="alert-err" id="us-data-err" style="margin-bottom:12px"></div>
+              <div class="alert-ok"  id="us-data-ok"  style="margin-bottom:12px"></div>
+              <button class="btn btn-primary" onclick="saveProfil()">Simpan Data Diri</button>
             </div>
           </div>
-          <div class="alert-err" id="us-pw-err" style="margin-bottom:12px"></div>
-          <div class="alert-ok"  id="us-pw-ok"  style="margin-bottom:12px"></div>
-          <button class="btn btn-primary" onclick="userChangePassword()">Simpan Password</button>
+
+          <div class="acc-pane" id="us-password">
+            <div style="max-width:360px">
+              <div class="form-group">
+                <label>Password Baru</label>
+                <div class="pin-input-wrap"><input type="password" id="us-pw-baru" placeholder="Min. 6 karakter" maxlength="100" autocomplete="new-password" style="font-size:13px" /></div>
+              </div>
+              <div class="form-group">
+                <label>Konfirmasi Password Baru</label>
+                <div class="pin-input-wrap"><input type="password" id="us-pw-konfirm" placeholder="Ulangi password baru" maxlength="100" autocomplete="new-password" style="font-size:13px" /></div>
+              </div>
+              <div class="alert-err" id="us-pw-err" style="margin-bottom:12px"></div>
+              <div class="alert-ok"  id="us-pw-ok"  style="margin-bottom:12px"></div>
+              <button class="btn btn-primary" onclick="userChangePassword()">Simpan Password</button>
+            </div>
+          </div>
+
         </div>
       </div>
-
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeSettingsModal()">Tutup</button>
@@ -1189,7 +1216,7 @@
   </div>
 </div>
 
-<script type="module" src="/build/spa/app.js?v=9"></script>
+<script type="module" src="/build/spa/app.js?v=12"></script>
 
 
 </body>

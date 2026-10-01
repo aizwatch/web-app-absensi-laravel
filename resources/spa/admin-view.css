@@ -197,3 +197,22 @@
 .save-bar[hidden] { display: none; }
 .save-bar-actions { display: flex; gap: 8px; }
 #save-bar-text { font-size: 13px; font-weight: 600; color: var(--av-text); }
+
+/* ── Pengaturan Akun (pakai layout admin, tapi modal kecil) ── */
+.modal-box.account-view { max-width: 760px; width: 96vw; height: auto; max-height: 90vh; }
+.acc-pane { display: none; }
+.acc-pane.active { display: block; }
+.acc-photo { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+.acc-photo-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.acc-hint { flex-basis: 100%; font-size: 12px; color: var(--av-text-muted, var(--text-muted)); }
+.acc-avatar {
+  width: 120px; height: 120px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; font-weight: 700; color: #fff;
+}
+.acc-avatar img, .personal-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; display: block; }
+.acc-hint.warn { color: #d97706; font-weight: 600; }
+.acc-info { display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; font-size: 14px; line-height: 1.8; }
+.acc-info > span:nth-child(odd) { color: var(--text-muted); }
+.acc-info .mono { font-family: var(--font-mono); }

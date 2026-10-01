@@ -96,3 +96,18 @@ export function initClock() {
     new Date().toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   applyTheme(localStorage.getItem('theme') === 'dark');
 }
+
+// Foto bulat bila ada, else huruf pertama nama. Dipakai picker + modal akun.
+export function renderAvatar(el, nama, foto) {
+  if (!el) return;
+  el.textContent = '';
+  if (foto) {
+    const img = document.createElement('img');
+    img.alt = '';
+    img.src = foto;
+    img.onerror = () => { el.textContent = (nama || '?')[0].toUpperCase(); };
+    el.appendChild(img);
+  } else {
+    el.textContent = (nama || '?')[0].toUpperCase();
+  }
+}

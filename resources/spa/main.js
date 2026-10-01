@@ -41,6 +41,7 @@ import {
   adminSavePegawai, adminDeletePegawai, adminAddPegawai,
   loadSyncDevices, runBackfill, runSetTime, runSyncUserInfo, populateSyncUserSelect,
   openUserSettingsModal, closeSettingsModal, userChangePassword,
+  openProfilModal, showAccountSection, saveProfil, uploadFoto, deleteFoto, exportFotoZip,
 } from './admin.js';
 import {
   openLaporanModal, closeLaporanModal, generateLaporan,
@@ -130,6 +131,7 @@ Object.assign(window, {
   adminDeletePegawai, adminAddPegawai,
   loadSyncDevices, runBackfill, runSetTime, runSyncUserInfo, populateSyncUserSelect,
   openUserSettingsModal, closeSettingsModal, userChangePassword,
+  openProfilModal, showAccountSection, saveProfil, uploadFoto, deleteFoto, exportFotoZip,
 
   // laporan
   openLaporanModal, closeLaporanModal, generateLaporan,

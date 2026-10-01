@@ -42,8 +42,16 @@ Route::middleware(AuthMiddleware::class)->get('settings', [SettingsController::c
 Route::middleware([AuthMiddleware::class . ':admin'])->post('settings', [SettingsController::class, 'store']);
 
 // ── Pegawai ──
-Route::middleware(AuthMiddleware::class)->get('pegawai', [PegawaiController::class, 'index']);
+Route::middleware(AuthMiddleware::class)->group(function () {
+    Route::get('pegawai', [PegawaiController::class, 'index']);
+    // otorisasi (diri sendiri / admin) di controller
+    Route::get('pegawai/{pin}/profil',    [PegawaiController::class, 'profil']);
+    Route::post('pegawai/{pin}/profil',   [PegawaiController::class, 'updateProfil']);
+    Route::post('pegawai/{pin}/foto',     [PegawaiController::class, 'uploadFoto']);
+    Route::delete('pegawai/{pin}/foto',   [PegawaiController::class, 'deleteFoto']);
+});
 Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
+    Route::get('pegawai/foto/zip', [PegawaiController::class, 'exportFoto']);
     Route::post('pegawai',         [PegawaiController::class, 'store']);
     Route::put('pegawai/{pin}',    [PegawaiController::class, 'update']);
     Route::delete('pegawai/{pin}', [PegawaiController::class, 'destroy']);

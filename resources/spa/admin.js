@@ -1,7 +1,7 @@
 import { state } from './state.js';
-import { escHtml, showToast, switchStab, switchAdminStab } from './utils.js';
+import { escHtml, showToast, switchAdminStab, renderAvatar } from './utils.js';
 import { authHeaders } from './auth.js';
-import { populatePickerSelect } from './picker.js';
+import { populatePickerSelect, initPicker } from './picker.js';
 import { ensureSettingsLoaded, renderDepartmentsCard, isSettingsDirty } from './settings.js';
 import { icon } from './icons.js';
 
@@ -164,6 +164,7 @@ export function renderAdminPegawai() {
       </td>
       <td style="white-space:nowrap">
         <span id="peg-view-btns-${i}">
+          <button class="btn-icon" onclick="openProfilModal('${escHtml(String(p.pin))}')" title="${p.foto_low?'Resolusi rendah — ':''}Foto & Data Diri">${icon('user')}${p.foto_low?'<span style="color:#d97706">⚠</span>':''}</button>
           <button class="btn-icon" onclick="adminEditPegawaiRow(${i})" title="Edit">${icon('pencil')}</button>
           <button class="btn-icon del" onclick="adminDeletePegawai('${escHtml(String(p.pin))}','${escHtml(p.nama)}')" title="Hapus">${icon('trash-2')}</button>
         </span>
@@ -343,22 +344,165 @@ export async function runSyncUserInfo() {
   }
 }
 
-export function openUserSettingsModal() {
-  if(!state.authUser) return;
-  document.getElementById('us-nama').textContent    =state.authUser.name||'—';
-  document.getElementById('us-username').textContent=state.authUser.nip||'—';
-  document.getElementById('us-role').textContent    =state.authUser.role||'—';
-  document.getElementById('us-pin').textContent     =state.authUser.pegawai_pin||'(tidak terhubung ke karyawan)';
-  document.getElementById('us-pw-baru').value='';
-  document.getElementById('us-pw-konfirm').value='';
-  document.getElementById('us-pw-err').classList.remove('show');
-  document.getElementById('us-pw-ok').classList.remove('show');
-  switchStab('us-profil',document.querySelector('.stab-btn'));
-  document.getElementById('modal-settings').classList.add('open');
+const $ = id => document.getElementById(id);
+const showMsg = (id, msg) => { const el = $(id); el.textContent = msg; el.classList.add('show'); };
+const hideMsgs = (...ids) => ids.forEach(id => $(id).classList.remove('show'));
+
+// pin = karyawan yang diedit (diri sendiri atau, oleh admin, orang lain)
+let _profilPin = null;
+let _profilNama = '';
+
+export async function openUserSettingsModal() {
+  if (!state.authUser) return;
+  await openProfilModal(state.authUser.pegawai_pin);
+}
+
+export async function openProfilModal(pin) {
+  const au = state.authUser;
+  if (!au) return;
+  const self = !pin || String(pin) === String(au.pegawai_pin);
+  _profilPin = self ? au.pegawai_pin : String(pin);
+  const emp = (state.pegawaiList || []).find(p => String(p.pin) === String(_profilPin));
+  _profilNama = self ? (au.name || '') : (emp?.nama || '');
+
+  $('acc-title').textContent = self ? 'Pengaturan Akun' : `Profil — ${_profilNama}`;
+  $('us-nama').textContent     = _profilNama || '—';
+  $('us-username').textContent = (self ? au.nip : emp?.nip) || '—';
+  $('us-role').textContent     = self ? (au.role || '—') : 'karyawan';
+  $('us-pin').textContent      = _profilPin || '(tidak terhubung ke karyawan)';
+  ['us-pw-baru', 'us-pw-konfirm'].forEach(id => $(id).value = '');
+  hideMsgs('us-pw-err', 'us-pw-ok', 'us-data-err', 'us-data-ok', 'us-foto-err');
+
+  // akun tanpa pegawai_pin (admin murni) hanya punya Password; password cuma untuk diri sendiri
+  const hasPin = !!_profilPin;
+  $('acc-nav-profil').style.display = hasPin ? '' : 'none';
+  $('acc-nav-data').style.display   = hasPin ? '' : 'none';
+  $('acc-nav-sec').style.display    = self ? '' : 'none';
+  _setFotoHint(false);
+  showAccountSection(hasPin ? 'us-profil' : 'us-password');
+  renderAvatar($('us-avatar'), _profilNama, emp?.foto);
+  $('modal-settings').classList.add('open');
+
+  if (!hasPin) return;
+  try {
+    const res = await fetch(`/api/pegawai/${encodeURIComponent(_profilPin)}/profil`, { headers: authHeaders() });
+    const json = await res.json();
+    if (!json.success) { showMsg('us-data-err', json.message || 'Gagal memuat data'); return; }
+    const d = json.data;
+    $('us-telp').value   = d.telp || '';
+    $('us-tempat').value = d.tempat_lahir || '';
+    $('us-tgl').value    = d.tgl_lahir || '';
+    $('us-gender').value = String(d.gender || 1);
+    renderAvatar($('us-avatar'), _profilNama, d.foto);
+    _setFotoHint(!!d.foto, d.foto_low, d.foto_dim);
+  } catch (e) { showMsg('us-data-err', 'Gagal terhubung ke server.'); }
+}
+
+export function showAccountSection(id, btn) {
+  document.querySelectorAll('#modal-settings .acc-pane').forEach(p => p.classList.toggle('active', p.id === id));
+  const navId = { 'us-profil': 'acc-nav-profil', 'us-data': 'acc-nav-data', 'us-password': 'acc-nav-pw' }[id];
+  document.querySelectorAll('#modal-settings .acc-nav-btn').forEach(b => {
+    const on = b === (btn || $(navId));
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
 }
 
 export function closeSettingsModal() {
-  document.getElementById('modal-settings').classList.remove('open');
+  $('modal-settings').classList.remove('open');
+}
+
+export async function saveProfil() {
+  hideMsgs('us-data-err', 'us-data-ok');
+  try {
+    const res = await fetch(`/api/pegawai/${encodeURIComponent(_profilPin)}/profil`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders() },
+      body: JSON.stringify({
+        telp: $('us-telp').value.trim(), tempat_lahir: $('us-tempat').value.trim(),
+        tgl_lahir: $('us-tgl').value || null, gender: $('us-gender').value,
+      }),
+    });
+    const json = await res.json();
+    if (!json.success) { showMsg('us-data-err', json.message || 'Gagal menyimpan'); return; }
+    showMsg('us-data-ok', json.message || 'Tersimpan');
+    adminLoadPegawai();
+  } catch (e) { showMsg('us-data-err', 'Gagal terhubung ke server.'); }
+}
+
+// Crop tengah rasio 3:4 → maks 900×1200 (tanpa upscale), JPEG q0.92 untuk ID Card
+function _cropPortrait(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const w = Math.min(img.width, img.height * 3 / 4), h = w * 4 / 3;
+      const k = Math.min(1, 900 / w);
+      const c = document.createElement('canvas');
+      c.width = Math.round(w * k); c.height = Math.round(h * k);
+      c.getContext('2d').drawImage(img, (img.width - w) / 2, (img.height - h) / 2, w, h, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? resolve(b) : reject(new Error('Gagal memproses gambar')), 'image/jpeg', 0.92);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('File bukan gambar yang valid')); };
+    img.src = url;
+  });
+}
+
+function _setFotoHint(has, low, dim) {
+  const el = $('us-foto-hint');
+  el.classList.toggle('warn', !!(has && low));
+  el.textContent = has && low
+    ? `⚠ Resolusi rendah${dim ? ` (${dim.w}×${dim.h})` : ''}. Disarankan minimal 600×800 px.`
+    : 'Foto portrait (rasio 3:4). Disarankan minimal 600×800 px.';
+}
+
+export function exportFotoZip() {
+  window.location.href = `/api/pegawai/foto/zip?token=${encodeURIComponent(state.authToken)}`;
+}
+
+async function _refreshFoto() {
+  await initPicker();
+  if (document.getElementById('adm-peg-tbody')?.children.length) await adminLoadPegawai();
+  const emp = state.pegawaiList.find(p => String(p.pin) === String(_profilPin));
+  renderAvatar($('us-avatar'), _profilNama, emp?.foto);
+  // header tab Saya, kalau yang diganti = karyawan yang sedang tampil
+  if (state.selectedEmployee && String(state.selectedEmployee.pin) === String(_profilPin))
+    renderAvatar($('p-avatar'), _profilNama, emp?.foto);
+}
+
+export async function uploadFoto(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  hideMsgs('us-foto-err');
+  try {
+    const blob = await _cropPortrait(file);
+    const fd = new FormData();
+    fd.append('foto', blob, 'foto.jpg');
+    const res = await fetch(`/api/pegawai/${encodeURIComponent(_profilPin)}/foto`, {
+      method: 'POST', headers: { Accept: 'application/json', ...authHeaders() }, body: fd,
+    });
+    const json = await res.json();
+    if (!json.success) { showMsg('us-foto-err', json.message || 'Gagal upload'); return; }
+    await _refreshFoto();
+    _setFotoHint(true, json.foto_low, json.foto_dim);
+    showToast('Berhasil', 'Foto diperbarui');
+  } catch (e) { showMsg('us-foto-err', e.message || 'Gagal upload'); }
+}
+
+export async function deleteFoto() {
+  if (!confirm('Hapus foto?')) return;
+  hideMsgs('us-foto-err');
+  try {
+    const res = await fetch(`/api/pegawai/${encodeURIComponent(_profilPin)}/foto`, {
+      method: 'DELETE', headers: { Accept: 'application/json', ...authHeaders() },
+    });
+    const json = await res.json();
+    if (!json.success) { showMsg('us-foto-err', json.message || 'Gagal hapus'); return; }
+    await _refreshFoto();
+    _setFotoHint(false);
+  } catch (e) { showMsg('us-foto-err', 'Gagal terhubung ke server.'); }
 }
 
 export async function userChangePassword() {

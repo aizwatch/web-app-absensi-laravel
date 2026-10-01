@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PegawaiController extends Controller
 {
@@ -12,7 +14,11 @@ class PegawaiController extends Controller
         $rows = DB::table('pegawai')
             ->selectRaw('pegawai_pin AS pin, pegawai_nama AS nama, pegawai_nip AS nip, pegawai_telp AS telp, pegawai_departemen AS departemen, pegawai_status AS status')
             ->orderBy('pegawai_nama')
-            ->get();
+            ->get()
+            ->each(function ($r) {
+                $r->foto = $this->fotoUrl((string) $r->pin);
+                $r->foto_low = $r->foto ? $this->fotoLow((string) $r->pin) : false;
+            });
 
         return response()->json(['success' => true, 'data' => $rows]);
     }
@@ -79,5 +85,118 @@ class PegawaiController extends Controller
             return response()->json(['success' => false, 'message' => 'Karyawan tidak ditemukan'], 404);
 
         return response()->json(['success' => true, 'message' => 'Karyawan berhasil dihapus']);
+    }
+
+    // ── Profil & foto (karyawan sendiri atau admin) ─────────────────────────
+
+    public function profil(Request $request, string $pin)
+    {
+        if ($deny = $this->deny($request, $pin)) return $deny;
+
+        $row = DB::table('pegawai')->where('pegawai_pin', $pin)
+            ->selectRaw('pegawai_nama AS nama, pegawai_telp AS telp, tempat_lahir, tgl_lahir, gender')
+            ->first();
+        if (!$row)
+            return response()->json(['success' => false, 'message' => 'Karyawan tidak ditemukan'], 404);
+
+        $row->foto     = $this->fotoUrl($pin);
+        $row->foto_low = $row->foto ? $this->fotoLow($pin) : false;
+        $row->foto_dim = $row->foto ? $this->fotoDim($pin) : null;
+        return response()->json(['success' => true, 'data' => $row]);
+    }
+
+    public function updateProfil(Request $request, string $pin)
+    {
+        if ($deny = $this->deny($request, $pin)) return $deny;
+
+        $v = $request->validate([
+            'telp'         => 'nullable|string|max:20',
+            'tempat_lahir' => 'nullable|string|max:50',
+            'tgl_lahir'    => 'nullable|date',
+            'gender'       => 'required|in:1,2',
+        ]);
+
+        $n = DB::table('pegawai')->where('pegawai_pin', $pin)->update([
+            'pegawai_telp' => $v['telp'] ?? '',
+            'tempat_lahir' => $v['tempat_lahir'] ?? '',
+            'tgl_lahir'    => $v['tgl_lahir'] ?? null,
+            'gender'       => (int) $v['gender'],
+        ]);
+        // update() returns 0 for unchanged rows too, so check existence instead
+        if (!$n && !DB::table('pegawai')->where('pegawai_pin', $pin)->exists())
+            return response()->json(['success' => false, 'message' => 'Karyawan tidak ditemukan'], 404);
+
+        return response()->json(['success' => true, 'message' => 'Data diri disimpan']);
+    }
+
+    public function uploadFoto(Request $request, string $pin)
+    {
+        if ($deny = $this->deny($request, $pin)) return $deny;
+
+        $request->validate(['foto' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120']);
+        $request->file('foto')->storeAs('foto', "$pin.jpg", 'public');
+
+        return response()->json([
+            'success' => true, 'foto' => $this->fotoUrl($pin),
+            'foto_low' => $this->fotoLow($pin), 'foto_dim' => $this->fotoDim($pin),
+        ]);
+    }
+
+    public function deleteFoto(Request $request, string $pin)
+    {
+        if ($deny = $this->deny($request, $pin)) return $deny;
+
+        Storage::disk('public')->delete("foto/$pin.jpg");
+        return response()->json(['success' => true]);
+    }
+
+    /** GET /api/pegawai/foto/zip (admin) — semua foto asli, nama file {pin}_{nama}.jpg */
+    public function exportFoto()
+    {
+        $disk = Storage::disk('public');
+        $nama = DB::table('pegawai')->pluck('pegawai_nama', 'pegawai_pin');
+        $tmp  = tempnam(sys_get_temp_dir(), 'foto');
+        $zip  = new \ZipArchive();
+        $zip->open($tmp, \ZipArchive::OVERWRITE);
+        $n = 0;
+        foreach ($nama as $pin => $nm) {
+            if (!$disk->exists("foto/$pin.jpg")) continue;
+            $zip->addFile($disk->path("foto/$pin.jpg"), $pin . '_' . Str::slug($nm, '_') . '.jpg');
+            $n++;
+        }
+        if (!$n) {
+            $zip->close(); @unlink($tmp);
+            return response()->json(['success' => false, 'message' => 'Belum ada foto karyawan'], 404);
+        }
+        $zip->close();
+
+        return response()->download($tmp, 'foto-karyawan-' . date('Ymd') . '.zip')->deleteFileAfterSend(true);
+    }
+
+    private function deny(Request $request, string $pin)
+    {
+        $auth = $request->attributes->get('auth_user');
+        if ($auth->role === 'admin' || (string) $auth->pegawai_pin === $pin) return null;
+        return response()->json(['success' => false, 'message' => 'Tidak punya akses'], 403);
+    }
+
+    private function fotoUrl(string $pin): ?string
+    {
+        $path = "foto/$pin.jpg";
+        $disk = Storage::disk('public');
+        return $disk->exists($path) ? "/storage/$path?v=" . $disk->lastModified($path) : null;
+    }
+
+    private function fotoDim(string $pin): ?array
+    {
+        $d = @getimagesize(Storage::disk('public')->path("foto/$pin.jpg"));
+        return $d ? ['w' => $d[0], 'h' => $d[1]] : null;
+    }
+
+    // resolusi rendah: < 600×800 px
+    private function fotoLow(string $pin): bool
+    {
+        $d = $this->fotoDim($pin);
+        return !$d || $d['w'] < 600 || $d['h'] < 800;
     }
 }
