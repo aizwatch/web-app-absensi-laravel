@@ -122,6 +122,7 @@ export async function saveSettings() {
   const src = currentStagedValues();
   const payload = {};
   keys.forEach(k => { payload[k] = src[k]; });
+  if (payload.departments && deptRenames.length) payload.department_renames = deptRenames;
   try {
     const res = await fetch('/api/settings', {
       method: 'POST',
@@ -135,6 +136,7 @@ export async function saveSettings() {
     }
     await loadAppSettings();
     snapshotAllBaseline();
+    if (payload.department_renames) { deptRenames = []; window.adminLoadPegawai?.(); }
     renderShiftsTable(); renderHolidaysTable(); renderOverridesTable(); renderAssignTable(); renderDepartmentsCard();
     updateSaveBar();
     if (okEl) okEl.classList.add('show');
@@ -152,6 +154,7 @@ export function discardSettings() {
   state.appHolidays     = JSON.parse(baseline.holidays);
   state.dailyOverrides  = JSON.parse(baseline.daily_overrides);
   state.departments     = JSON.parse(baseline.departments);
+  deptRenames = []; editingDept = -1;
   renderShiftsTable(); renderHolidaysTable(); renderOverridesTable(); renderAssignTable(); renderDepartmentsCard();
   updateSaveBar();
 }
@@ -168,6 +171,7 @@ export async function ensureSettingsLoaded() {
   renderShiftsTable();
   renderHolidaysTable();
   renderOverridesTable();
+  renderDepartmentsCard();
   await loadEmployeesForAssign();
   updateSaveBar();
 }
@@ -698,11 +702,17 @@ export function renderDepartmentsCard() {
   if(el){
     if(!state.departments.length){el.innerHTML='<p style="color:var(--text-muted);font-size:13px;margin:0">Belum ada departemen.</p>';}
     else{el.innerHTML=state.departments.map((d,i)=>
-      `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:13px">
-        <span>${escHtml(d)}</span>
+      `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:13px">
+        ${editingDept===i
+          ? `<input id="dept-edit-${i}" type="text" value="${escHtml(d)}" style="flex:1" onkeydown="if(event.key==='Enter')renameDepartment(${i});if(event.key==='Escape')editDepartment(-1)" />
+             <button class="btn-icon" onclick="renameDepartment(${i})" title="Simpan">${icon('check-circle')}</button>
+             <button class="btn-icon" onclick="editDepartment(-1)" title="Batal">${icon('x-circle')}</button>`
+          : `<span style="flex:1">${escHtml(d)}</span>
+             <button class="btn-icon" onclick="editDepartment(${i})" title="Ubah nama" aria-label="Ubah nama departemen ${escHtml(d)}">${icon('pencil')}</button>`}
         <button onclick="removeDepartment(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1;padding:0 2px" title="Hapus" aria-label="Hapus departemen ${escHtml(d)}">×</button>
       </div>`
     ).join('');}
+    document.getElementById(`dept-edit-${editingDept}`)?.focus();
   }
   const sel=document.getElementById('np-dept');
   if(sel){
@@ -723,7 +733,33 @@ export function addDepartment() {
   updateSaveBar();
 }
 
+// Rename dicatat terpisah supaya saat disimpan backend ikut memperbarui pegawai_departemen karyawan.
+let editingDept = -1;
+let deptRenames = []; // [{from, to}] — from = nama yang tersimpan di server
+
+export function editDepartment(idx) {
+  editingDept = idx;
+  renderDepartmentsCard();
+}
+
+export function renameDepartment(idx) {
+  const lama = state.departments[idx];
+  const baru = (document.getElementById(`dept-edit-${idx}`)?.value || '').trim();
+  if (!baru) return;
+  if (baru !== lama && state.departments.includes(baru)) { showToast('Peringatan', 'Departemen sudah ada'); return; }
+  if (baru !== lama) {
+    const r = deptRenames.find(r => r.to === lama); // rename berantai A→B→C tetap satu entri A→C
+    if (r) r.to = baru; else deptRenames.push({ from: lama, to: baru });
+    deptRenames = deptRenames.filter(r => r.from !== r.to);
+    state.departments[idx] = baru;
+  }
+  editingDept = -1;
+  renderDepartmentsCard();
+  updateSaveBar();
+}
+
 export function removeDepartment(idx) {
+  editingDept = -1;
   state.departments.splice(idx,1);
   renderDepartmentsCard();
   updateSaveBar();

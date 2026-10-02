@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\SettingsManager;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
@@ -39,6 +40,14 @@ class SettingsController extends Controller
 
         if (isset($data['departments']) && is_array($data['departments']))
             SettingsManager::set('departments', array_values(array_filter($data['departments'], fn($d) => !empty(trim($d)))));
+
+        // Ganti nama departemen → ikut perbarui karyawan yang memakai nama lama
+        foreach ((array) ($data['department_renames'] ?? []) as $r) {
+            $from = trim((string) ($r['from'] ?? ''));
+            $to   = trim((string) ($r['to'] ?? ''));
+            if ($from !== '' && $to !== '' && $from !== $to)
+                DB::table('pegawai')->where('pegawai_departemen', $from)->update(['pegawai_departemen' => $to]);
+        }
 
         if (isset($data['idcard']) && is_array($data['idcard'])) {
             // url design hanya diubah lewat uploadIdCard

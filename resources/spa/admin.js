@@ -11,7 +11,7 @@ const ADMIN_SECTION_PANES = {
   sync: 'astab-sync', shift: 'pstab-shifts', penugasan: 'pstab-assign', libur: 'pstab-holidays',
   override: 'pstab-overrides', resetpw: 'pstab-resetpw', idcard: 'astab-idcard',
 };
-const SETTINGS_SECTIONS = ['shift', 'penugasan', 'libur', 'override', 'resetpw'];
+const SETTINGS_SECTIONS = ['shift', 'penugasan', 'libur', 'override', 'resetpw', 'dept'];
 
 export function showAdminSection(key, btn) {
   const paneId = ADMIN_SECTION_PANES[key];
@@ -167,6 +167,7 @@ export function renderAdminPegawai() {
       <td style="white-space:nowrap">
         <span id="peg-view-btns-${i}">
           <button class="btn-icon" onclick="openProfilModal('${escHtml(String(p.pin))}')" title="${p.foto_low?'Resolusi rendah — ':''}Foto & Data Diri">${icon('user')}${p.foto_low?'<span style="color:#d97706">⚠</span>':''}</button>
+          ${p.foto?`<a class="btn-icon" href="${escHtml(p.foto)}" download="${escHtml(String(p.pin))}_${escHtml((p.nama||'').toLowerCase().replace(/[^a-z0-9]+/g,'_'))}.jpg" title="Unduh Foto">${icon('download')}</a>`:''}
           <button class="btn-icon" onclick="adminEditPegawaiRow(${i})" title="Edit">${icon('pencil')}</button>
           <button class="btn-icon del" onclick="adminDeletePegawai('${escHtml(String(p.pin))}','${escHtml(p.nama)}')" title="Hapus">${icon('trash-2')}</button>
         </span>

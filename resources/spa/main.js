@@ -27,7 +27,7 @@ import {
   toggleOvPin, ovPickerSelectAll, ovPickerClearAll, confirmOvKaryawanPicker,
   addOverride,
   adminResetUserPassword,
-  renderDepartmentsCard, addDepartment, removeDepartment,
+  renderDepartmentsCard, addDepartment, removeDepartment, editDepartment, renameDepartment,
 } from './settings.js';
 import { pollAbsensi, changeMonth, loadPersonalAbsensi } from './table.js';
 import { applyFilter, resetFilter, exportFilter, switchFilterStab, applyBermasalah, toggleBermasalahDetail } from './filter.js';
@@ -116,7 +116,7 @@ Object.assign(window, {
 
   // settings — password + departemen + save bar
   adminResetUserPassword, saveSettings, discardSettings,
-  renderDepartmentsCard, addDepartment, removeDepartment,
+  renderDepartmentsCard, addDepartment, removeDepartment, editDepartment, renameDepartment,
 
   // filter
   applyFilter, resetFilter, exportFilter,
