@@ -7,11 +7,14 @@ import { makeZip } from './zip.js';
 
 const MIN_W = 638, MIN_H = 1012; // CR80 54×85,6 mm @300 DPI
 
+// Model pop-out: panel (sudah tergambar di design) jadi batas foto; cutout PNG boleh keluar
+// di atas panel, bagian bawah terpotong mengikuti sudut panel.
 const DEFAULT = {
-  foto: { x: .5, y: .40, d: .46, ring: .012, ringColor: '#ffffff' },
-  nama: { y: .68, size: .055, color: '#111111', bold: true },
-  dept: { y: .74, size: .040, color: '#333333', bold: false },
-  nip:  { y: .79, size: .040, color: '#333333', bold: false },
+  panel: { x: .27, y: .135, w: .645, h: .73, r: .06, keluar: .5 },
+  foto:  { x: .59, y: .865, h: .78 },  // x = tengah, y = bawah, h = tinggi cutout (pecahan tinggi kartu)
+  // max = lebar maksimum teks (pecahan lebar kartu; untuk vertikal pecahan tinggi) → huruf mengecil otomatis
+  nama:  { x: .31, y: .78, size: .055, max: .58, color: '#ffffff', bold: true, align: 'left' },
+  dept:  { x: .17, y: .50, size: .065, max: .70, color: '#111111', bold: true, align: 'center', vertical: true },
 };
 
 const $ = id => document.getElementById(id);
@@ -20,15 +23,10 @@ let _layout = null; // salinan kerja di editor admin
 export function idcardLayout() {
   const s = state.idcard || {};
   const L = { depan: s.depan || null, belakang: s.belakang || null };
-  for (const k of Object.keys(DEFAULT)) L[k] = { ...DEFAULT[k], ...(s[k] || {}) };
+  // layout model lama (foto lingkaran) beda arti koordinat → abaikan, pakai default pop-out
+  const saved = s.model === 'popout' ? s : {};
+  for (const k of Object.keys(DEFAULT)) L[k] = { ...DEFAULT[k], ...(saved[k] || {}) };
   return L;
-}
-
-/** NIP di kartu = NIP + MMYY tanggal lahir; tanpa tgl lahir → NIP saja */
-export const tglLahirOk = emp => !!emp.tgl_lahir && emp.tgl_lahir > '1900';
-export function nipKartu(emp) {
-  const t = emp.tgl_lahir;
-  return (emp.nip || '') + (tglLahirOk(emp) ? t.slice(5, 7) + t.slice(2, 4) : '');
 }
 
 const _imgs = new Map();
@@ -42,19 +40,31 @@ function loadImg(url) {
   return _imgs.get(url);
 }
 
+// t.vertical = diputar -90° (dibaca dari bawah ke atas), selalu rata tengah
 function drawText(ctx, text, t, W, H) {
   if (!text) return;
+  const vertical = !!t.vertical;
+  const align = vertical ? 'center' : t.align || 'center';
+  const max = t.max * (vertical ? H : W);
   let px = t.size * H;
   const font = () => `${t.bold ? 700 : 500} ${px}px Montserrat, sans-serif`;
   ctx.font = font();
-  while (ctx.measureText(text).width > W * .9 && px > 6) { px -= 1; ctx.font = font(); }
+  while (ctx.measureText(text).width > max && px > 6) { px -= 1; ctx.font = font(); }
+  ctx.save();
+  ctx.translate(t.x * W, t.y * H);
+  if (vertical) ctx.rotate(-Math.PI / 2);
   ctx.fillStyle = t.color;
-  ctx.textAlign = 'center';
+  ctx.textAlign = align;
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, W / 2, t.y * H);
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
 }
 
-/** Gambar kartu depan ke canvas (ukuran = resolusi asli design). emp: {nama, departemen, nip, tgl_lahir, foto} */
+function panelPath(ctx, p, W, H) {
+  ctx.roundRect(p.x * W, p.y * H, p.w * W, p.h * H, p.r * W);
+}
+
+/** Gambar kartu depan ke canvas (ukuran = resolusi asli design). emp: {nama, departemen, foto, cutout} */
 export async function renderFront(canvas, L, emp) {
   const design = L.depan ? await loadImg(L.depan).catch(() => null) : null;
   const W = canvas.width = design ? design.naturalWidth : MIN_W;
@@ -66,38 +76,39 @@ export async function renderFront(canvas, L, emp) {
   ctx.fillRect(0, 0, W, H);
   if (design) ctx.drawImage(design, 0, 0);
 
-  const f = L.foto, D = f.d * W, cx = f.x * W, cy = f.y * H;
-  if (f.ring > 0) {
-    ctx.beginPath(); ctx.arc(cx, cy, D / 2 + f.ring * W, 0, Math.PI * 2);
-    ctx.fillStyle = f.ringColor; ctx.fill();
-  }
+  const p = L.panel, cut = emp.cutout ? await loadImg(emp.cutout).catch(() => null) : null;
   ctx.save();
-  ctx.beginPath(); ctx.arc(cx, cy, D / 2, 0, Math.PI * 2); ctx.clip();
-  const foto = emp.foto ? await loadImg(emp.foto).catch(() => null) : null;
-  if (foto) {
-    // cover + fokus 25% dari atas (wajah), sama seperti avatar
-    const s = D / Math.min(foto.naturalWidth, foto.naturalHeight);
-    const w = foto.naturalWidth * s, h = foto.naturalHeight * s;
-    ctx.drawImage(foto, cx - w / 2, cy - D / 2 + (D - h) * .25, w, h);
+  ctx.beginPath();
+  panelPath(ctx, p, W, H);
+  if (cut) {
+    // area "keluar": selebar kartu, dari atas sampai sebagian tinggi panel
+    ctx.rect(0, 0, W, (p.y + p.h * p.keluar) * H);
+    ctx.clip();
+    const h = L.foto.h * H, w = cut.naturalWidth * h / cut.naturalHeight;
+    ctx.drawImage(cut, L.foto.x * W - w / 2, L.foto.y * H - h, w, h);
   } else {
-    ctx.fillStyle = '#d1d5db'; ctx.fillRect(cx - D / 2, cy - D / 2, D, D);
-    ctx.fillStyle = '#6b7280'; ctx.font = `700 ${D * .4}px Montserrat, sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText((emp.nama || '?').trim().charAt(0).toUpperCase(), cx, cy);
+    // belum ada cutout → foto biasa, cover di dalam panel
+    ctx.clip();
+    const foto = emp.foto ? await loadImg(emp.foto).catch(() => null) : null;
+    if (foto) {
+      const pw = p.w * W, ph = p.h * H, s = Math.max(pw / foto.naturalWidth, ph / foto.naturalHeight);
+      const w = foto.naturalWidth * s, h = foto.naturalHeight * s;
+      ctx.drawImage(foto, p.x * W + (pw - w) / 2, p.y * H + (ph - h) * .25, w, h);
+    }
   }
   ctx.restore();
 
   drawText(ctx, emp.nama, L.nama, W, H);
   drawText(ctx, emp.departemen, L.dept, W, H);
-  drawText(ctx, nipKartu(emp), L.nip, W, H);
 }
 
 // ── Editor admin ──
+const TEXT = [['x', 'Posisi X', 0, 1], ['y', 'Posisi Y', 0, 1], ['size', 'Ukuran', .015, .15], ['max', 'Lebar maks', .1, 1], ['color', 'Warna'], ['bold', 'Tebal']];
 const FIELDS = [
-  ['foto', 'Foto', [['x', 'Posisi X', 0, 1], ['y', 'Posisi Y', 0, 1], ['d', 'Diameter', .1, 1], ['ring', 'Tebal bingkai', 0, .05], ['ringColor', 'Warna bingkai']]],
-  ['nama', 'Nama', [['y', 'Posisi Y', 0, 1], ['size', 'Ukuran', .015, .12], ['color', 'Warna'], ['bold', 'Tebal']]],
-  ['dept', 'Departemen', [['y', 'Posisi Y', 0, 1], ['size', 'Ukuran', .015, .12], ['color', 'Warna'], ['bold', 'Tebal']]],
-  ['nip', 'NIP', [['y', 'Posisi Y', 0, 1], ['size', 'Ukuran', .015, .12], ['color', 'Warna'], ['bold', 'Tebal']]],
+  ['panel', 'Panel (samakan dengan kotak di design)', [['x', 'Kiri', 0, 1], ['y', 'Atas', 0, 1], ['w', 'Lebar', .1, 1], ['h', 'Tinggi', .1, 1], ['r', 'Sudut', 0, .2], ['keluar', 'Batas keluar samping', 0, 1]]],
+  ['foto', 'Foto cutout', [['x', 'Tengah X', 0, 1], ['y', 'Bawah Y', 0, 1.2], ['h', 'Tinggi', .2, 1.2]]],
+  ['nama', 'Nama', [...TEXT, ['align', 'Rata']]],
+  ['dept', 'Departemen', [...TEXT, ['vertical', 'Vertikal'], ['align', 'Rata (horizontal)']]],
 ];
 
 const activeEmps = () => (state.pegawaiList || []).filter(p => p.status == 1);
@@ -107,7 +118,9 @@ export function initIdCardAdmin() {
   $('idc-fields').innerHTML = FIELDS.map(([g, label, fs]) => `
     <div class="idc-group"><div class="idc-group-title">${label}</div>${fs.map(([k, lbl, min, max]) => {
       const v = _layout[g][k], id = `idc-${g}-${k}`;
-      const inp = typeof v === 'boolean'
+      const inp = k === 'align'
+        ? `<select id="${id}" onchange="idcardSet('${g}','${k}',this.value)">${['left', 'center', 'right'].map(a => `<option value="${a}" ${a === v ? 'selected' : ''}>${{ left: 'Kiri', center: 'Tengah', right: 'Kanan' }[a]}</option>`).join('')}</select>`
+        : typeof v === 'boolean'
         ? `<input type="checkbox" id="${id}" ${v ? 'checked' : ''} onchange="idcardSet('${g}','${k}',this.checked)">`
         : typeof v === 'string'
           ? `<input type="color" id="${id}" value="${v}" oninput="idcardSet('${g}','${k}',this.value)">`
@@ -117,17 +130,97 @@ export function initIdCardAdmin() {
 
   const emps = activeEmps();
   const sel = $('idc-emp'), prev = sel.value;
-  sel.innerHTML = emps.map(p => `<option value="${escHtml(String(p.pin))}">${escHtml(p.nama)}${p.foto ? '' : ' (tanpa foto)'}</option>`).join('');
-  if (prev) sel.value = prev; else { const withFoto = emps.find(p => p.foto); if (withFoto) sel.value = withFoto.pin; }
+  sel.innerHTML = emps.map(p => `<option value="${escHtml(String(p.pin))}">${escHtml(p.nama)}${p.cutout ? '' : p.foto ? ' (tanpa cutout)' : ' (tanpa foto)'}</option>`).join('');
+  if (prev) sel.value = prev; else { const best = emps.find(p => p.cutout) || emps.find(p => p.foto); if (best) sel.value = best.pin; }
 
-  const noFoto = emps.filter(p => !p.foto), noTgl = emps.filter(p => !tglLahirOk(p));
+  const noCut = emps.filter(p => !p.cutout);
   $('idc-warn').innerHTML = [
-    noFoto.length && `⚠ ${noFoto.length} karyawan belum ada foto`,
-    noTgl.length && `⚠ ${noTgl.length} karyawan tanggal lahir kosong (NIP tanpa MMYY): ${noTgl.slice(0, 8).map(p => escHtml(p.nama)).join(', ')}${noTgl.length > 8 ? ', dst.' : ''}`,
+    noCut.length && `⚠ ${noCut.length} karyawan belum ada cutout (pakai foto biasa di dalam panel)`,
   ].filter(Boolean).join('<br>');
 
   _designInfo('depan'); _designInfo('belakang');
+  renderCutoutList();
   renderIdCardPreview();
+}
+
+// ── Cutout per karyawan (admin hapus background di luar aplikasi, upload PNG transparan) ──
+export function renderCutoutList() {
+  const q = ($('idc-cut-q').value || '').toLowerCase();
+  $('idc-cut-list').innerHTML = activeEmps().filter(p => !q || p.nama.toLowerCase().includes(q)).map(p => {
+    const pin = escHtml(String(p.pin));
+    return `<div class="idc-cut-row">
+      <span class="idc-cut-name">${escHtml(p.nama)}</span>
+      <span class="idc-cut-st ${p.cutout ? 'ok' : ''}">${p.cutout ? '✓ cutout' : '—'}</span>
+      ${p.foto ? `<a class="btn btn-ghost btn-sm" href="${escHtml(p.foto)}" download="${pin}_${escHtml(slug(p.nama))}.jpg" title="Unduh foto asli untuk diedit">Foto ↓</a>` : '<span class="idc-cut-st">tanpa foto</span>'}
+      <label class="btn btn-ghost btn-sm">Upload PNG<input type="file" accept="image/png" hidden onchange="uploadCutout('${pin}',this)"></label>
+      ${p.cutout ? `<button class="btn btn-ghost btn-sm" onclick="deleteCutout('${pin}')">Hapus</button>` : ''}
+    </div>`;
+  }).join('') || '<p class="hint">Tidak ada karyawan</p>';
+}
+
+// buang margin transparan supaya posisi kepala/bawah konsisten antar karyawan
+function _trimAlpha(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const { data } = ctx.getImageData(0, 0, c.width, c.height);
+      let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1, opaque = 0;
+      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+        const a = data[(y * c.width + x) * 4 + 3];
+        if (a > 10) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        if (a === 255) opaque++;
+      }
+      if (x1 < 0) return reject(new Error('Gambar kosong (transparan semua)'));
+      if (opaque === c.width * c.height) return reject(new Error('PNG tidak transparan — hapus background dulu'));
+      const o = document.createElement('canvas');
+      o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
+      o.getContext('2d').drawImage(c, -x0, -y0);
+      o.toBlob(b => b ? resolve(b) : reject(new Error('Gagal memproses gambar')), 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('File bukan PNG yang valid')); };
+    img.src = url;
+  });
+}
+
+async function _reloadPegawai() {
+  const res = await fetch('/api/pegawai', { headers: authHeaders() });
+  const json = await res.json();
+  if (json.success) state.pegawaiList = json.data;
+  initIdCardAdmin();
+}
+
+/** trim + upload PNG transparan sebagai cutout; throw bila tidak transparan / gagal */
+export async function uploadCutoutFile(pin, file) {
+  const fd = new FormData();
+  fd.append('cutout', await _trimAlpha(file), 'cutout.png');
+  const res = await fetch(`/api/pegawai/${encodeURIComponent(pin)}/cutout`, { method: 'POST', headers: { Accept: 'application/json', ...authHeaders() }, body: fd });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message || 'Upload gagal');
+}
+
+export async function uploadCutout(pin, input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  try {
+    await uploadCutoutFile(pin, file);
+    $('idc-emp').value = pin; // dipertahankan initIdCardAdmin → preview langsung karyawan ini
+    await _reloadPegawai();
+    showToast('Berhasil', 'Cutout diperbarui');
+  } catch (e) { showToast('Gagal', e.message || 'Upload gagal'); }
+}
+
+export async function deleteCutout(pin) {
+  if (!confirm('Hapus cutout?')) return;
+  try {
+    await fetch(`/api/pegawai/${encodeURIComponent(pin)}/cutout`, { method: 'DELETE', headers: { Accept: 'application/json', ...authHeaders() } });
+    await _reloadPegawai();
+  } catch (e) { showToast('Gagal', 'Gagal terhubung ke server.'); }
 }
 
 export function idcardSet(g, k, v) {
@@ -136,7 +229,7 @@ export function idcardSet(g, k, v) {
 }
 
 export function renderIdCardPreview() {
-  const emp = (state.pegawaiList || []).find(p => String(p.pin) === $('idc-emp').value) || { nama: 'Nama Karyawan', departemen: 'Departemen', nip: '1001', tgl_lahir: '1996-10-01' };
+  const emp = (state.pegawaiList || []).find(p => String(p.pin) === $('idc-emp').value) || { nama: 'Nama Karyawan', departemen: 'Departemen' };
   return renderFront($('idc-canvas'), _layout, emp);
 }
 
@@ -174,11 +267,11 @@ export async function saveIdCardLayout() {
   try {
     const res = await fetch('/api/settings', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...authHeaders() },
-      body: JSON.stringify({ data: { idcard: layout } }),
+      body: JSON.stringify({ data: { idcard: { ...layout, model: 'popout' } } }),
     });
     const json = await res.json();
     if (!json.success) { showToast('Gagal', json.message || 'Gagal menyimpan'); return; }
-    state.idcard = { ...(state.idcard || {}), ...layout };
+    state.idcard = { ...(state.idcard || {}), ...layout, model: 'popout' };
     showToast('Tersimpan', 'Layout ID Card disimpan');
   } catch (e) { showToast('Gagal', 'Gagal terhubung ke server.'); }
 }
@@ -195,7 +288,7 @@ export async function exportIdCardZip(btn) {
       btn.textContent = `Membuat ${i + 1}/${emps.length}…`;
       await renderFront(canvas, _layout, p);
       const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-      files.push({ name: `${nipKartu(p) || p.pin}_${slug(p.nama)}_depan.png`, data: new Uint8Array(await blob.arrayBuffer()) });
+      files.push({ name: `${p.nip || p.pin}_${slug(p.nama)}_depan.png`, data: new Uint8Array(await blob.arrayBuffer()) });
     }
     if (_layout.belakang) {
       const buf = await (await fetch(_layout.belakang)).arrayBuffer();

@@ -236,3 +236,15 @@
   .idc-layout { grid-template-columns: 1fr; }
   .idc-preview { position: static; order: -1; }
 }
+.idc-field select { font-size: 12px; padding: 2px 6px; justify-self: start; width: auto; }
+.idc-cut-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.idc-cut-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+.idc-cut-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idc-cut-st { width: 64px; color: var(--text-muted, #888); }
+.idc-cut-st.ok { color: #059669; font-weight: 600; }
+.idc-cut-row .btn-sm { padding: 3px 8px; font-size: 11px; cursor: pointer; }
+.acc-crop { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 16px; }
+.acc-crop canvas { width: 180px; height: 240px; border-radius: 8px; border: 1px solid var(--border); cursor: grab; touch-action: none; }
+.acc-crop canvas:active { cursor: grabbing; }
+.acc-crop-ctl { display: flex; flex-direction: column; gap: 10px; }
+.acc-crop-ctl input[type=range] { width: 160px; vertical-align: middle; }

@@ -54,6 +54,8 @@ Route::middleware(AuthMiddleware::class)->group(function () {
 });
 Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
     Route::get('pegawai/foto/zip', [PegawaiController::class, 'exportFoto']);
+    Route::post('pegawai/{pin}/cutout',   [PegawaiController::class, 'uploadCutout']);
+    Route::delete('pegawai/{pin}/cutout', [PegawaiController::class, 'deleteCutout']);
     Route::post('pegawai',         [PegawaiController::class, 'store']);
     Route::put('pegawai/{pin}',    [PegawaiController::class, 'update']);
     Route::delete('pegawai/{pin}', [PegawaiController::class, 'destroy']);

@@ -9,17 +9,16 @@ use Illuminate\Support\Str;
 
 class PegawaiController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        // tgl_lahir hanya untuk admin (dipakai NIP di ID Card)
-        $admin = $request->attributes->get('auth_user')?->role === 'admin';
         $rows = DB::table('pegawai')
-            ->selectRaw('pegawai_pin AS pin, pegawai_nama AS nama, pegawai_nip AS nip, pegawai_telp AS telp, pegawai_departemen AS departemen, pegawai_status AS status' . ($admin ? ', tgl_lahir' : ''))
+            ->selectRaw('pegawai_pin AS pin, pegawai_nama AS nama, pegawai_nip AS nip, pegawai_telp AS telp, pegawai_departemen AS departemen, pegawai_status AS status')
             ->orderBy('pegawai_nama')
             ->get()
             ->each(function ($r) {
                 $r->foto = $this->fotoUrl((string) $r->pin);
                 $r->foto_low = $r->foto ? $this->fotoLow((string) $r->pin) : false;
+                $r->cutout = $this->fileUrl("cutout/{$r->pin}.png");
             });
 
         return response()->json(['success' => true, 'data' => $rows]);
@@ -104,6 +103,7 @@ class PegawaiController extends Controller
         $row->foto     = $this->fotoUrl($pin);
         $row->foto_low = $row->foto ? $this->fotoLow($pin) : false;
         $row->foto_dim = $row->foto ? $this->fotoDim($pin) : null;
+        $row->cutout   = $this->fileUrl("cutout/$pin.png");
         return response()->json(['success' => true, 'data' => $row]);
     }
 
@@ -152,6 +152,20 @@ class PegawaiController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /** POST /api/pegawai/{pin}/cutout (admin) — foto tanpa background (PNG transparan) untuk ID Card */
+    public function uploadCutout(Request $request, string $pin)
+    {
+        $request->validate(['cutout' => 'required|file|mimes:png|max:10240']);
+        $request->file('cutout')->storeAs('cutout', "$pin.png", 'public');
+        return response()->json(['success' => true, 'cutout' => $this->fileUrl("cutout/$pin.png")]);
+    }
+
+    public function deleteCutout(string $pin)
+    {
+        Storage::disk('public')->delete("cutout/$pin.png");
+        return response()->json(['success' => true]);
+    }
+
     /** GET /api/pegawai/foto/zip (admin) — semua foto asli, nama file {pin}_{nama}.jpg */
     public function exportFoto()
     {
@@ -184,7 +198,11 @@ class PegawaiController extends Controller
 
     private function fotoUrl(string $pin): ?string
     {
-        $path = "foto/$pin.jpg";
+        return $this->fileUrl("foto/$pin.jpg");
+    }
+
+    private function fileUrl(string $path): ?string
+    {
         $disk = Storage::disk('public');
         return $disk->exists($path) ? "/storage/$path?v=" . $disk->lastModified($path) : null;
     }

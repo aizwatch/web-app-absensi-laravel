@@ -21,7 +21,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LT Absensi">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/build/spa/app.css?v=13">
+<link rel="stylesheet" href="/build/spa/app.css?v=18">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -514,7 +514,7 @@
       </div>
 
       <div class="admin-stab-pane" id="astab-idcard">
-        <p class="hint" style="margin-bottom:16px">Upload design kartu (portrait CR80 54×85,6 mm, disarankan minimal 638×1012 px). Foto, nama, departemen, dan NIP ditempel otomatis di bagian depan.</p>
+        <p class="hint" style="margin-bottom:16px">Upload design kartu (portrait CR80 54×85,6 mm, disarankan minimal 638×1012 px). Panel foto digambar di design; foto cutout ditempel dan boleh keluar dari atas panel. Nama dan departemen ditempel otomatis.</p>
         <div class="idc-layout">
           <div class="idc-controls">
             <div class="admin-form-card">
@@ -528,6 +528,12 @@
                 <span class="acc-hint" id="idc-belakang-info"></span>
               </div>
               <img id="idc-belakang-img" class="idc-back" alt="Design belakang" style="display:none" />
+            </div>
+            <div class="admin-form-card">
+              <div class="section-title">Foto Cutout (tanpa background)</div>
+              <p class="hint" style="margin:0 0 10px">Unduh foto asli → hapus background (remove.bg / Canva / Photoshop) → upload PNG transparan. Foto setengah badan, margin kosong dipotong otomatis.</p>
+              <input type="text" id="idc-cut-q" placeholder="Cari karyawan…" oninput="renderCutoutList()" style="margin-bottom:8px" />
+              <div id="idc-cut-list" class="idc-cut-list"></div>
             </div>
             <div class="admin-form-card">
               <div class="section-title">Posisi &amp; Gaya</div>
@@ -931,6 +937,17 @@
               </div>
             </div>
             <div class="alert-err" id="us-foto-err" style="margin-bottom:12px"></div>
+            <div class="acc-crop" id="us-crop" style="display:none">
+              <canvas id="us-crop-canvas" width="300" height="400"></canvas>
+              <div class="acc-crop-ctl">
+                <div class="acc-hint">Geser foto untuk mengatur posisi, wajah di bagian atas.</div>
+                <label class="acc-hint">Zoom <input type="range" id="us-crop-zoom" min="1" max="4" step="0.01" value="1" oninput="cropZoom(this.value)" /></label>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-primary" onclick="cropSave()">Simpan Foto</button>
+                  <button class="btn btn-ghost" onclick="cropCancel()">Batal</button>
+                </div>
+              </div>
+            </div>
             <div class="acc-info">
               <span>Nama</span><strong id="us-nama">—</strong>
               <span>NIP</span><span id="us-username" class="mono">—</span>
@@ -1255,7 +1272,7 @@
   </div>
 </div>
 
-<script type="module" src="/build/spa/app.js?v=13"></script>
+<script type="module" src="/build/spa/app.js?v=18"></script>
 
 
 </body>

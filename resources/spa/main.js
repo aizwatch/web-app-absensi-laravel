@@ -15,7 +15,7 @@ import {
   showPicker, selectEmployee, updatePersonalMeta,
 } from './picker.js';
 import { loadAppSettings } from './settings.js';
-import { idcardSet, renderIdCardPreview, uploadIdCardDesign, saveIdCardLayout, exportIdCardZip } from './idcard.js';
+import { idcardSet, renderIdCardPreview, uploadIdCardDesign, saveIdCardLayout, exportIdCardZip, renderCutoutList, uploadCutout, deleteCutout } from './idcard.js';
 import {
   saveSettings, discardSettings, isSettingsDirty,
   renderShiftsTable, openShiftForm, cancelShiftForm, submitShiftForm,
@@ -43,6 +43,7 @@ import {
   loadSyncDevices, runBackfill, runSetTime, runSyncUserInfo, populateSyncUserSelect,
   openUserSettingsModal, closeSettingsModal, userChangePassword,
   openProfilModal, showAccountSection, saveProfil, uploadFoto, deleteFoto, exportFotoZip,
+  cropZoom, cropSave, cropCancel,
 } from './admin.js';
 import {
   openLaporanModal, closeLaporanModal, generateLaporan,
@@ -127,6 +128,7 @@ Object.assign(window, {
 
   // id card
   idcardSet, renderIdCardPreview, uploadIdCardDesign, saveIdCardLayout, exportIdCardZip,
+  renderCutoutList, uploadCutout, deleteCutout,
 
   // admin page
   openAdminModal, closeAdminModal, showAdminSection, switchAdminStab,
@@ -136,6 +138,7 @@ Object.assign(window, {
   loadSyncDevices, runBackfill, runSetTime, runSyncUserInfo, populateSyncUserSelect,
   openUserSettingsModal, closeSettingsModal, userChangePassword,
   openProfilModal, showAccountSection, saveProfil, uploadFoto, deleteFoto, exportFotoZip,
+  cropZoom, cropSave, cropCancel,
 
   // laporan
   openLaporanModal, closeLaporanModal, generateLaporan,

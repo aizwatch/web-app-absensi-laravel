@@ -4,7 +4,7 @@ import { authHeaders } from './auth.js';
 import { populatePickerSelect, initPicker } from './picker.js';
 import { ensureSettingsLoaded, renderDepartmentsCard, isSettingsDirty } from './settings.js';
 import { icon } from './icons.js';
-import { idcardLayout, renderFront, tglLahirOk, initIdCardAdmin } from './idcard.js';
+import { idcardLayout, renderFront, initIdCardAdmin, uploadCutoutFile } from './idcard.js';
 
 const ADMIN_SECTION_PANES = {
   scan: 'astab-attlog', pegawai: 'astab-pegawai', dept: 'astab-dept', rekap: 'astab-filter',
@@ -360,10 +360,7 @@ function _renderProfilIdCard() {
   const L = idcardLayout(), d = _profilData;
   $('us-idcard').style.display = L.depan && d ? '' : 'none';
   if (!L.depan || !d) return;
-  $('us-idcard-hint').textContent = [
-    !d.foto && 'Belum ada foto.',
-    !tglLahirOk(d) && 'Isi Tanggal Lahir di Data Diri untuk melengkapi NIP.',
-  ].filter(Boolean).join(' ');
+  $('us-idcard-hint').textContent = d.foto ? '' : 'Belum ada foto.';
   renderFront($('us-idcard-canvas'), L, d);
 }
 
@@ -396,6 +393,7 @@ export async function openProfilModal(pin) {
   _setFotoHint(false);
   _profilData = null;
   _renderProfilIdCard();
+  _cropClose();
   showAccountSection(hasPin ? 'us-profil' : 'us-password');
   renderAvatar($('us-avatar'), _profilNama, emp?.foto);
   $('modal-settings').classList.add('open');
@@ -451,23 +449,100 @@ export async function saveProfil() {
   } catch (e) { showMsg('us-data-err', 'Gagal terhubung ke server.'); }
 }
 
-// Crop tengah rasio 3:4 → maks 900×1200 (tanpa upscale), JPEG q0.92 untuk ID Card
-function _cropPortrait(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const w = Math.min(img.width, img.height * 3 / 4), h = w * 4 / 3;
-      const k = Math.min(1, 900 / w);
-      const c = document.createElement('canvas');
-      c.width = Math.round(w * k); c.height = Math.round(h * k);
-      c.getContext('2d').drawImage(img, (img.width - w) / 2, (img.height - h) / 2, w, h, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url);
-      c.toBlob(b => b ? resolve(b) : reject(new Error('Gagal memproses gambar')), 'image/jpeg', 0.92);
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('File bukan gambar yang valid')); };
-    img.src = url;
-  });
+// Editor crop 3:4: geser (drag) + zoom. Hasil maks 900×1200 (tanpa upscale), JPEG q0.92.
+let _crop = null; // { img, url, zoom, cx, cy } — cx/cy = titik tengah crop dalam piksel gambar
+
+function _cropSize() {
+  const { img, zoom } = _crop;
+  const w = Math.min(img.naturalWidth, img.naturalHeight * 3 / 4) / zoom;
+  return { w, h: w * 4 / 3 };
+}
+
+function _cropDraw() {
+  const { img } = _crop, { w, h } = _cropSize();
+  // jaga crop tetap di dalam gambar
+  _crop.cx = Math.min(Math.max(_crop.cx, w / 2), img.naturalWidth - w / 2);
+  _crop.cy = Math.min(Math.max(_crop.cy, h / 2), img.naturalHeight - h / 2);
+  const c = $('us-crop-canvas'), ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, _crop.cx - w / 2, _crop.cy - h / 2, w, h, 0, 0, c.width, c.height);
+}
+
+function _cropClose() {
+  if (_crop) URL.revokeObjectURL(_crop.url);
+  _crop = null;
+  $('us-crop').style.display = 'none';
+  $('us-foto-btn').disabled = false;
+}
+
+export function uploadFoto(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  hideMsgs('us-foto-err');
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = () => {
+    if (_crop) URL.revokeObjectURL(_crop.url);
+    _crop = { img, url, file, zoom: 1, cx: img.naturalWidth / 2, cy: 0 }; // cy=0 → mulai dari atas (kepala)
+    $('us-crop-zoom').value = 1;
+    $('us-crop').style.display = '';
+    $('us-foto-btn').disabled = true;
+    _cropDraw();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); showMsg('us-foto-err', 'File bukan gambar yang valid'); };
+  img.src = url;
+}
+
+export function cropZoom(v) {
+  if (!_crop) return;
+  _crop.zoom = +v;
+  _cropDraw();
+}
+
+export function cropCancel() { _cropClose(); }
+
+// drag: pasang sekali di canvas
+document.addEventListener('pointerdown', e => {
+  if (e.target.id !== 'us-crop-canvas' || !_crop) return;
+  const c = e.target, k = _cropSize().w / c.clientWidth;
+  let x = e.clientX, y = e.clientY;
+  c.setPointerCapture(e.pointerId);
+  const move = ev => {
+    _crop.cx -= (ev.clientX - x) * k; _crop.cy -= (ev.clientY - y) * k;
+    x = ev.clientX; y = ev.clientY;
+    _cropDraw();
+  };
+  const up = () => { c.removeEventListener('pointermove', move); c.removeEventListener('pointerup', up); };
+  c.addEventListener('pointermove', move);
+  c.addEventListener('pointerup', up);
+});
+
+export async function cropSave() {
+  if (!_crop) return;
+  const { w, h } = _cropSize(), k = Math.min(1, 900 / w);
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); // PNG transparan → latar putih, bukan hitam
+  ctx.drawImage(_crop.img, _crop.cx - w / 2, _crop.cy - h / 2, w, h, 0, 0, c.width, c.height);
+  try {
+    const blob = await new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('Gagal memproses gambar')), 'image/jpeg', 0.92));
+    const fd = new FormData();
+    fd.append('foto', blob, 'foto.jpg');
+    const res = await fetch(`/api/pegawai/${encodeURIComponent(_profilPin)}/foto`, {
+      method: 'POST', headers: { Accept: 'application/json', ...authHeaders() }, body: fd,
+    });
+    const json = await res.json();
+    if (!json.success) { showMsg('us-foto-err', json.message || 'Gagal upload'); return; }
+    // admin upload PNG transparan → file asli sekalian jadi cutout ID Card
+    let cut = false;
+    if (state.authUser?.role === 'admin' && _crop.file.type === 'image/png')
+      cut = await uploadCutoutFile(_profilPin, _crop.file).then(() => true, () => false);
+    _cropClose();
+    await _refreshFoto();
+    _setFotoHint(true, json.foto_low, json.foto_dim);
+    showToast('Berhasil', cut ? 'Foto diperbarui + disimpan sebagai cutout ID Card' : 'Foto diperbarui');
+  } catch (e) { showMsg('us-foto-err', e.message || 'Gagal upload'); }
 }
 
 function _setFotoHint(has, low, dim) {
@@ -491,26 +566,6 @@ async function _refreshFoto() {
   // header tab Saya, kalau yang diganti = karyawan yang sedang tampil
   if (state.selectedEmployee && String(state.selectedEmployee.pin) === String(_profilPin))
     renderAvatar($('p-avatar'), _profilNama, emp?.foto);
-}
-
-export async function uploadFoto(input) {
-  const file = input.files[0];
-  input.value = '';
-  if (!file) return;
-  hideMsgs('us-foto-err');
-  try {
-    const blob = await _cropPortrait(file);
-    const fd = new FormData();
-    fd.append('foto', blob, 'foto.jpg');
-    const res = await fetch(`/api/pegawai/${encodeURIComponent(_profilPin)}/foto`, {
-      method: 'POST', headers: { Accept: 'application/json', ...authHeaders() }, body: fd,
-    });
-    const json = await res.json();
-    if (!json.success) { showMsg('us-foto-err', json.message || 'Gagal upload'); return; }
-    await _refreshFoto();
-    _setFotoHint(true, json.foto_low, json.foto_dim);
-    showToast('Berhasil', 'Foto diperbarui');
-  } catch (e) { showMsg('us-foto-err', e.message || 'Gagal upload'); }
 }
 
 export async function deleteFoto() {
