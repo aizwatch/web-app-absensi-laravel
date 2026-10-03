@@ -7,6 +7,47 @@ const PRESET_LABEL = {'setengah_pagi_preset':'Setengah Hari (masuk pagi)','seten
 let _pendingFile = null;
 let _pendingBlob = null;
 let _pendingFileName = null;
+let _amCompressing = false; // true saat kompresi gambar lampiran masih berjalan
+let _amPreviewGen = 0; // cegah hasil kompresi basi menimpa pilihan file yang lebih baru
+
+// Kompresi gambar lampiran di sisi klien: sisi terpanjang max 1600px, re-encode JPEG q0.8.
+// Foto HP ±3-5MB biasanya turun ke ±300-600KB. PDF/HEIC dilewati (canvas tidak bisa memprosesnya).
+const AM_IMG_MAX_DIM = 1600;
+const AM_IMG_QUALITY = 0.8;
+
+function amCompressibleImage(file) {
+  return file.type.startsWith('image/')
+    && !/heic|heif/i.test(file.type)
+    && !/\.hei[cf]$/i.test(file.name);
+}
+
+function compressAmImage(file) {
+  return new Promise((resolve) => {
+    const done = (blob, name) => resolve({ blob, name });
+    const fallback = () => done(file, file.name);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      try {
+        const scale = Math.min(1, AM_IMG_MAX_DIM / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob) => {
+          if (!blob) { fallback(); return; }
+          let name = file.name.replace(/\.(png|gif|webp|bmp)$/i, '.jpg');
+          if (!/\.jpe?g$/i.test(name)) name += '.jpg';
+          done(blob, name);
+        }, 'image/jpeg', AM_IMG_QUALITY);
+      } catch (e) { fallback(); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); fallback(); };
+    img.src = url;
+  });
+}
 
 function parseCatatan(tipe, catatan) {
   if (!catatan) return {note:'', jam2:''};
@@ -44,6 +85,8 @@ export function toggleAmFields() {
   jamWrap.style.display   = noJam ? 'none' : 'grid';
   jam2Wrap.style.display  = isCV ? '' : 'none';
   shiftWrap.style.display = tipe==='ganti_shift' ? '' : 'none';
+  const attReq = document.getElementById('am-attachment-req');
+  if (attReq) attReq.style.display = tipe==='lupa' ? 'none' : '';
   if (jamLabel) jamLabel.innerHTML = isCV
     ? 'Scan 1 <span style="color:#e53e3e">*</span>'
     : 'Jam <span style="color:#e53e3e">*</span>';
@@ -58,18 +101,32 @@ export function previewAttachment() {
   const img   = document.getElementById('am-preview-img');
   const lbl   = document.getElementById('am-preview-label');
   if (!file) { wrap.style.display='none'; _pendingBlob=null; _pendingFileName=null; return; }
-  lbl.textContent = file.name+' ('+(file.size/1024).toFixed(0)+' KB)';
   if (file.type.startsWith('image/')) { img.src=URL.createObjectURL(file); img.style.display=''; }
   else { img.style.display='none'; }
   wrap.style.display = '';
-  // iOS Safari can invalidate File references after DOM changes (modal/keyboard).
-  // Read the file into a Blob immediately so the data is safely in memory.
-  const reader = new FileReader();
-  reader.onload = () => {
-    _pendingBlob = new Blob([reader.result], { type: file.type });
-    _pendingFileName = file.name;
+  // iOS Safari bisa meng-invalidate referensi File setelah perubahan DOM (modal/keyboard),
+  // jadi data dibaca ke memori segera. Gambar dikompresi dulu via canvas agar ukuran
+  // upload jauh lebih kecil; PDF/HEIC dikirim apa adanya.
+  _pendingBlob = null; _pendingFileName = null;
+  const gen = ++_amPreviewGen;
+  const setPending = (blob, name) => {
+    if (gen !== _amPreviewGen) return; // abaikan hasil dari pilihan file yang sudah diganti
+    _pendingBlob = blob; _pendingFileName = name;
+    lbl.textContent = name+' ('+(blob.size/1024).toFixed(0)+' KB)';
   };
-  reader.readAsArrayBuffer(file);
+  lbl.textContent = file.name+' (memproses...)';
+  if (amCompressibleImage(file)) {
+    _amCompressing = true;
+    compressAmImage(file).then(({ blob, name }) => {
+      _amCompressing = false; // flag milik alur ini, selalu dibersihkan
+      if (gen !== _amPreviewGen) return;
+      setPending(blob, name);
+    });
+  } else {
+    const reader = new FileReader();
+    reader.onload = () => setPending(new Blob([reader.result], { type: file.type }), file.name);
+    reader.readAsArrayBuffer(file);
+  }
 }
 
 // Tanggal lokal (YYYY-MM-DD) bergeser offsetHari dari hari ini; toISOString() memakai UTC sehingga salah di 00:00-07:00 WIB
@@ -129,7 +186,11 @@ export function submitAbsensiMandiri() {
   if (tanggal < localDateStr(-1)) { errEl.textContent='Absensi mandiri hanya bisa diisi paling lambat 1 hari setelah tanggal kejadian.'; errEl.classList.add('show'); return; }
   if (!noJam&&!jam) { errEl.textContent='Jam wajib diisi.'; errEl.classList.add('show'); return; }
   if (tipe==='ganti_shift'&&!document.getElementById('am-shift-id').value) { errEl.textContent='Pilih shift pengganti.'; errEl.classList.add('show'); return; }
-  if (fileEl.files[0]&&fileEl.files[0].size>5*1024*1024) { errEl.textContent='File maksimal 5MB.'; errEl.classList.add('show'); return; }
+  // Lampiran wajib untuk semua tipe kecuali 'lupa'
+  if (_amCompressing) { errEl.textContent='Tunggu kompresi gambar selesai...'; errEl.classList.add('show'); return; }
+  if (tipe!=='lupa' && !fileEl.files[0] && !_pendingBlob && !_pendingFile) { errEl.textContent='Lampiran (bukti) wajib diisi.'; errEl.classList.add('show'); return; }
+  const effFile = _pendingBlob || fileEl.files[0] || _pendingFile;
+  if (effFile&&effFile.size>5*1024*1024) { errEl.textContent='File maksimal 5MB.'; errEl.classList.add('show'); return; }
   _pendingFile = fileEl.files[0] || null;
   document.getElementById('am-confirm-pw').value = '';
   document.getElementById('am-confirm-err').classList.remove('show');
