@@ -22,6 +22,9 @@ class AbsensiMandiriController extends Controller
         'ganti_shift'        => 'Ganti Shift',
     ];
 
+    /** Kuota tipe 'lupa' (approved) per karyawan, lifetime. Sumber tunggal untuk enforcement + tampilan. */
+    public const LUPA_QUOTA = 3;
+
     /** POST /api/absensi-mandiri — karyawan submit request */
     public function store(Request $request)
     {
@@ -78,17 +81,17 @@ class AbsensiMandiriController extends Controller
             return response()->json(['success' => false, 'message' => 'Scan 2 tidak boleh sama dengan Scan 1'], 422);
         }
 
-        // Tipe 'lupa' dibatasi max 3x approved per karyawan
+        // Tipe 'lupa' dibatasi max LUPA_QUOTA approved per karyawan (lifetime, tanpa reset)
         if ($tipe === 'lupa') {
             $lupaCount = DB::table('absensi_mandiri')
                 ->where('pegawai_pin', $pin)
                 ->where('tipe', 'lupa')
                 ->where('status', 'approved')
                 ->count();
-            if ($lupaCount >= 3) {
+            if ($lupaCount >= self::LUPA_QUOTA) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Tipe "Lupa" sudah digunakan ' . $lupaCount . 'x. Batas maksimal 3x telah tercapai.',
+                    'message' => 'Tipe "Lupa" sudah digunakan ' . $lupaCount . 'x. Batas maksimal ' . self::LUPA_QUOTA . 'x telah tercapai.',
                 ], 422);
             }
         }
