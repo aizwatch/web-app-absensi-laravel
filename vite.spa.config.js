@@ -8,7 +8,13 @@ export default defineConfig({
       input: 'resources/spa/main.js',
       output: {
         entryFileNames: 'app.js',
+        chunkFileNames: 'chunk-[name]-[hash].js',
         assetFileNames: (info) => info.name === 'style.css' ? 'app.css' : '[name].[ext]',
+        // Pisah modul halaman admin yang besar ke chunk tersendiri agar tiap file
+        // bundle tetap kecil (juga memperbaiki caching: chunk admin jarang berubah).
+        manualChunks(id) {
+          if (/[/\\](settings|admin|laporan)\.js$/.test(id)) return 'admin-pages';
+        },
       },
     },
     cssCodeSplit: false,
