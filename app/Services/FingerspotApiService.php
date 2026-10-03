@@ -24,7 +24,7 @@ class FingerspotApiService
     protected static function fetchChunk(string $startDate, string $endDate, string $cloudId): array
     {
         $response = Http::withoutVerifying()
-            ->withToken(env('FINGERSPOT_API_TOKEN'))
+            ->withToken(config('services.fingerspot.api_token'))
             ->post(self::API_URL, [
                 'trans_id'   => (string) now()->timestamp,
                 'cloud_id'   => $cloudId,

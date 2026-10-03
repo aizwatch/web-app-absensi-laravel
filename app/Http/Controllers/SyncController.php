@@ -14,7 +14,7 @@ class SyncController extends Controller
     {
         return array_filter(array_map(
             'trim',
-            explode(',', env('FINGERSPOT_CLOUD_IDS', env('FINGERSPOT_CLOUD_ID', '')))
+            explode(',', (string) config('services.fingerspot.cloud_ids'))
         ));
     }
 
@@ -25,7 +25,7 @@ class SyncController extends Controller
 
     public function syncToday(Request $request)
     {
-        $secret = env('SYNC_SECRET_KEY');
+        $secret = config('services.fingerspot.sync_secret');
         if ($secret && $request->header('X-Sync-Key') !== $secret) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
@@ -75,7 +75,7 @@ class SyncController extends Controller
     {
         $targets  = $this->cloudIds();
         $timezone = $request->input('timezone', 'Asia/Jakarta');
-        $token    = env('FINGERSPOT_API_TOKEN');
+        $token    = config('services.fingerspot.api_token');
 
         if (empty($targets))
             return response()->json(['success' => false, 'message' => 'Tidak ada Cloud ID terkonfigurasi'], 500);
@@ -107,7 +107,7 @@ class SyncController extends Controller
     public function syncUserInfo(Request $request)
     {
         $targets  = $this->cloudIds();
-        $token    = env('FINGERSPOT_API_TOKEN');
+        $token    = config('services.fingerspot.api_token');
 
         if (empty($targets))
             return response()->json(['success' => false, 'message' => 'Tidak ada Cloud ID terkonfigurasi'], 500);

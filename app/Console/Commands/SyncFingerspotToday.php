@@ -17,7 +17,7 @@ class SyncFingerspotToday extends Command
         $today   = now()->format('Y-m-d');
         $cloudIds = array_filter(array_map(
             'trim',
-            explode(',', env('FINGERSPOT_CLOUD_IDS', env('FINGERSPOT_CLOUD_ID', '')))
+            explode(',', (string) config('services.fingerspot.cloud_ids'))
         ));
 
         if (empty($cloudIds)) {

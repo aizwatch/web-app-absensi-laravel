@@ -20,7 +20,7 @@ class WebhookController extends Controller
     {
         return array_filter(array_map(
             'trim',
-            explode(',', env('FINGERSPOT_CLOUD_IDS', env('FINGERSPOT_CLOUD_ID', '')))
+            explode(',', (string) config('services.fingerspot.cloud_ids'))
         ));
     }
 
