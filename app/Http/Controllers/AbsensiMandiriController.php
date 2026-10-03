@@ -93,10 +93,18 @@ class AbsensiMandiriController extends Controller
             }
         }
 
+        // Lampiran wajib untuk semua tipe kecuali 'lupa'
+        if ($tipe !== 'lupa' && ! $request->hasFile('attachment')) {
+            return response()->json(['success' => false, 'message' => 'Lampiran (bukti) wajib diisi'], 422);
+        }
+
         // Upload attachment
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
+            if (! $file->isValid()) {
+                return response()->json(['success' => false, 'message' => 'Upload file gagal, coba lagi'], 422);
+            }
             if ($file->getSize() > 5 * 1024 * 1024) {
                 return response()->json(['success' => false, 'message' => 'File maksimal 5MB'], 422);
             }
