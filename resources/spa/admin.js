@@ -142,7 +142,7 @@ export async function adminLoadPegawai() {
 
 export function renderAdminPegawai() {
   const tbody=document.getElementById('adm-peg-tbody');
-  if(!state.pegawaiList.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">${icon('users')}</div><div class="empty-text">Tidak ada karyawan</div></div></td></tr>`;return;}
+  if(!state.pegawaiList.length){tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">${icon('users')}</div><div class="empty-text">Tidak ada karyawan</div></div></td></tr>`;return;}
   const deptOpts=state.departments.map(d=>`<option value="${escHtml(d)}">${escHtml(d)}</option>`).join('');
   tbody.innerHTML=state.pegawaiList.map((p,i)=>`
     <tr id="peg-row-${i}">
@@ -164,6 +164,7 @@ export function renderAdminPegawai() {
           <option value="0" ${p.status==0?'selected':''}>Nonaktif</option>
         </select>
       </td>
+      <td style="text-align:center"><span class="td-status ${p.sisa_lupa>0?'status-hadir':'status-alpha'}" style="font-size:11px" title="Sisa kuota lupa absensi mandiri (lifetime)">${p.sisa_lupa ?? '—'}</span></td>
       <td style="white-space:nowrap">
         <span id="peg-view-btns-${i}">
           <button class="btn-icon" onclick="openProfilModal('${escHtml(String(p.pin))}')" title="${p.foto_low?'Resolusi rendah — ':''}Foto & Data Diri">${icon('user')}${p.foto_low?'<span style="color:#d97706">⚠</span>':''}</button>
