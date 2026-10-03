@@ -11,14 +11,25 @@ class PegawaiController extends Controller
 {
     public function index()
     {
+        // Hitung pemakaian kuota 'lupa' (approved) per pin dalam 1 query
+        $lupaUsed = DB::table('absensi_mandiri')
+            ->selectRaw('pegawai_pin, COUNT(*) AS used')
+            ->where('tipe', 'lupa')
+            ->where('status', 'approved')
+            ->groupBy('pegawai_pin')
+            ->pluck('used', 'pegawai_pin');
+        $quota = AbsensiMandiriController::LUPA_QUOTA;
+
         $rows = DB::table('pegawai')
             ->selectRaw('pegawai_pin AS pin, pegawai_nama AS nama, pegawai_nip AS nip, pegawai_telp AS telp, pegawai_departemen AS departemen, pegawai_status AS status')
             ->orderBy('pegawai_nama')
             ->get()
-            ->each(function ($r) {
+            ->each(function ($r) use ($lupaUsed, $quota) {
                 $r->foto = $this->fotoUrl((string) $r->pin);
                 $r->foto_low = $r->foto ? $this->fotoLow((string) $r->pin) : false;
                 $r->cutout = $this->fileUrl("cutout/{$r->pin}.png");
+                $used = (int) $lupaUsed->get((string) $r->pin, 0);
+                $r->sisa_lupa = max(0, $quota - $used);
             });
 
         return response()->json(['success' => true, 'data' => $rows]);
