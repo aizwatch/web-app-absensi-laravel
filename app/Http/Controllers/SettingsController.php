@@ -32,8 +32,10 @@ class SettingsController extends Controller
         if (isset($data['holidays']) && is_array($data['holidays']))
             SettingsManager::set('holidays', array_values(array_filter($data['holidays'], fn($h) => !empty($h['tanggal']))));
 
-        if (isset($data['daily_overrides']) && is_array($data['daily_overrides']))
-            SettingsManager::set('daily_overrides', array_values(array_filter($data['daily_overrides'], fn($o) => !empty($o['tanggal']))));
+        if (isset($data['daily_overrides']) && is_array($data['daily_overrides'])) {
+            $new = array_values(array_filter($data['daily_overrides'], fn($o) => !empty($o['tanggal'])));
+            SettingsManager::set('daily_overrides', $this->syncPulangAwalScans($new));
+        }
 
         if (isset($data['scan_notes']) && is_array($data['scan_notes']))
             SettingsManager::set('scan_notes', array_values(array_filter($data['scan_notes'], fn($n) => !empty($n['pin']) && !empty($n['tanggal']))));
@@ -59,6 +61,46 @@ class SettingsController extends Controller
         \Log::info('Settings diperbarui oleh: ' . $request->attributes->get('auth_user')?->username);
 
         return response()->json(['success' => true, 'message' => 'Settings disimpan']);
+    }
+
+    /**
+     * Override pulang_awal baru → inject scan MANUAL di jam_pulang untuk karyawan yang hadir
+     * tapi scan terakhirnya lebih awal (supaya Odoo menerima jam itu). Override dihapus → scan dihapus.
+     * ponytail: inject hanya saat override disimpan; yang scan setelahnya tidak ikut (hapus & buat ulang override).
+     */
+    private function syncPulangAwalScans(array $new): array
+    {
+        $old    = collect(SettingsManager::get('daily_overrides', []))->keyBy('id');
+        $newIds = array_column($new, 'id');
+
+        foreach ($old as $id => $o) {
+            if (in_array($id, $newIds, true) || empty($o['injected_pins'])) continue;
+            DB::table('att_log')->where('sn', 'MANUAL')->whereIn('pin', $o['injected_pins'])
+                ->where('scan_date', "{$o['tanggal']} {$o['jam_pulang']}:00")->delete();
+        }
+
+        foreach ($new as &$o) {
+            $id = $o['id'] ?? '';
+            if ($old->has($id)) {
+                if (isset($old[$id]['injected_pins'])) $o['injected_pins'] = $old[$id]['injected_pins'];
+                continue;
+            }
+            // am_* = override dari absensi mandiri (setengah hari), bukan untuk inject
+            if (($o['tipe'] ?? '') !== 'pulang_awal' || empty($o['jam_pulang']) || str_starts_with($id, 'am_')) continue;
+
+            $at = "{$o['tanggal']} {$o['jam_pulang']}:00";
+            $q  = DB::table('att_log')->whereRaw('DATE(scan_date) = ?', [$o['tanggal']]);
+            if (is_array($o['berlaku_untuk'] ?? null)) $q->whereIn('pin', array_map('strval', $o['berlaku_untuk']));
+            $pins = $q->groupBy('pin')->havingRaw('MAX(scan_date) < ?', [$at])->pluck('pin')->map(fn($p) => (string) $p)->all();
+
+            DB::table('att_log')->insertOrIgnore(array_map(fn($pin) => [
+                'sn' => 'MANUAL', 'scan_date' => $at, 'pin' => $pin,
+                'verifymode' => 1, 'inoutmode' => 0, 'reserved' => 0, 'work_code' => 0, 'att_id' => '0',
+            ], $pins));
+            $o['injected_pins'] = $pins;
+        }
+
+        return $new;
     }
 
     /** POST /api/settings/idcard/{side} (admin) — design ID card depan/belakang */
