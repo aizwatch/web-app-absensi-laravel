@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { escHtml } from './utils.js';
-import { renderOverridesTable, patchOverridesNow, patchOverridesRemoveNow } from './settings.js';
+import { renderOverridesTable, patchOverridesNow, patchOverridesRemoveNow, updateSaveBar } from './settings.js';
 import { loadPersonalAbsensi } from './table.js';
 import { applyFilter } from './filter.js';
 import { icon } from './icons.js';
@@ -147,7 +147,7 @@ export async function openRowHistory(pin, tanggal, nama) {
         <div style="font-size:13px;font-weight:600">${escHtml(detail)}</div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${escHtml(byAt||'—')}</div>
       </div>
-      <button class="btn-icon del" title="Hapus" onclick="deleteOverride('${escHtml(o.id)}');openRowHistory('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}')">${icon('trash-2')}</button>
+      <button class="btn-icon del" title="Hapus" onclick="deleteOverride('${escHtml(o.id)}').then(()=>openRowHistory('${escHtml(String(pin))}','${escHtml(tanggal)}','${escHtml(nama||'')}'))">${icon('trash-2')}</button>
     </div>`);
   });
 
@@ -176,10 +176,21 @@ export async function deleteOverride(id) {
   const entry=state.dailyOverrides.find(o=>o.id===id);
   if(!entry) return;
 
+  // pulang_awal dengan injected_pins sudah menulis scan MANUAL → hapus langsung (server ikut hapus scan-nya)
+  if (entry.injected_pins?.length) {
+    if(!confirm(`Hapus override "${entry.nama||'Pulang Awal'}"?\nScan MANUAL jam ${entry.jam_pulang} untuk ${entry.injected_pins.length} karyawan akan dihapus.`)) return;
+    if(!await patchOverridesRemoveNow(id)) { alert('Gagal menghapus override'); return; }
+    renderOverridesTable();
+    if(document.getElementById('tab-personal')?.classList.contains('active')&&state.selectedEmployee) loadPersonalAbsensi();
+    else if(state.lastFilterData.length) applyFilter();
+    return;
+  }
+
   if (entry.tipe!=='absen_inject') {
     if(!confirm('Hapus override ini?')) return;
     state.dailyOverrides=state.dailyOverrides.filter(o=>o.id!==id);
     renderOverridesTable();
+    updateSaveBar();
     if(document.getElementById('tab-personal')?.classList.contains('active')&&state.selectedEmployee) loadPersonalAbsensi();
     return;
   }

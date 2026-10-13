@@ -21,7 +21,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LT Absensi">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/build/spa/app.css?v=21">
+<link rel="stylesheet" href="/build/spa/app.css?v=22">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -250,6 +250,7 @@
         <div class="table-header">
           <span class="table-title">LOG ABSENSI — <span id="tanggal-hari-ini"></span></span>
           <div style="display:flex;gap:12px;align-items:center">
+            <input type="date" id="live-tanggal" style="display:none" onchange="setLiveTanggal(this.value)" aria-label="Pilih tanggal" />
             <span id="last-update">Belum ada update</span>
             <span class="total-badge" id="badge-total">0 karyawan</span>
           </div>
@@ -1273,7 +1274,7 @@
   </div>
 </div>
 
-<script type="module" src="/build/spa/app.js?v=22"></script>
+<script type="module" src="/build/spa/app.js?v=23"></script>
 
 
 </body>

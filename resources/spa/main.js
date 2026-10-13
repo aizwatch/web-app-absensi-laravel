@@ -29,7 +29,7 @@ import {
   adminResetUserPassword,
   renderDepartmentsCard, addDepartment, removeDepartment, editDepartment, renameDepartment,
 } from './settings.js';
-import { pollAbsensi, changeMonth, loadPersonalAbsensi } from './table.js';
+import { pollAbsensi, changeMonth, loadPersonalAbsensi, setLiveTanggal } from './table.js';
 import { applyFilter, resetFilter, exportFilter, switchFilterStab, applyBermasalah, toggleBermasalahDetail } from './filter.js';
 import {
   openInjectModal, closeInjectModal, toggleInjAlasan,
@@ -89,7 +89,7 @@ Object.assign(window, {
   // icons
   icon,
   // theme & nav
-  toggleTheme, switchTab, switchStab, switchAdminStab,
+  toggleTheme, switchTab, setLiveTanggal, switchStab, switchAdminStab,
   mobileNavSwitch,
 
   // auth

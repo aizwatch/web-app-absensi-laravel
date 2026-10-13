@@ -42,6 +42,11 @@ export function applyAuthUI() {
   document.getElementById('btn-logout').style.display         = loggedIn ? '' : 'none';
   const gantiBtn = document.getElementById('btn-ganti-karyawan');
   if (gantiBtn) gantiBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  const liveTgl = document.getElementById('live-tanggal');
+  if (liveTgl) {
+    liveTgl.style.display = isAdmin ? '' : 'none';
+    if (!liveTgl.value) liveTgl.value = new Date().toLocaleDateString('sv-SE');
+  }
 }
 
 export async function loadLoginUsers() {

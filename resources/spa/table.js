@@ -6,17 +6,31 @@ import { icon } from './icons.js';
 
 export const POLL_INTERVAL = 5000;
 
+// Admin: lihat Live untuk tanggal lain (null/hari ini = live normal)
+export function setLiveTanggal(tgl) {
+  const today = new Date().toLocaleDateString('sv-SE');
+  state.liveTanggal = tgl && tgl !== today ? tgl : null;
+  state.prevPins = null; state.prevTotal = 0;
+  const d = state.liveTanggal ? new Date(state.liveTanggal+'T00:00:00') : new Date();
+  document.getElementById('tanggal-hari-ini').textContent =
+    d.toLocaleDateString('id-ID', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  pollAbsensi();
+}
+
 export async function pollAbsensi() {
+  const tgl = state.liveTanggal;
   try {
-    const res  = await fetch('/api/absensi/hari-ini', { headers: authHeaders() });
+    const url  = tgl ? `/api/absensi/filter?tanggal_dari=${tgl}&tanggal_sampai=${tgl}` : '/api/absensi/hari-ini';
+    const res  = await fetch(url, { headers: authHeaders() });
     const json = await res.json();
     if (!json.success) throw new Error();
+    if (tgl !== state.liveTanggal) return; // tanggal diganti saat fetch berjalan
     const { data, total } = json;
     renderTable('live-tbody', data, true);
     updateStats(data);
     updateLastUpdate(new Date().toISOString());
     document.getElementById('badge-total').textContent = `${total} karyawan`;
-    if (state.prevPins && state.prevTotal > 0) {
+    if (!tgl && state.prevPins && state.prevTotal > 0) {
       const newEntry = data.find(r => r.scan_masuk && !state.prevPins.has(String(r.pin)));
       if (newEntry) showToast('Update Absensi', `${newEntry.nama||'PIN '+newEntry.pin}`);
     }

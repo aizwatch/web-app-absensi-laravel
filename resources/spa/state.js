@@ -29,5 +29,6 @@ export const state = {
 
   // Polling
   prevTotal:        0,
+  liveTanggal:      null,
   pollOnline:       false,
 };
