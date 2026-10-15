@@ -251,6 +251,8 @@ export async function loadSyncDevices() {
     const opts=json.data.map(id=>`<option value="${escHtml(id)}">${escHtml(id)}</option>`).join('');
     const sel=document.getElementById('sync-device');
     sel.innerHTML='<option value="">— Semua Mesin —</option>'+opts;
+    const du=document.getElementById('devuser-cid');
+    if(du) du.innerHTML=opts;
   }catch(_){}
 }
 
@@ -600,4 +602,59 @@ export async function userChangePassword() {
     document.getElementById('us-pw-baru').value='';
     document.getElementById('us-pw-konfirm').value='';
   }catch(e){errEl.textContent='Gagal terhubung ke server.';errEl.classList.add('show');}
+}
+
+// ── Privilege user di mesin ── (callback Fingerspot async → poll GET sync/device-user)
+function devUserTarget() {
+  return { cloud_id: document.getElementById('devuser-cid').value, pin: document.getElementById('devuser-pin').value.trim() };
+}
+function devUserMsg(ok, text) {
+  const errEl=document.getElementById('devuser-err'), okEl=document.getElementById('devuser-ok');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+  if (text) { const el=ok?okEl:errEl; el.textContent=text; el.classList.add('show'); }
+}
+async function devUserPoll(t, done) {
+  for (let i=0;i<15;i++) {
+    await new Promise(r=>setTimeout(r,2000));
+    try {
+      const res=await fetch(`/api/sync/device-user?cloud_id=${encodeURIComponent(t.cloud_id)}&pin=${encodeURIComponent(t.pin)}`,{headers:authHeaders()});
+      const d=(await res.json()).data;
+      if (d && done(d)) return d;
+    } catch(_) {}
+  }
+  return null;
+}
+async function devUserPost(path, body) {
+  const res=await fetch('/api/sync/device-user/'+path,{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify(body)});
+  const json=await res.json();
+  if(!json.success) throw new Error(json.message||'Perintah ditolak API Fingerspot');
+}
+
+export async function devUserFetch() {
+  const t=devUserTarget(), info=document.getElementById('devuser-info'), btn=document.getElementById('devuser-fetch-btn');
+  devUserMsg(true,''); info.textContent='';
+  if(!t.cloud_id||!t.pin){devUserMsg(false,'Pilih mesin dan isi PIN.');return;}
+  btn.disabled=true; btn.textContent='Menunggu mesin...';
+  try {
+    await devUserPost('fetch', t);
+    const d=await devUserPoll(t, d=>d.user);
+    if(!d){devUserMsg(false,'Mesin belum membalas (30 detik). Pastikan mesin online, lalu coba lagi.');return;}
+    const u=d.user;
+    info.innerHTML=`<b>${escHtml(u.name||'-')}</b> · privilege <b>${escHtml(String(u.privilege??'-'))}</b> · sidik jari: ${u.has_template?'ada':'tidak ada'} · kartu: ${u.has_rfid?'ada':'tidak ada'} <span style="color:var(--text-muted)">(${escHtml(u.at)})</span>`;
+  } catch(e){devUserMsg(false,e.message);}
+  finally{btn.disabled=false;btn.textContent='Ambil Data';}
+}
+
+export async function devUserSetPrivilege() {
+  const t=devUserTarget(), privilege=document.getElementById('devuser-priv').value.trim(), btn=document.getElementById('devuser-set-btn');
+  devUserMsg(true,'');
+  if(!t.cloud_id||!t.pin||!privilege){devUserMsg(false,'Isi mesin, PIN, dan privilege baru.');return;}
+  if(!confirm(`Ubah privilege PIN ${t.pin} di mesin ${t.cloud_id} menjadi "${privilege}"?`)) return;
+  btn.disabled=true; btn.textContent='Mengirim...';
+  try {
+    await devUserPost('privilege', {...t, privilege});
+    const d=await devUserPoll(t, d=>d.set);
+    devUserMsg(true, d ? `Balasan mesin: ${JSON.stringify(d.set.data)}` : 'Perintah terkirim. Balasan mesin belum masuk, cek menu di mesin.');
+  } catch(e){devUserMsg(false,e.message);}
+  finally{btn.disabled=false;btn.textContent='Kirim Privilege';}
 }

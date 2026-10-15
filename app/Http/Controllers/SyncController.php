@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Services\FingerspotApiService;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class SyncController extends Controller
 {
@@ -212,5 +214,79 @@ class SyncController extends Controller
             'duplicate' => $totalDuplicate,
             'total'     => $totalFetched,
         ]);
+    }
+
+    // ── Privilege user di mesin (mis. buka menu mesin yang terkunci) ──
+    // Alur: get_userinfo → callback disimpan WebhookController → set_userinfo dgn privilege baru,
+    // template/rfid/password disalin dari callback supaya sidik jari tidak hilang.
+
+    private function deviceUserTarget(Request $request): array
+    {
+        $cid = (string) $request->input('cloud_id');
+        $pin = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $request->input('pin'));
+        if (!in_array($cid, $this->cloudIds(), true) || $pin === '')
+            throw new HttpResponseException(response()->json(['success' => false, 'message' => 'Mesin / PIN tidak valid'], 422));
+        return [$cid, $pin];
+    }
+
+    private function deviceUserFile(string $type, string $cid, string $pin): ?array
+    {
+        $path = "fingerspot/{$type}_{$cid}_{$pin}.json";
+        return Storage::exists($path) ? json_decode(Storage::get($path), true) : null;
+    }
+
+    private function fingerspotPost(string $endpoint, array $body): array
+    {
+        $res = Http::withoutVerifying()->withToken(config('services.fingerspot.api_token'))
+            ->post("https://developer.fingerspot.io/api/{$endpoint}", ['trans_id' => (string) now()->timestamp] + $body);
+        Log::channel('webhook')->info(strtoupper($endpoint) . " | cloud_id={$body['cloud_id']} body=" . $res->body());
+        return $res->json() ?? [];
+    }
+
+    public function deviceUserFetch(Request $request)
+    {
+        [$cid, $pin] = $this->deviceUserTarget($request);
+        Storage::delete("fingerspot/get_userinfo_{$cid}_{$pin}.json");
+        $json = $this->fingerspotPost('get_userinfo', ['cloud_id' => $cid, 'pin' => $pin]);
+        return response()->json(['success' => (bool) ($json['success'] ?? false), 'message' => $json['message'] ?? null]);
+    }
+
+    public function deviceUserShow(Request $request)
+    {
+        [$cid, $pin] = $this->deviceUserTarget($request);
+        $get = $this->deviceUserFile('get_userinfo', $cid, $pin);
+        $set = $this->deviceUserFile('set_userinfo', $cid, $pin);
+        $d   = $get['data'] ?? null;
+        return response()->json(['success' => true, 'data' => [
+            // template/password sengaja tidak dikirim ke browser
+            'user' => $d ? [
+                'name'         => $d['name'] ?? null,
+                'privilege'    => $d['privilege'] ?? null,
+                'has_template' => !empty($d['template']),
+                'has_rfid'     => !empty($d['rfid']),
+                'at'           => $get['at'],
+            ] : null,
+            'set' => $set ? ['at' => $set['at'], 'data' => array_diff_key((array) $set['data'], ['template' => 1, 'password' => 1])] : null,
+        ]]);
+    }
+
+    public function deviceUserPrivilege(Request $request)
+    {
+        [$cid, $pin] = $this->deviceUserTarget($request);
+        $privilege = trim((string) $request->input('privilege'));
+        $d = $this->deviceUserFile('get_userinfo', $cid, $pin)['data'] ?? null;
+        if ($privilege === '' || !$d)
+            return response()->json(['success' => false, 'message' => 'Ambil Data dulu dan isi privilege'], 422);
+
+        Storage::delete("fingerspot/set_userinfo_{$cid}_{$pin}.json");
+        $json = $this->fingerspotPost('set_userinfo', ['cloud_id' => $cid, 'data' => [
+            'pin'       => $pin,
+            'name'      => (string) ($d['name'] ?? ''),
+            'privilege' => $privilege,
+            'password'  => (string) ($d['password'] ?? ''),
+            'rfid'      => (string) ($d['rfid'] ?? ''),
+            'template'  => $d['template'] ?? '',
+        ]]);
+        return response()->json(['success' => (bool) ($json['success'] ?? false), 'message' => $json['message'] ?? null]);
     }
 }

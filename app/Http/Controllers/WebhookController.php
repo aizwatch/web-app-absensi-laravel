@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class WebhookController extends Controller
 {
@@ -58,8 +59,11 @@ class WebhookController extends Controller
         }
 
         if ($type !== 'attlog') {
-            // simpan payload lengkap (mis. hasil get_userinfo: privilege/password/rfid/template) untuk backup manual
-            $this->logWebhook('IGNORED', $payload, "type '{$type}' diabaikan | data=" . json_encode($data, JSON_UNESCAPED_SLASHES));
+            // Callback perintah (get_userinfo, set_userinfo, ...) disimpan untuk menu Admin → Privilege User di Mesin.
+            // File berisi template sidik jari: tidak pernah dikirim ke browser (lihat SyncController::deviceUserShow).
+            $pin = is_array($data) ? preg_replace('/[^A-Za-z0-9_-]/', '', (string) ($data['pin'] ?? '')) : '';
+            if ($pin !== '') Storage::put("fingerspot/{$type}_{$cloudId}_{$pin}.json", json_encode(['at' => now()->toDateTimeString(), 'data' => $data]));
+            $this->logWebhook('IGNORED', $payload, "type '{$type}' diabaikan");
             return response()->json(['success' => true, 'message' => "Type '{$type}' diabaikan"]);
         }
 

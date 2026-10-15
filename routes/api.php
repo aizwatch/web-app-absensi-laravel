@@ -80,6 +80,9 @@ Route::middleware([AuthMiddleware::class . ':admin'])->group(function () {
     Route::post('sync/set-time',   [SyncController::class, 'syncSetTime']);
     Route::post('sync/user-info',  [SyncController::class, 'syncUserInfo']);
     Route::post('sync/today',      [SyncController::class, 'syncToday']);
+    Route::get('sync/device-user',            [SyncController::class, 'deviceUserShow']);
+    Route::post('sync/device-user/fetch',     [SyncController::class, 'deviceUserFetch']);
+    Route::post('sync/device-user/privilege', [SyncController::class, 'deviceUserPrivilege']);
 });
 
 // ── Absensi Mandiri ──

@@ -21,7 +21,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LT Absensi">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/build/spa/app.css?v=22">
+<link rel="stylesheet" href="/build/spa/app.css?v=23">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -693,6 +693,32 @@
           <div class="alert-err" id="syncuser-err" style="margin-top:4px;margin-bottom:0"></div>
           <div class="alert-ok"  id="syncuser-ok"  style="margin-top:4px;margin-bottom:0"></div>
         </div>
+
+        <div class="admin-form-card" style="margin-top:16px">
+          <div class="section-title">Privilege User di Mesin</div>
+          <p class="hint" style="margin-bottom:14px">Untuk membuka menu mesin yang terkunci: Ambil Data PIN karyawan biasa (catat privilege-nya), lalu turunkan setiap admin ke nilai itu. Mesin tanpa admin membuka menu tanpa verifikasi. Setelah selesai, jadikan admin lagi. Sidik jari, kartu, dan password tetap disalin.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px">
+            <div class="filter-group">
+              <label for="devuser-cid">Mesin</label>
+              <select id="devuser-cid" style="min-width:180px"></select>
+            </div>
+            <div class="filter-group">
+              <label for="devuser-pin">PIN di mesin</label>
+              <input id="devuser-pin" type="text" inputmode="numeric" style="width:120px" />
+            </div>
+            <button class="btn btn-ghost" id="devuser-fetch-btn" onclick="devUserFetch()">Ambil Data</button>
+          </div>
+          <div id="devuser-info" class="hint" style="margin-bottom:10px"></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+            <div class="filter-group">
+              <label for="devuser-priv">Privilege baru</label>
+              <input id="devuser-priv" type="text" style="width:120px" />
+            </div>
+            <button class="btn btn-primary" id="devuser-set-btn" onclick="devUserSetPrivilege()">Kirim Privilege</button>
+          </div>
+          <div class="alert-err" id="devuser-err" style="margin-top:12px;margin-bottom:0"></div>
+          <div class="alert-ok"  id="devuser-ok"  style="margin-top:12px;margin-bottom:0"></div>
+        </div>
       </div>
 
       <div class="admin-stab-pane" id="pstab-shifts">
@@ -1274,7 +1300,7 @@
   </div>
 </div>
 
-<script type="module" src="/build/spa/app.js?v=23"></script>
+<script type="module" src="/build/spa/app.js?v=24"></script>
 
 
 </body>
