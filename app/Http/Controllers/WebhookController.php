@@ -58,7 +58,8 @@ class WebhookController extends Controller
         }
 
         if ($type !== 'attlog') {
-            $this->logWebhook('IGNORED', $payload, "type '{$type}' diabaikan");
+            // simpan payload lengkap (mis. hasil get_userinfo: privilege/password/rfid/template) untuk backup manual
+            $this->logWebhook('IGNORED', $payload, "type '{$type}' diabaikan | data=" . json_encode($data, JSON_UNESCAPED_SLASHES));
             return response()->json(['success' => true, 'message' => "Type '{$type}' diabaikan"]);
         }
 
